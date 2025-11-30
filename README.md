@@ -213,6 +213,10 @@ The analysis shows:
 
 ### Migrate Content
 
+> **Warning**: Always create a full database backup before migrating content.
+> While the plugin stores original content in post meta for rollback,
+> a complete backup is recommended.
+
 Convert posts from HTML/Markdown to Djot:
 
 ```bash

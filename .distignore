@@ -1,0 +1,34 @@
+# Git
+/.git
+/.gitattributes
+/.gitignore
+/.github
+
+# Development
+/.idea
+/.vscode
+/.phpunit.cache
+/stubs
+/tests
+/build
+
+# Build tools
+/build.sh
+/composer.json
+/composer.lock
+/phpcs.xml
+/phpstan.neon
+/phpunit.xml.dist
+/.editorconfig
+
+# Documentation (keep readme.txt)
+/*.md
+CHANGELOG.md
+CONTRIBUTING.md
+README.md
+
+# Temporary files
+/_*
+*.log
+*.tmp
+*.zip

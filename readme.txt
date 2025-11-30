@@ -48,8 +48,8 @@ WP Djot adds support for the [Djot](https://djot.net/) markup language in WordPr
 = Links =
 
 * [Djot Syntax Reference](https://djot.net/)
-* [GitHub Repository](https://github.com/dereuromark/wp-djot)
-* [Report Issues](https://github.com/dereuromark/wp-djot/issues)
+* [GitHub Repository](https://github.com/php-collective/wp-djot)
+* [Report Issues](https://github.com/php-collective/wp-djot/issues)
 
 == Installation ==
 

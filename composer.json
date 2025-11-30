@@ -1,5 +1,5 @@
 {
-    "name": "dereuromark/wp-djot",
+    "name": "php-collective/wp-djot",
     "description": "WordPress plugin for Djot markup language support",
     "type": "wordpress-plugin",
     "license": "MIT",

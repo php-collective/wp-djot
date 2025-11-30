@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: WP Djot
- * Plugin URI: https://github.com/dereuromark/wp-djot
- * Description: Djot markup language support for WordPress. Convert Djot syntax to HTML in posts, pages, and comments.
+ * Plugin URI: https://github.com/php-collective/wp-djot
+ * Description: <a href="https://djot.net/" target="_blank">Djot</a> markup language support for WordPress – a modern, cleaner alternative to Markdown with syntax highlighting. Convert Djot syntax to HTML in posts, pages, and comments.
  * Version: 1.0.0
  * Requires at least: 6.0
  * Requires PHP: 8.2
  * Author: Mark Scherer
- * Author URI: https://www.dereuromark.de
+ * Author URI: https://github.com/php-collective
  * License: MIT
  * License URI: https://opensource.org/licenses/MIT
  * Text Domain: wp-djot

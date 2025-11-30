@@ -89,7 +89,9 @@ function register_activation_hook(string $file, callable $callback): void {}
 function register_deactivation_hook(string $file, callable $callback): void {}
 
 function is_admin(): bool {}
+/** @param string|array<string> $post_types */
 function is_singular(string|array $post_types = ''): bool {}
+/** @param int|string|array<int|string> $page */
 function is_page(int|string|array $page = ''): bool {}
 function is_multisite(): bool {}
 function current_user_can(string $capability, mixed ...$args): bool {}
@@ -126,7 +128,7 @@ function wp_add_inline_script(string $handle, string $data, string $position = '
  * @param string $menu_slug
  * @param callable $callback
  */
-function add_options_page(string $page_title, string $menu_title, string $capability, string $menu_slug, callable $callback = null): string|false {}
+function add_options_page(string $page_title, string $menu_title, string $capability, string $menu_slug, ?callable $callback = null): string|false {}
 
 /**
  * @param string $option_group
@@ -176,6 +178,7 @@ function get_admin_page_title(): string {}
 function admin_url(string $path = '', string $scheme = 'admin'): string {}
 function esc_html(string $text): string {}
 function esc_attr(string $text): string {}
+/** @param array<string>|null $protocols */
 function esc_url(string $url, ?array $protocols = null, string $_context = 'display'): string {}
 function __(string $text, string $domain = 'default'): string {}
 function esc_html__(string $text, string $domain = 'default'): string {}
@@ -192,3 +195,112 @@ function selected(mixed $selected, mixed $current = true, bool $echo = true): st
 function get_sites(array $args = []): array {}
 function switch_to_blog(int $new_blog_id): bool {}
 function restore_current_blog(): bool {}
+
+// Block functions
+/** @param array<string, mixed> $args */
+function register_block_type(string $block_type, array $args = []): mixed {}
+/** @param array<string, mixed> $extra_attributes */
+function get_block_wrapper_attributes(array $extra_attributes = []): string {}
+
+// REST API functions
+/**
+ * @param string $namespace
+ * @param string $route
+ * @param array<string, mixed> $args
+ */
+function register_rest_route(string $namespace, string $route, array $args = []): bool {}
+function sanitize_textarea_field(string $str): string {}
+
+// Post functions
+function get_post(int $post_id): ?WP_Post {}
+function get_post_type(?int $post_id = null): string|false {}
+function get_post_meta(int $post_id, string $key = '', bool $single = false): mixed {}
+function update_post_meta(int $post_id, string $key, mixed $value): int|bool {}
+function delete_post_meta(int $post_id, string $key, mixed $value = ''): bool {}
+/** @param array<string, mixed> $postarr */
+function wp_update_post(array $postarr, bool $wp_error = false, bool $fire_after_hooks = true): int|\WP_Error {}
+function is_wp_error(mixed $thing): bool {}
+function is_feed(): bool {}
+
+// Comment functions
+function get_comment(int $comment_id): ?WP_Comment {}
+function get_comment_meta(int $comment_id, string $key = '', bool $single = false): mixed {}
+function update_comment_meta(int $comment_id, string $key, mixed $value): int|bool {}
+function delete_comment_meta(int $comment_id, string $key, mixed $value = ''): bool {}
+/** @param array<string, mixed> $commentarr */
+function wp_update_comment(array $commentarr, bool $wp_error = false): int|\WP_Error {}
+/**
+ * @param array<string, mixed> $args
+ * @return array<WP_Comment>
+ */
+function get_comments(array $args = []): array {}
+
+// Kses
+function wp_kses_post(string $data): string {}
+
+/**
+ * WordPress Post class stub.
+ */
+class WP_Post {
+    public int $ID;
+    public string $post_content;
+    public string $post_type;
+    public string $post_status;
+    public string $post_title;
+}
+
+/**
+ * WordPress Comment class stub.
+ */
+class WP_Comment {
+    public int $comment_ID;
+    public string $comment_content;
+    public string $comment_approved;
+    public int $comment_post_ID;
+}
+
+/**
+ * WordPress Query class stub.
+ */
+class WP_Query {
+    /** @var array<WP_Post> */
+    public array $posts = [];
+    /** @param array<string, mixed> $args */
+    public function __construct(array $args = []) {}
+}
+
+/**
+ * WordPress Error class stub.
+ */
+class WP_Error {
+    public function __construct(string $code = '', string $message = '', mixed $data = '') {}
+    public function get_error_message(): string {}
+    public function get_error_code(): string {}
+}
+
+/**
+ * WP-CLI class stub.
+ */
+class WP_CLI {
+    public static function log(string $message): void {}
+    public static function success(string $message): void {}
+    public static function warning(string $message): void {}
+    public static function error(string $message, bool $exit = true): void {}
+    /** @param array<string, mixed> $assoc_args */
+    public static function confirm(string $question, array $assoc_args = []): void {}
+    /** @param array<string, mixed> $args */
+    public static function add_command(string $name, string|object $callable, array $args = []): bool {}
+}
+
+/**
+ * HTMLPurifier stubs.
+ */
+class HTMLPurifier {
+    public function __construct(?HTMLPurifier_Config $config = null) {}
+    public function purify(string $html): string {}
+}
+
+class HTMLPurifier_Config {
+    public static function createDefault(): self {}
+    public function set(string $key, mixed $value): void {}
+}

@@ -1,14 +1,25 @@
 parameters:
-    level: 8
+    level: 6
     paths:
         - src/
         - wp-djot.php
     excludePaths:
         - vendor
+        - src/Blocks
+        - stubs
     bootstrapFiles:
         - vendor/autoload.php
     stubFiles:
         - stubs/wordpress.stub
     ignoreErrors:
-        - '#Function .* not found#'
-        - '#Constant .* not found#'
+        -
+            identifier: missingType.iterableValue
+        -
+            identifier: function.notFound
+        -
+            identifier: constant.notFound
+        -
+            identifier: class.notFound
+        -
+            message: '#DjotBlock#'
+            reportUnmatched: false

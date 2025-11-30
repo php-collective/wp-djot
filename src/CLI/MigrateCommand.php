@@ -403,10 +403,12 @@ class MigrateCommand
      *     wp djot analyze-comments
      *     wp djot analyze-comments --post-id=123
      *
+     * @subcommand analyze-comments
+     *
      * @param array<string> $args
      * @param array<string, string> $assocArgs
      */
-    public function analyze_comments(array $args, array $assocArgs): void
+    public function analyzeComments(array $args, array $assocArgs): void
     {
         $commentId = $assocArgs['comment-id'] ?? null;
         $postId = $assocArgs['post-id'] ?? null;
@@ -472,10 +474,12 @@ class MigrateCommand
      *     wp djot migrate-comments --dry-run
      *     wp djot migrate-comments --post-id=123
      *
+     * @subcommand migrate-comments
+     *
      * @param array<string> $args
      * @param array<string, string> $assocArgs
      */
-    public function migrate_comments(array $args, array $assocArgs): void
+    public function migrateComments(array $args, array $assocArgs): void
     {
         $commentId = $assocArgs['comment-id'] ?? null;
         $postId = $assocArgs['post-id'] ?? null;
@@ -556,10 +560,12 @@ class MigrateCommand
      *     wp djot rollback-comments --comment-id=123
      *     wp djot rollback-comments --all
      *
+     * @subcommand rollback-comments
+     *
      * @param array<string> $args
      * @param array<string, string> $assocArgs
      */
-    public function rollback_comments(array $args, array $assocArgs): void
+    public function rollbackComments(array $args, array $assocArgs): void
     {
         $commentId = $assocArgs['comment-id'] ?? null;
         $all = isset($assocArgs['all']);

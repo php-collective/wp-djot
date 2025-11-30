@@ -250,14 +250,6 @@ wp djot status
 
 Shows count of migrated posts, pending posts, and complexity distribution.
 
-## Contributing
-
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Credits
 
 - [Djot](https://djot.net/) by John MacFarlane
@@ -267,12 +259,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for full history.
-
-### 0.1.0
-
-- Initial release with full Djot syntax support
-- Shortcode and content filtering
-- Admin settings page with syntax highlighting
-- Safe mode for untrusted content
-- Template tags for theme developers
-- WP-CLI migration commands for HTML/Markdown to Djot conversion

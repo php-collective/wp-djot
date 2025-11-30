@@ -1,0 +1,194 @@
+<?php
+
+/**
+ * WordPress function stubs for PHPStan.
+ */
+
+/**
+ * @param string $hook_name
+ * @param callable $callback
+ * @param int $priority
+ * @param int $accepted_args
+ */
+function add_action(string $hook_name, callable $callback, int $priority = 10, int $accepted_args = 1): bool {}
+
+/**
+ * @param string $hook_name
+ * @param callable $callback
+ * @param int $priority
+ * @param int $accepted_args
+ */
+function add_filter(string $hook_name, callable $callback, int $priority = 10, int $accepted_args = 1): bool {}
+
+/**
+ * @param string $hook_name
+ * @param mixed $value
+ * @param mixed ...$args
+ * @return mixed
+ */
+function apply_filters(string $hook_name, mixed $value, mixed ...$args): mixed {}
+
+/**
+ * @param string $option
+ * @param mixed $default
+ * @return mixed
+ */
+function get_option(string $option, mixed $default = false): mixed {}
+
+/**
+ * @param string $option
+ * @param mixed $value
+ * @param string|bool $autoload
+ */
+function add_option(string $option, mixed $value = '', string|bool $autoload = 'yes'): bool {}
+
+/**
+ * @param string $option
+ */
+function delete_option(string $option): bool {}
+
+/**
+ * @param string $tag
+ * @param callable $callback
+ */
+function add_shortcode(string $tag, callable $callback): void {}
+
+/**
+ * @param array<string, mixed>|string $pairs
+ * @param array<string, mixed>|string $atts
+ * @param string $shortcode
+ * @return array<string, mixed>
+ */
+function shortcode_atts(array|string $pairs, array|string $atts, string $shortcode = ''): array {}
+
+/**
+ * @param string $file
+ */
+function plugin_dir_path(string $file): string {}
+
+/**
+ * @param string $file
+ */
+function plugin_dir_url(string $file): string {}
+
+/**
+ * @param string $file
+ */
+function plugin_basename(string $file): string {}
+
+/**
+ * @param string $file
+ * @param callable $callback
+ */
+function register_activation_hook(string $file, callable $callback): void {}
+
+/**
+ * @param string $file
+ * @param callable $callback
+ */
+function register_deactivation_hook(string $file, callable $callback): void {}
+
+function is_admin(): bool {}
+function is_singular(string|array $post_types = ''): bool {}
+function is_page(int|string|array $page = ''): bool {}
+function is_multisite(): bool {}
+function current_user_can(string $capability, mixed ...$args): bool {}
+
+/**
+ * @param string $handle
+ * @param string $src
+ * @param array<string> $deps
+ * @param string|bool|null $ver
+ * @param string|bool $media
+ */
+function wp_enqueue_style(string $handle, string $src = '', array $deps = [], string|bool|null $ver = false, string|bool $media = 'all'): void {}
+
+/**
+ * @param string $handle
+ * @param string $src
+ * @param array<string> $deps
+ * @param string|bool|null $ver
+ * @param bool $in_footer
+ */
+function wp_enqueue_script(string $handle, string $src = '', array $deps = [], string|bool|null $ver = false, bool $in_footer = false): void {}
+
+/**
+ * @param string $handle
+ * @param string $data
+ * @param string $position
+ */
+function wp_add_inline_script(string $handle, string $data, string $position = 'after'): bool {}
+
+/**
+ * @param string $page_title
+ * @param string $menu_title
+ * @param string $capability
+ * @param string $menu_slug
+ * @param callable $callback
+ */
+function add_options_page(string $page_title, string $menu_title, string $capability, string $menu_slug, callable $callback = null): string|false {}
+
+/**
+ * @param string $option_group
+ * @param string $option_name
+ * @param array<string, mixed> $args
+ */
+function register_setting(string $option_group, string $option_name, array $args = []): void {}
+
+/**
+ * @param string $id
+ * @param string $title
+ * @param callable $callback
+ * @param string $page
+ */
+function add_settings_section(string $id, string $title, callable $callback, string $page): void {}
+
+/**
+ * @param string $id
+ * @param string $title
+ * @param callable $callback
+ * @param string $page
+ * @param string $section
+ * @param array<string, mixed> $args
+ */
+function add_settings_field(string $id, string $title, callable $callback, string $page, string $section = 'default', array $args = []): void {}
+
+/**
+ * @param string $option_group
+ */
+function settings_fields(string $option_group): void {}
+
+/**
+ * @param string $page
+ */
+function do_settings_sections(string $page): void {}
+
+/**
+ * @param string $text
+ * @param string $type
+ * @param string $name
+ * @param bool $wrap
+ * @param array<string, mixed>|string $other_attributes
+ */
+function submit_button(string $text = '', string $type = 'primary', string $name = 'submit', bool $wrap = true, array|string $other_attributes = ''): void {}
+
+function get_admin_page_title(): string {}
+function admin_url(string $path = '', string $scheme = 'admin'): string {}
+function esc_html(string $text): string {}
+function esc_attr(string $text): string {}
+function esc_url(string $url, ?array $protocols = null, string $_context = 'display'): string {}
+function __(string $text, string $domain = 'default'): string {}
+function esc_html__(string $text, string $domain = 'default'): string {}
+function esc_html_e(string $text, string $domain = 'default'): void {}
+function sanitize_text_field(string $str): string {}
+function sanitize_key(string $key): string {}
+function checked(mixed $checked, mixed $current = true, bool $echo = true): string {}
+function selected(mixed $selected, mixed $current = true, bool $echo = true): string {}
+
+/**
+ * @param array<string> $args
+ * @return array<int>
+ */
+function get_sites(array $args = []): array {}
+function switch_to_blog(int $new_blog_id): bool {}
+function restore_current_blog(): bool {}

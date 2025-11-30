@@ -1,0 +1,14 @@
+parameters:
+    level: 8
+    paths:
+        - src/
+        - wp-djot.php
+    excludePaths:
+        - vendor
+    bootstrapFiles:
+        - vendor/autoload.php
+    stubFiles:
+        - stubs/wordpress.stub
+    ignoreErrors:
+        - '#Function .* not found#'
+        - '#Constant .* not found#'

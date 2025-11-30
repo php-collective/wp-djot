@@ -1,0 +1,28 @@
+{
+    "name": "dereuromark/wp-djot",
+    "description": "WordPress plugin for Djot markup language support",
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mark Scherer",
+            "homepage": "https://www.dereuromark.de"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "php-collective/djot": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpDjot\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

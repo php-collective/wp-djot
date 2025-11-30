@@ -14,6 +14,7 @@ Djot is a light markup syntax created by John MacFarlane (creator of CommonMark 
 ## Features
 
 - **Full Djot Support**: Headings, emphasis, links, images, code blocks, tables, footnotes, and more
+- **Block Editor Support**: Native Gutenberg block for writing Djot with live preview
 - **Shortcode Support**: Use `[djot]...[/djot]` in your content
 - **Content Filtering**: Automatically process `{djot}...{/djot}` blocks in posts and pages
 - **Safe Mode**: XSS protection for untrusted content (enabled by default for comments)
@@ -21,6 +22,7 @@ Djot is a light markup syntax created by John MacFarlane (creator of CommonMark 
 - **Admin Settings**: Easy configuration through WordPress admin
 - **Template Tags**: `djot_to_html()` and `the_djot()` for theme developers
 - **Dark Mode Support**: CSS automatically adapts to dark mode preferences
+- **WP-CLI Migration**: Migrate existing HTML/Markdown content to Djot with rollback support
 
 ## Requirements
 
@@ -46,6 +48,16 @@ composer install
 Search for "WP Djot" in the WordPress plugin directory.
 
 ## Usage
+
+### Block Editor (Gutenberg)
+
+Add a **Djot** block from the block inserter (search for "Djot"). The block provides:
+
+- A code editor for writing Djot markup
+- Live preview toggle in the sidebar
+- Server-side rendering for accurate output
+
+Simply write your Djot content and toggle preview to see the rendered HTML.
 
 ### Shortcode
 
@@ -161,37 +173,86 @@ add_filter('wp_djot_post_convert', function(string $html): string {
 });
 ```
 
-## Development
+## WP-CLI Commands
 
-### Running Tests
+Migrate existing HTML or Markdown content to Djot format using WP-CLI.
 
-```bash
-composer install
-composer test
-```
+### Analyze Content
 
-### Code Style
+Analyze posts to determine migration complexity before converting:
 
 ```bash
-composer cs-check
-composer cs-fix
+# Analyze all posts and pages
+wp djot analyze
+
+# Analyze a specific post
+wp djot analyze --post-id=123
+
+# Analyze only posts, limit to 10
+wp djot analyze --post-type=post --limit=10
+
+# Output as JSON
+wp djot analyze --format=json
 ```
 
-### Static Analysis
+The analysis shows:
+- **Complexity**: none, low, medium, high
+- **Content types**: HTML, Markdown, Gutenberg blocks, shortcodes
+- **Auto-migrate**: Whether the post can be safely auto-migrated
+
+### Migrate Content
+
+Convert posts from HTML/Markdown to Djot:
 
 ```bash
-composer stan
+# Migrate a single post
+wp djot migrate --post-id=123
+
+# Preview migration without saving (dry run)
+wp djot migrate --dry-run
+
+# Preview with content diff
+wp djot migrate --dry-run --show-diff --post-id=123
+
+# Migrate posts in batches
+wp djot migrate --post-type=post --limit=10
+
+# Force migration of high-complexity posts
+wp djot migrate --post-id=123 --force
 ```
+
+**Features:**
+- Automatic backup of original content
+- Preserves WordPress shortcodes
+- Preserves Gutenberg blocks
+- Converts HTML tags to Djot syntax
+- Converts Markdown syntax to Djot
+
+### Rollback Migrations
+
+Restore posts to their original content:
+
+```bash
+# Rollback a single post
+wp djot rollback --post-id=123
+
+# Rollback all migrated posts
+wp djot rollback --all
+```
+
+### Migration Status
+
+View migration statistics:
+
+```bash
+wp djot status
+```
+
+Shows count of migrated posts, pending posts, and complexity distribution.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
@@ -205,12 +266,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### 1.0.0
+See [CHANGELOG.md](CHANGELOG.md) for full history.
 
-- Initial release
-- Full Djot syntax support
+### 0.1.0
+
+- Initial release with full Djot syntax support
 - Shortcode and content filtering
-- Admin settings page
-- Syntax highlighting with highlight.js
+- Admin settings page with syntax highlighting
 - Safe mode for untrusted content
 - Template tags for theme developers
+- WP-CLI migration commands for HTML/Markdown to Djot conversion

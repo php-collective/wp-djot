@@ -1,0 +1,127 @@
+.wp-djot-block {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.wp-djot-block-wrapper {
+    padding: 0;
+}
+
+.wp-djot-block .wp-djot-editor textarea {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 200px;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 4px;
+    resize: vertical;
+    background: #f9f9f9;
+}
+
+.wp-djot-block .wp-djot-editor textarea:focus {
+    outline: none;
+    box-shadow: none;
+    background: #fff;
+}
+
+.wp-djot-block .components-base-control__label {
+    display: none;
+}
+
+.wp-djot-preview-wrapper {
+    background: #fff;
+}
+
+.wp-djot-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: #f0f0f0;
+    border-bottom: 1px solid #ddd;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: #666;
+}
+
+.wp-djot-edit-button {
+    background: #007cba;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    text-transform: none;
+}
+
+.wp-djot-edit-button:hover {
+    background: #005a87;
+}
+
+.wp-djot-preview {
+    padding: 16px;
+    min-height: 100px;
+}
+
+.wp-djot-preview:empty::before {
+    content: "Preview will appear here...";
+    color: #999;
+    font-style: italic;
+}
+
+/* Djot content styles in editor */
+.wp-djot-preview.djot-content h1,
+.wp-djot-preview.djot-content h2,
+.wp-djot-preview.djot-content h3,
+.wp-djot-preview.djot-content h4,
+.wp-djot-preview.djot-content h5,
+.wp-djot-preview.djot-content h6 {
+    margin-top: 0;
+}
+
+.wp-djot-preview.djot-content pre {
+    background: #f4f4f4;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.wp-djot-preview.djot-content code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.wp-djot-preview.djot-content pre code {
+    background: none;
+    padding: 0;
+}
+
+.wp-djot-preview.djot-content blockquote {
+    border-left: 4px solid #ddd;
+    margin-left: 0;
+    padding-left: 16px;
+    color: #666;
+}
+
+/* Placeholder styles */
+.wp-djot-block .components-placeholder {
+    min-height: auto;
+    padding: 24px;
+}
+
+.wp-djot-block .components-placeholder .wp-djot-editor textarea {
+    margin-top: 16px;
+}
+
+/* Loading spinner */
+.wp-djot-preview-wrapper .components-spinner {
+    margin: 40px auto;
+    display: block;
+}

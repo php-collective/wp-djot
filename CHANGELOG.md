@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2024-XX-XX
+## [0.1.0] - 2025-XX-XX
 
 ### Added
 
@@ -25,6 +25,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dark mode CSS support
 - Multisite compatible
 - Clean uninstall (removes all options)
+- Gutenberg block editor support with live preview
+  - Native "Djot" block for the block editor
+  - REST API endpoint for server-side preview rendering
+  - Toggle between edit and preview modes
+- WP-CLI migration commands for converting existing content to Djot
+  - `wp djot analyze` - Analyze posts for migration complexity
+  - `wp djot migrate` - Migrate posts from HTML/Markdown to Djot
+  - `wp djot rollback` - Restore posts to original content
+  - `wp djot status` - View migration statistics
+- Content migration from HTML to Djot (using djot-php HtmlToDjot converter)
+- Content migration from Markdown to Djot (using djot-php MarkdownToDjot converter)
+- Automatic backup of original content before migration
+- Complexity analysis (none, low, medium, high) for migration planning
+- Dry-run mode with diff preview
+- Batch processing with progress bar
+- Preservation of WordPress shortcodes during migration
+- Preservation of Gutenberg blocks during migration
 
 ### Security
 
@@ -32,5 +49,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/php-collective/wp-djot/releases/tag/v1.0.0
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/php-collective/wp-djot/releases/tag/v0.1.0

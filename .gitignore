@@ -19,7 +19,8 @@ composer.lock
 
 # Testing
 /coverage/
-.phpunit.result.cache
+/.phpunit.result.cache
+/.phpunit.cache/
 
 # Temporary files
 *.log

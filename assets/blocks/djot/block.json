@@ -1,0 +1,26 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "wp-djot/djot",
+    "version": "0.1.0",
+    "title": "Djot",
+    "category": "text",
+    "icon": "editor-code",
+    "description": "Write content using Djot markup language.",
+    "keywords": ["djot", "markup", "markdown", "text"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"],
+        "className": true
+    },
+    "textdomain": "wp-djot",
+    "attributes": {
+        "content": {
+            "type": "string",
+            "default": ""
+        }
+    },
+    "editorScript": "file:./index.js",
+    "editorStyle": "file:./editor.css",
+    "render": "file:./render.php"
+}

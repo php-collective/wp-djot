@@ -4,9 +4,9 @@ parameters:
         - src/
         - wp-djot.php
     excludePaths:
-        - vendor
-        - src/Blocks (?)
-        - stubs (?)
+        - vendor/
+        - src/Blocks/
+        - stubs/
     bootstrapFiles:
         - vendor/autoload.php
     stubFiles:

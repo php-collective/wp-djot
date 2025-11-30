@@ -118,9 +118,20 @@ Content with custom CSS class
 Go to **Settings → WP Djot** to configure:
 
 - **Content Settings**: Enable/disable for posts, pages, comments
+- **Comment Processing**: Process full comment content as Djot (not just `{djot}` blocks)
 - **Security Settings**: Safe mode for XSS protection
 - **Code Highlighting**: Enable/disable and choose theme
 - **Advanced**: Custom shortcode tag, filter priority
+
+### Optional: HTMLPurifier for Enhanced Security
+
+For additional XSS protection on comments, you can optionally install HTMLPurifier:
+
+```bash
+composer require ezyang/htmlpurifier
+```
+
+When installed, HTMLPurifier will automatically be used for sanitizing comment output.
 
 ## Djot Syntax Quick Reference
 
@@ -249,6 +260,36 @@ wp djot status
 ```
 
 Shows count of migrated posts, pending posts, and complexity distribution.
+
+### Comment Migration
+
+Migrate comments similarly to posts:
+
+```bash
+# Analyze all comments
+wp djot analyze-comments
+
+# Analyze comments for a specific post
+wp djot analyze-comments --post-id=123
+
+# Migrate comments (dry run first)
+wp djot migrate-comments --dry-run
+
+# Migrate a specific comment
+wp djot migrate-comments --comment-id=456
+
+# Migrate all comments for a post
+wp djot migrate-comments --post-id=123
+
+# Force migration of complex comments
+wp djot migrate-comments --force
+
+# Rollback a comment
+wp djot rollback-comments --comment-id=456
+
+# Rollback all migrated comments
+wp djot rollback-comments --all
+```
 
 ## Credits
 

@@ -5,8 +5,8 @@ parameters:
         - wp-djot.php
     excludePaths:
         - vendor
-        - src/Blocks
-        - stubs
+        - src/Blocks (?)
+        - stubs (?)
     bootstrapFiles:
         - vendor/autoload.php
     stubFiles:

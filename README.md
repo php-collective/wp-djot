@@ -61,7 +61,7 @@ Simply write your Djot content and toggle preview to see the rendered HTML.
 
 ### Shortcode
 
-```
+````
 [djot]
 # Hello World
 
@@ -74,7 +74,7 @@ This is _emphasized_ and this is *strong*.
 echo "Hello, World!";
 ```
 [/djot]
-```
+````
 
 ### Curly Brace Syntax
 

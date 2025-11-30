@@ -9,8 +9,14 @@ namespace WpDjot\Admin;
  */
 class Settings
 {
+    /**
+     * @var string
+     */
     private const OPTION_GROUP = 'wp_djot_settings';
 
+    /**
+     * @var string
+     */
     private const PAGE_SLUG = 'wp-djot-settings';
 
     /**
@@ -41,6 +47,7 @@ class Settings
      * Add settings link to plugin list.
      *
      * @param array<string> $links
+     *
      * @return array<string>
      */
     public function addSettingsLink(array $links): array
@@ -111,7 +118,16 @@ class Settings
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
             'wp_djot_content',
-            ['field' => 'process_full_content', 'description' => __('Process entire post/page content as Djot. When disabled, only [djot]...[/djot] blocks are processed.', 'wp-djot')],
+            ['field' => 'process_full_content', 'description' => __('Process entire post/page content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'wp-djot')],
+        );
+
+        add_settings_field(
+            'process_full_comments',
+            __('Process Full Comments', 'wp-djot'),
+            [$this, 'renderCheckboxField'],
+            self::PAGE_SLUG,
+            'wp_djot_content',
+            ['field' => 'process_full_comments', 'description' => __('Process entire comment content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'wp-djot')],
         );
 
         // Security Settings Section
@@ -188,6 +204,7 @@ class Settings
      * Sanitize settings before saving.
      *
      * @param array<string, mixed> $input
+     *
      * @return array<string, mixed>
      */
     public function sanitizeSettings(array $input): array
@@ -197,6 +214,7 @@ class Settings
             'enable_pages' => !empty($input['enable_pages']),
             'enable_comments' => !empty($input['enable_comments']),
             'process_full_content' => !empty($input['process_full_content']),
+            'process_full_comments' => !empty($input['process_full_comments']),
             'safe_mode' => !empty($input['safe_mode']),
             'highlight_code' => !empty($input['highlight_code']),
             'highlight_theme' => sanitize_text_field($input['highlight_theme'] ?? 'github'),

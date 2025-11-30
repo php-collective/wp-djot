@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace WpDjot;
 
+use WP_CLI;
 use WpDjot\Admin\Settings;
+use WpDjot\Blocks\DjotBlock;
+use WpDjot\CLI\MigrateCommand;
 use WpDjot\Shortcodes\DjotShortcode;
 
 /**
@@ -17,6 +20,8 @@ class Plugin
     private Settings $settings;
 
     private DjotShortcode $shortcode;
+
+    private DjotBlock $block;
 
     /**
      * @var array<string, mixed>
@@ -44,8 +49,27 @@ class Plugin
             $this->settings->init();
         }
 
+        // Register WP-CLI commands
+        $this->registerCliCommands();
+
+        // Register Gutenberg block
+        $this->block = new DjotBlock($this->converter);
+        $this->block->init();
+
         // Enqueue assets
         add_action('wp_enqueue_scripts', [$this, 'enqueueAssets']);
+    }
+
+    /**
+     * Register WP-CLI commands.
+     */
+    private function registerCliCommands(): void
+    {
+        if (!defined('WP_CLI') || !WP_CLI) {
+            return;
+        }
+
+        WP_CLI::add_command('djot', MigrateCommand::class);
     }
 
     /**
@@ -87,6 +111,12 @@ class Plugin
      */
     public function filterComment(string $content): string
     {
+        // Process full comment as Djot
+        if ($this->options['process_full_comments']) {
+            return $this->converter->convertSafe($content);
+        }
+
+        // Only process {djot}...{/djot} blocks
         return $this->processContent($content, true);
     }
 
@@ -184,6 +214,7 @@ class Plugin
             'enable_pages' => true,
             'enable_comments' => false,
             'process_full_content' => true,
+            'process_full_comments' => true,
             'safe_mode' => true,
             'highlight_code' => true,
             'highlight_theme' => 'github',

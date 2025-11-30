@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace WpDjot;
 
 use Djot\DjotConverter;
+use HTMLPurifier;
+use HTMLPurifier_Config;
 
 /**
  * Wrapper around the Djot converter with WordPress-specific features.
@@ -39,7 +41,7 @@ class Converter
         $converter = $useSafeMode ? $this->safeConverter : $this->converter;
         $html = $converter->convert($djot);
 
-        return $this->postProcess($html);
+        return $this->postProcess($html, $useSafeMode);
     }
 
     /**
@@ -90,10 +92,15 @@ class Converter
     /**
      * Post-process HTML after conversion.
      */
-    private function postProcess(string $html): string
+    private function postProcess(string $html, bool $useSafeMode = false): string
     {
+        // Apply HTML Purifier for extra sanitization in safe mode (if available)
+        if ($useSafeMode && $html) {
+            $html = $this->purifyHtml($html);
+        }
+
         // Add djot-content wrapper class for styling
-        if (!empty($html)) {
+        if ($html) {
             $html = '<div class="djot-content">' . $html . '</div>';
         }
 
@@ -104,6 +111,34 @@ class Converter
          */
         if (function_exists('apply_filters')) {
             $html = (string)apply_filters('wp_djot_post_convert', $html);
+        }
+
+        return $html;
+    }
+
+    /**
+     * Purify HTML using HTMLPurifier if available.
+     *
+     * Falls back to WordPress wp_kses_post() if HTMLPurifier is not installed.
+     */
+    private function purifyHtml(string $html): string
+    {
+        // Use HTMLPurifier if available (composer require ezyang/htmlpurifier)
+        if (class_exists(HTMLPurifier::class)) {
+            static $purifier = null;
+            if ($purifier === null) {
+                $config = HTMLPurifier_Config::createDefault();
+                $config->set('Cache.DefinitionImpl', null);
+                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title],ul,ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr');
+                $purifier = new HTMLPurifier($config);
+            }
+
+            return $purifier->purify($html);
+        }
+
+        // Fallback to WordPress sanitization
+        if (function_exists('wp_kses_post')) {
+            return wp_kses_post($html);
         }
 
         return $html;

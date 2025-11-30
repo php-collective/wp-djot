@@ -13,10 +13,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.2', '8.3', '8.4']
+        php-version: ['8.2', '8.5']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -38,35 +38,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          tools: composer:v2, phpstan
+          tools: composer:v2
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
       - name: Run PHPStan
-        run: phpstan analyse --configuration=phpstan.neon || true
+        run: composer stan
 
   coding-standards:
     name: Coding Standards
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          tools: composer:v2, phpcs
+          tools: composer:v2
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
       - name: Check coding standards
-        run: phpcs --standard=phpcs.xml || true
+        run: composer cs-check

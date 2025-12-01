@@ -210,22 +210,27 @@
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( textarea ) {
                     const selectedText = ( content || '' ).substring( textarea.selectionStart, textarea.selectionEnd );
-                    setLinkText( selectedText || 'link text' );
+                    setLinkText( selectedText || '' );
                     setLinkUrl( 'https://' );
                 }
                 setShowLinkModal( true );
             }
 
             function onInsertLink() {
-                insertMarkup( '[' + linkText + '](', ')', linkUrl );
+                if ( linkText.trim() ) {
+                    insertMarkup( '[' + linkText + '](', ')', linkUrl );
+                } else {
+                    // Use autolink syntax when no text provided
+                    insertMarkup( '<', '>', linkUrl );
+                }
                 setShowLinkModal( false );
                 setLinkUrl( '' );
                 setLinkText( '' );
             }
 
             function onImage() {
-                setImageAlt( 'image description' );
                 setImageUrl( 'https://' );
+                setImageAlt( '' );
                 setShowImageModal( true );
             }
 
@@ -489,15 +494,15 @@
                         onRequestClose: function() { setShowLinkModal( false ); },
                     },
                     wp.element.createElement( TextControl, {
-                        label: __( 'Link Text', 'wp-djot' ),
-                        value: linkText,
-                        onChange: setLinkText,
-                    } ),
-                    wp.element.createElement( TextControl, {
                         label: __( 'URL', 'wp-djot' ),
                         value: linkUrl,
                         onChange: setLinkUrl,
                         type: 'url',
+                    } ),
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Link Text (optional, leave empty for autolink)', 'wp-djot' ),
+                        value: linkText,
+                        onChange: setLinkText,
                     } ),
                     wp.element.createElement(
                         'div',
@@ -521,15 +526,15 @@
                         onRequestClose: function() { setShowImageModal( false ); },
                     },
                     wp.element.createElement( TextControl, {
-                        label: __( 'Alt Text', 'wp-djot' ),
-                        value: imageAlt,
-                        onChange: setImageAlt,
-                    } ),
-                    wp.element.createElement( TextControl, {
                         label: __( 'Image URL', 'wp-djot' ),
                         value: imageUrl,
                         onChange: setImageUrl,
                         type: 'url',
+                    } ),
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Alt Text (optional)', 'wp-djot' ),
+                        value: imageAlt,
+                        onChange: setImageAlt,
                     } ),
                     wp.element.createElement(
                         'div',

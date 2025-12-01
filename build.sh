@@ -24,6 +24,7 @@ composer install --no-dev --optimize-autoloader --quiet
 # Copy plugin files
 echo "Copying files..."
 cp -r assets "${DIST_DIR}/"
+cp -r languages "${DIST_DIR}/"
 cp -r src "${DIST_DIR}/"
 cp -r templates "${DIST_DIR}/"
 cp -r vendor "${DIST_DIR}/"

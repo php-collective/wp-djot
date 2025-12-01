@@ -12,7 +12,7 @@ Djot markup language support for WordPress. A modern, cleaner alternative to Mar
 
 == Description ==
 
-WP Djot adds support for the [Djot](https://djot.net/) markup language in WordPress. Djot is created by John MacFarlane (creator of CommonMark and Pandoc) and offers cleaner syntax with more consistent parsing rules than Markdown.
+Djot Markup for WP adds support for the [Djot](https://djot.net/) markup language in WordPress. Djot is created by John MacFarlane (creator of CommonMark and Pandoc) and offers cleaner syntax with more consistent parsing rules than Markdown.
 
 = Features =
 
@@ -47,6 +47,7 @@ WP Djot adds support for the [Djot](https://djot.net/) markup language in WordPr
 
 = Links =
 
+* [WordPress.org Plugin Page](https://wordpress.org/plugins/djot-markup-for-wp/)
 * [Djot Syntax Reference](https://djot.net/)
 * [GitHub Repository](https://github.com/php-collective/wp-djot)
 * [Report Issues](https://github.com/php-collective/wp-djot/issues)
@@ -56,7 +57,7 @@ WP Djot adds support for the [Djot](https://djot.net/) markup language in WordPr
 1. Upload the plugin files to `/wp-content/plugins/wp-djot`
 2. Run `composer install` in the plugin directory
 3. Activate the plugin through the 'Plugins' screen in WordPress
-4. Configure settings under Settings → WP Djot
+4. Configure settings under Settings → Djot Markup
 
 == Frequently Asked Questions ==
 

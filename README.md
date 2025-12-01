@@ -1,6 +1,9 @@
-# WP Djot
+# Djot Markup for WP
 
 [![CI](https://github.com/php-collective/wp-djot/actions/workflows/ci.yml/badge.svg)](https://github.com/php-collective/wp-djot/actions/workflows/ci.yml)
+[![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
+[![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dt/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
+[![WordPress Plugin Rating](https://img.shields.io/wordpress/plugin/stars/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://php.net)
 [![WordPress 6.0+](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org)
@@ -20,7 +23,7 @@ Djot is a light markup syntax created by John MacFarlane (creator of CommonMark 
 - **Safe Mode**: XSS protection for untrusted content (enabled by default for comments)
 - **Syntax Highlighting**: Built-in highlight.js integration with multiple themes
 - **Admin Settings**: Easy configuration through WordPress admin
-- **Template Tags**: `djot_to_html()` and `the_djot()` for theme developers
+- **Template Tags**: `wp_djot_to_html()` and `wp_djot_the()` for theme developers
 - **Dark Mode Support**: CSS automatically adapts to dark mode preferences
 - **WP-CLI Migration**: Migrate existing HTML/Markdown content to Djot with rollback support
 
@@ -43,9 +46,10 @@ cd wp-content/plugins/wp-djot
 composer install
 ```
 
-### From WordPress.org (coming soon)
+### From WordPress.org
 
-Search for "WP Djot" in the WordPress plugin directory.
+Search for "Djot Markup" in the WordPress plugin directory, or visit:
+[wordpress.org/plugins/djot-markup-for-wp](https://wordpress.org/plugins/djot-markup-for-wp/)
 
 ## Usage
 
@@ -90,13 +94,13 @@ Your Djot content here...
 
 ```php
 // Convert and return HTML
-$html = djot_to_html('# Hello *World*!');
+$html = wp_djot_to_html('# Hello *World*!');
 
 // Convert and echo HTML
-the_djot('# _Hello_ *World*!');
+wp_djot_the('# _Hello_ *World*!');
 
 // Check if content has Djot
-if (has_djot($content)) {
+if (wp_djot_has($content)) {
     // ...
 }
 ```
@@ -115,7 +119,7 @@ Content with custom CSS class
 
 ## Configuration
 
-Go to **Settings → WP Djot** to configure:
+Go to **Settings → Djot Markup** to configure:
 
 - **Content Settings**: Enable/disable for posts, pages, comments
 - **Comment Processing**: Process full comment content as Djot (not just `{djot}` blocks)

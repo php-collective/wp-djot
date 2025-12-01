@@ -1,4 +1,4 @@
-=== WP Djot ===
+=== Djot Markup for WP ===
 Contributors: dereuromark
 Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0

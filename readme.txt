@@ -2,7 +2,7 @@
 Contributors: dereuromark
 Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 8.2
 Stable tag: 1.0.0
 License: MIT
@@ -41,8 +41,8 @@ WP Djot adds support for the [Djot](https://djot.net/) markup language in WordPr
 **Template Tags:**
 
     <?php
-    $html = djot_to_html('# Hello *World*!');
-    the_djot('# _Hello_ *World*!');
+    $html = wp_djot_to_html('# Hello *World*!');
+    wp_djot_the('# _Hello_ *World*!');
     ?>
 
 = Links =

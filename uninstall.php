@@ -10,6 +10,8 @@ declare(strict_types=1);
  * @package WpDjot
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Variables are local to uninstall script
+
 // Exit if not called by WordPress
 if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;

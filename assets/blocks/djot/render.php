@@ -9,6 +9,9 @@
 
 declare(strict_types=1);
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Variables are local to block render context
+// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped by get_block_wrapper_attributes()
+
 $content = $attributes['content'] ?? '';
 
 if (empty($content)) {
@@ -30,8 +33,9 @@ $html = preg_replace_callback(
 
 $wrapper_attributes = get_block_wrapper_attributes(['class' => 'wp-djot-block-rendered']);
 
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped by get_block_wrapper_attributes()
 printf(
     '<div %s>%s</div>',
     $wrapper_attributes,
-    $html
+    wp_kses_post($html)
 );

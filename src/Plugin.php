@@ -188,16 +188,16 @@ class Plugin
 
             wp_enqueue_style(
                 'wp-djot-highlight',
-                "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/{$theme}.min.css",
+                WP_DJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
                 [],
-                '11.9.0',
+                WP_DJOT_VERSION,
             );
 
             wp_enqueue_script(
                 'wp-djot-highlight',
-                'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js',
+                WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
                 [],
-                '11.9.0',
+                WP_DJOT_VERSION,
                 true,
             );
 

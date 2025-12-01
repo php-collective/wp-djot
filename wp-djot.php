@@ -23,6 +23,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- WP_DJOT_ is our plugin prefix
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Variable is local to this file
+
 // Plugin constants
 define('WP_DJOT_VERSION', '1.0.0');
 define('WP_DJOT_PLUGIN_DIR', plugin_dir_path(__FILE__));

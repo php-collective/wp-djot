@@ -35,8 +35,8 @@ class Settings
     public function addMenuPage(): void
     {
         add_options_page(
-            __('WP Djot Settings', 'wp-djot'),
-            __('WP Djot', 'wp-djot'),
+            __('Djot Markup Settings', 'djot-markup-for-wp'),
+            __('Djot Markup', 'djot-markup-for-wp'),
             'manage_options',
             self::PAGE_SLUG,
             [$this, 'renderSettingsPage'],
@@ -55,7 +55,7 @@ class Settings
         $settingsLink = sprintf(
             '<a href="%s">%s</a>',
             admin_url('options-general.php?page=' . self::PAGE_SLUG),
-            __('Settings', 'wp-djot'),
+            __('Settings', 'djot-markup-for-wp'),
         );
 
         array_unshift($links, $settingsLink);
@@ -80,93 +80,93 @@ class Settings
         // Content Settings Section
         add_settings_section(
             'wp_djot_content',
-            __('Content Settings', 'wp-djot'),
+            __('Content Settings', 'djot-markup-for-wp'),
             [$this, 'renderContentSectionDescription'],
             self::PAGE_SLUG,
         );
 
         add_settings_field(
             'enable_posts',
-            __('Enable for Posts', 'wp-djot'),
+            __('Enable for Posts', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
             'wp_djot_content',
-            ['field' => 'enable_posts', 'description' => __('Process Djot markup in blog posts.', 'wp-djot')],
+            ['field' => 'enable_posts', 'description' => __('Process Djot markup in blog posts.', 'djot-markup-for-wp')],
         );
 
         add_settings_field(
             'enable_pages',
-            __('Enable for Pages', 'wp-djot'),
+            __('Enable for Pages', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
             'wp_djot_content',
-            ['field' => 'enable_pages', 'description' => __('Process Djot markup in pages.', 'wp-djot')],
+            ['field' => 'enable_pages', 'description' => __('Process Djot markup in pages.', 'djot-markup-for-wp')],
         );
 
         add_settings_field(
             'enable_comments',
-            __('Enable for Comments', 'wp-djot'),
+            __('Enable for Comments', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
             'wp_djot_content',
-            ['field' => 'enable_comments', 'description' => __('Process Djot markup in comments (always uses safe mode).', 'wp-djot')],
+            ['field' => 'enable_comments', 'description' => __('Process Djot markup in comments (always uses safe mode).', 'djot-markup-for-wp')],
         );
 
         add_settings_field(
             'process_full_content',
-            __('Process Full Content', 'wp-djot'),
+            __('Process Full Content', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
             'wp_djot_content',
-            ['field' => 'process_full_content', 'description' => __('Process entire post/page content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'wp-djot')],
+            ['field' => 'process_full_content', 'description' => __('Process entire post/page content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'djot-markup-for-wp')],
         );
 
         add_settings_field(
             'process_full_comments',
-            __('Process Full Comments', 'wp-djot'),
+            __('Process Full Comments', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
             'wp_djot_content',
-            ['field' => 'process_full_comments', 'description' => __('Process entire comment content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'wp-djot')],
+            ['field' => 'process_full_comments', 'description' => __('Process entire comment content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'djot-markup-for-wp')],
         );
 
         // Security Settings Section
         add_settings_section(
             'wp_djot_security',
-            __('Security Settings', 'wp-djot'),
+            __('Security Settings', 'djot-markup-for-wp'),
             [$this, 'renderSecuritySectionDescription'],
             self::PAGE_SLUG,
         );
 
         add_settings_field(
             'safe_mode',
-            __('Safe Mode', 'wp-djot'),
+            __('Safe Mode', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
             'wp_djot_security',
-            ['field' => 'safe_mode', 'description' => __('Block dangerous URL schemes and strip event handlers. Recommended for untrusted content.', 'wp-djot')],
+            ['field' => 'safe_mode', 'description' => __('Block dangerous URL schemes and strip event handlers. Recommended for untrusted content.', 'djot-markup-for-wp')],
         );
 
         // Code Highlighting Section
         add_settings_section(
             'wp_djot_highlighting',
-            __('Code Highlighting', 'wp-djot'),
+            __('Code Highlighting', 'djot-markup-for-wp'),
             [$this, 'renderHighlightingSectionDescription'],
             self::PAGE_SLUG,
         );
 
         add_settings_field(
             'highlight_code',
-            __('Enable Highlighting', 'wp-djot'),
+            __('Enable Highlighting', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
             'wp_djot_highlighting',
-            ['field' => 'highlight_code', 'description' => __('Enable syntax highlighting for code blocks using highlight.js.', 'wp-djot')],
+            ['field' => 'highlight_code', 'description' => __('Enable syntax highlighting for code blocks using highlight.js.', 'djot-markup-for-wp')],
         );
 
         add_settings_field(
             'highlight_theme',
-            __('Highlight Theme', 'wp-djot'),
+            __('Highlight Theme', 'djot-markup-for-wp'),
             [$this, 'renderThemeSelect'],
             self::PAGE_SLUG,
             'wp_djot_highlighting',
@@ -176,27 +176,27 @@ class Settings
         // Advanced Settings Section
         add_settings_section(
             'wp_djot_advanced',
-            __('Advanced Settings', 'wp-djot'),
+            __('Advanced Settings', 'djot-markup-for-wp'),
             [$this, 'renderAdvancedSectionDescription'],
             self::PAGE_SLUG,
         );
 
         add_settings_field(
             'shortcode_tag',
-            __('Shortcode Tag', 'wp-djot'),
+            __('Shortcode Tag', 'djot-markup-for-wp'),
             [$this, 'renderTextField'],
             self::PAGE_SLUG,
             'wp_djot_advanced',
-            ['field' => 'shortcode_tag', 'description' => __('The shortcode tag to use (default: djot).', 'wp-djot')],
+            ['field' => 'shortcode_tag', 'description' => __('The shortcode tag to use (default: djot).', 'djot-markup-for-wp')],
         );
 
         add_settings_field(
             'filter_priority',
-            __('Filter Priority', 'wp-djot'),
+            __('Filter Priority', 'djot-markup-for-wp'),
             [$this, 'renderNumberField'],
             self::PAGE_SLUG,
             'wp_djot_advanced',
-            ['field' => 'filter_priority', 'description' => __('Priority for content filters (lower = earlier, default: 10).', 'wp-djot')],
+            ['field' => 'filter_priority', 'description' => __('Priority for content filters (lower = earlier, default: 10).', 'djot-markup-for-wp')],
         );
     }
 
@@ -240,22 +240,22 @@ class Settings
      */
     public function renderContentSectionDescription(): void
     {
-        echo '<p>' . esc_html__('Choose where Djot markup should be processed.', 'wp-djot') . '</p>';
+        echo '<p>' . esc_html__('Choose where Djot markup should be processed.', 'djot-markup-for-wp') . '</p>';
     }
 
     public function renderSecuritySectionDescription(): void
     {
-        echo '<p>' . esc_html__('Security options for handling potentially unsafe content.', 'wp-djot') . '</p>';
+        echo '<p>' . esc_html__('Security options for handling potentially unsafe content.', 'djot-markup-for-wp') . '</p>';
     }
 
     public function renderHighlightingSectionDescription(): void
     {
-        echo '<p>' . esc_html__('Configure syntax highlighting for code blocks.', 'wp-djot') . '</p>';
+        echo '<p>' . esc_html__('Configure syntax highlighting for code blocks.', 'djot-markup-for-wp') . '</p>';
     }
 
     public function renderAdvancedSectionDescription(): void
     {
-        echo '<p>' . esc_html__('Advanced configuration options.', 'wp-djot') . '</p>';
+        echo '<p>' . esc_html__('Advanced configuration options.', 'djot-markup-for-wp') . '</p>';
     }
 
     /**
@@ -369,6 +369,6 @@ class Settings
         }
 
         echo '</select>';
-        echo '<p class="description">' . esc_html__('Choose a syntax highlighting color scheme.', 'wp-djot') . '</p>';
+        echo '<p class="description">' . esc_html__('Choose a syntax highlighting color scheme.', 'djot-markup-for-wp') . '</p>';
     }
 }

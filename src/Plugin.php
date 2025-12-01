@@ -176,7 +176,7 @@ class Plugin
     {
         // Plugin CSS
         wp_enqueue_style(
-            'wp-djot',
+            'djot-markup-for-wp',
             WP_DJOT_PLUGIN_URL . 'assets/css/djot.css',
             [],
             WP_DJOT_VERSION,

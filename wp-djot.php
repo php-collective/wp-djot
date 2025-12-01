@@ -10,7 +10,7 @@
  * Author URI: https://github.com/php-collective
  * License: MIT
  * License URI: https://opensource.org/licenses/MIT
- * Text Domain: wp-djot
+ * Text Domain: djot-markup-for-wp
  * Domain Path: /languages
  *
  * @package WpDjot
@@ -37,7 +37,7 @@ $autoloader = WP_DJOT_PLUGIN_DIR . 'vendor/autoload.php';
 if (!file_exists($autoloader)) {
     add_action('admin_notices', static function (): void {
         echo '<div class="notice notice-error"><p>';
-        echo esc_html__('WP Djot: Please run "composer install" in the plugin directory.', 'wp-djot');
+        echo esc_html__('WP Djot: Please run "composer install" in the plugin directory.', 'djot-markup-for-wp');
         echo '</p></div>';
     });
 

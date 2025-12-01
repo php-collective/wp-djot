@@ -97,6 +97,12 @@ class Plugin
             return $content;
         }
 
+        // Skip if content contains rendered Djot blocks (already processed by Gutenberg)
+        if (str_contains($content, 'wp-djot-block-rendered')) {
+            // Only process {djot}...{/djot} blocks outside of rendered blocks
+            return $this->processContent($content, false);
+        }
+
         // Process full content as Djot
         if ($this->options['process_full_content']) {
             return $this->converter->convert($content, false);

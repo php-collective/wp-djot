@@ -108,6 +108,25 @@
                 }
             }
 
+            // Auto-grow textarea
+            function autoGrow( textarea ) {
+                if ( textarea ) {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                }
+            }
+
+            // Auto-grow on content change or when returning from preview
+            useEffect( function() {
+                if ( ! isPreviewMode && textareaRef.current ) {
+                    // Small delay to ensure textarea is rendered
+                    setTimeout( function() {
+                        const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                        autoGrow( textarea );
+                    }, 10 );
+                }
+            }, [ content, isPreviewMode ] );
+
             // Insert text at cursor or wrap selection
             function insertMarkup( before, after, placeholder ) {
                 after = after || '';

@@ -1,5 +1,4 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- wp_djot_ is our plugin prefix
 
 declare(strict_types=1);
 
@@ -8,6 +7,8 @@ namespace WpDjot;
 use Djot\DjotConverter;
 use HTMLPurifier;
 use HTMLPurifier_Config;
+
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- wp_djot_ is our plugin prefix
 
 /**
  * Wrapper around the Djot converter with WordPress-specific features.

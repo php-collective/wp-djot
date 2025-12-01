@@ -1,5 +1,4 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- wp_djot_ is our plugin prefix
 
 declare(strict_types=1);
 
@@ -10,6 +9,8 @@ declare(strict_types=1);
  */
 
 use WpDjot\Converter;
+
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- wp_djot_ is our plugin prefix
 
 /**
  * Convert Djot markup to HTML.

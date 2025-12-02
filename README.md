@@ -26,7 +26,7 @@ Djot is a light markup syntax created by John MacFarlane (creator of CommonMark 
 
 ## Example
 
-```
+````
 # Welcome to My Blog
 
 This is _emphasized_ and this is *strong*.
@@ -45,7 +45,26 @@ And a code block:
 <?php
 echo "Hello, World!";
 ```
-```
+````
+
+**Renders as:**
+
+> # Welcome to My Blog
+>
+> This is _emphasized_ and this is **strong**.
+>
+> Here's a [link to Djot](https://djot.net/) and some `inline code`.
+>
+> - First item
+> - Second item
+> - Third item
+>
+> > A blockquote with some wisdom.
+>
+> ```php
+> <?php
+> echo "Hello, World!";
+> ```
 
 ## Requirements
 

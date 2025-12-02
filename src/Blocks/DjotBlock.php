@@ -50,7 +50,11 @@ class DjotBlock
                 'content' => [
                     'required' => true,
                     'type' => 'string',
-                    'sanitize_callback' => 'sanitize_textarea_field',
+                    // Don't use sanitize_textarea_field - it strips HTML tags
+                    // which breaks raw HTML blocks. Security is handled by:
+                    // 1. permission_callback requiring edit_posts capability
+                    // 2. Profile-based feature restrictions in the converter
+                    'sanitize_callback' => static fn (string $value): string => wp_unslash($value),
                 ],
             ],
         ]);

@@ -128,6 +128,9 @@ class Plugin
      */
     public function filterComment(string $content): string
     {
+        // Debug: Uncomment to see what content looks like
+        // error_log('Comment content: ' . var_export($content, true));
+
         // Process full comment as Djot with comment profile
         if ($this->options['process_full_comments']) {
             return $this->converter->convertComment($content);
@@ -240,7 +243,7 @@ class Plugin
             'highlight_code' => true,
             'highlight_theme' => 'github',
             'shortcode_tag' => 'djot',
-            'filter_priority' => 6,
+            'filter_priority' => 31,
         ];
 
         $options = get_option('wp_djot_settings', []);

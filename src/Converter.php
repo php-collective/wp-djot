@@ -131,7 +131,14 @@ class Converter
         // Normalize line endings
         $djot = str_replace(["\r\n", "\r"], "\n", $djot);
 
-        // WordPress sometimes adds extra paragraph tags - remove them
+        // Remove <br> tags that WordPress wpautop() may have added
+        // This is critical for fenced code blocks - <br> before ``` breaks recognition
+        $djot = preg_replace('/<br\s*\/?>\n?/i', "\n", $djot) ?? $djot;
+
+        // Remove <p>...</p> wrapper tags that wpautop() adds (preserve content)
+        $djot = preg_replace('/<p>(.*?)<\/p>/s', "$1\n\n", $djot) ?? $djot;
+
+        // WordPress sometimes adds empty paragraph tags - remove them
         $djot = preg_replace('/<p>\s*<\/p>/', '', $djot) ?? $djot;
 
         // Decode HTML entities that WordPress may have encoded

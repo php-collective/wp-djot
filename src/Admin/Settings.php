@@ -214,7 +214,7 @@ class Settings
             [$this, 'renderNumberField'],
             self::PAGE_SLUG,
             'wp_djot_advanced',
-            ['field' => 'filter_priority', 'description' => __('Priority for content filters (lower = earlier, default: 10).', 'djot-markup-for-wp')],
+            ['field' => 'filter_priority', 'description' => __('Priority for content filters (lower = earlier). Default: 31 runs after wpautop (30).', 'djot-markup-for-wp')],
         );
     }
 
@@ -247,7 +247,7 @@ class Settings
             'highlight_code' => !empty($input['highlight_code']),
             'highlight_theme' => sanitize_text_field($input['highlight_theme'] ?? 'github'),
             'shortcode_tag' => sanitize_key($input['shortcode_tag'] ?? 'djot'),
-            'filter_priority' => (int)($input['filter_priority'] ?? 5),
+            'filter_priority' => (int)($input['filter_priority'] ?? 31),
         ];
     }
 
@@ -341,7 +341,7 @@ class Settings
     {
         $options = get_option(self::OPTION_GROUP, []);
         $field = $args['field'];
-        $value = $options[$field] ?? 10;
+        $value = $options[$field] ?? 31;
 
         printf(
             '<input type="number" id="%1$s" name="%2$s[%1$s]" value="%3$s" class="small-text" min="1" max="100" />',

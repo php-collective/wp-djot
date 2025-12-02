@@ -141,6 +141,10 @@ class Converter
         // WordPress sometimes adds empty paragraph tags - remove them
         $djot = preg_replace('/<p>\s*<\/p>/', '', $djot) ?? $djot;
 
+        // Ensure blank line before code fences (required by Djot for block recognition)
+        // Without a blank line, ``` is treated as inline code, not a code block
+        $djot = preg_replace('/([^\n])\n(```)/m', "$1\n\n$2", $djot) ?? $djot;
+
         // Decode HTML entities that WordPress may have encoded
         $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 

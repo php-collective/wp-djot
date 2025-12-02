@@ -7,28 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Configurable content profiles for posts/pages and comments
-  - **Full**: All features enabled (trusted content only)
-  - **Article**: All formatting, no raw HTML (default for posts)
-  - **Comment**: Basic formatting, nofollow links (default for comments)
-  - **Minimal**: Text formatting and lists only
-- Profile settings in admin under Security Settings
-- `convertArticle()` and `convertComment()` methods in Converter
-- Lazy-loading of profile converters for better performance
-
-### Changed
-
-- Comments now use the Comment profile by default (restricted features, nofollow/ugc links)
-- Renamed `forceSafeMode` parameter to `isComment` for clarity
-
 ## [1.0.0] - 2025-12
 
 ### Added
 
 - Initial release
 - Full Djot markup syntax support via php-collective/djot
+- Configurable content profiles for posts/pages and comments
+  - **Full**: All features enabled (trusted content only)
+  - **Article**: All formatting, no raw HTML (default for posts)
+  - **Comment**: Basic formatting, nofollow links (default for comments)
+  - **Minimal**: Text formatting and lists only
+- Profile settings in admin under Security Settings
 - `[djot]...[/djot]` shortcode for posts and pages
 - `{djot}...{/djot}` curly brace syntax for content filtering
 - Admin settings page under Settings → WP Djot
@@ -36,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Security settings: safe mode for XSS protection
 - Syntax highlighting with highlight.js (12+ themes)
 - Advanced settings: custom shortcode tag, filter priority
-- Template tags: `djot_to_html()`, `the_djot()`, `has_djot()`
+- Template tags: `wp_djot_to_html()`, `wp_djot_the()`, `wp_djot_has()`
 - WordPress filters: `wp_djot_pre_convert`, `wp_djot_post_convert`
 - Dark mode CSS support
 - Multisite compatible
@@ -58,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Batch processing with progress bar
 - Preservation of WordPress shortcodes during migration
 - Preservation of Gutenberg blocks during migration
+- Documentation in `docs/` folder (profiles, WP-CLI, hooks, syntax)
 
 ### Security
 

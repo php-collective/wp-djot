@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=8.2",
-        "php-collective/djot": "^0.1"
+        "php-collective/djot": "dev-master as 0.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.4 || ^12.3",

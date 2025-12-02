@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WpDjot;
 
 use Djot\DjotConverter;
+use Djot\Profile;
 use HTMLPurifier;
 use HTMLPurifier_Config;
 
@@ -21,11 +22,44 @@ class Converter
 
     private bool $defaultSafeMode;
 
-    public function __construct(bool $safeMode = true)
+    private string $postProfile;
+
+    private string $commentProfile;
+
+    /**
+     * @var array<string, DjotConverter>
+     */
+    private array $profileConverters = [];
+
+    public function __construct(bool $safeMode = true, string $postProfile = 'article', string $commentProfile = 'comment')
     {
         $this->defaultSafeMode = $safeMode;
+        $this->postProfile = $postProfile;
+        $this->commentProfile = $commentProfile;
         $this->converter = new DjotConverter(safeMode: false);
         $this->safeConverter = new DjotConverter(safeMode: true);
+    }
+
+    /**
+     * Get or create a converter for the specified profile.
+     */
+    private function getProfileConverter(string $profileName, bool $safeMode): DjotConverter
+    {
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe');
+
+        if (!isset($this->profileConverters[$key])) {
+            $profile = match ($profileName) {
+                'full' => Profile::full(),
+                'article' => Profile::article(),
+                'comment' => Profile::comment(),
+                'minimal' => Profile::minimal(),
+                default => Profile::article(),
+            };
+
+            $this->profileConverters[$key] = new DjotConverter(safeMode: $safeMode, profile: $profile);
+        }
+
+        return $this->profileConverters[$key];
     }
 
     /**
@@ -60,6 +94,30 @@ class Converter
     public function convertUnsafe(string $djot): string
     {
         return $this->convert($djot, false);
+    }
+
+    /**
+     * Convert for articles/blog posts using configured profile.
+     */
+    public function convertArticle(string $djot): string
+    {
+        $djot = $this->preProcess($djot);
+        $converter = $this->getProfileConverter($this->postProfile, false);
+        $html = $converter->convert($djot);
+
+        return $this->postProcess($html, false);
+    }
+
+    /**
+     * Convert for comments using configured profile (always with safe mode).
+     */
+    public function convertComment(string $djot): string
+    {
+        $djot = $this->preProcess($djot);
+        $converter = $this->getProfileConverter($this->commentProfile, true);
+        $html = $converter->convert($djot);
+
+        return $this->postProcess($html, true);
     }
 
     /**

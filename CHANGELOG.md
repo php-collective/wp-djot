@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Configurable content profiles for posts/pages and comments
+  - **Full**: All features enabled (trusted content only)
+  - **Article**: All formatting, no raw HTML (default for posts)
+  - **Comment**: Basic formatting, nofollow links (default for comments)
+  - **Minimal**: Text formatting and lists only
+- Profile settings in admin under Security Settings
+- `convertArticle()` and `convertComment()` methods in Converter
+- Lazy-loading of profile converters for better performance
+
+### Changed
+
+- Comments now use the Comment profile by default (restricted features, nofollow/ugc links)
+- Renamed `forceSafeMode` parameter to `isComment` for clarity
+
 ## [1.0.0] - 2025-12
 
 ### Added

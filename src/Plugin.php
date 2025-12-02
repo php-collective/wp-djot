@@ -78,18 +78,17 @@ class Plugin
 
     /**
      * Register content filters based on settings.
+     *
+     * We run at priority 5 (before wptexturize/wpautop at 10) to get clean content.
+     * Our HTML output uses <pre><code> which these filters respect and skip.
      */
     private function registerFilters(): void
     {
-        $priority = (int)$this->options['filter_priority'];
-
         if ($this->options['enable_posts'] || $this->options['enable_pages']) {
-            add_filter('the_content', [$this, 'filterContent'], $priority);
+            add_filter('the_content', [$this, 'filterContent'], 5);
         }
 
         if ($this->options['enable_comments']) {
-            // Run BEFORE wptexturize (priority 10) to get clean content
-            // This avoids smart quote mangling of code fences like ```
             add_filter('comment_text', [$this, 'filterComment'], 5);
         }
     }
@@ -242,7 +241,6 @@ class Plugin
             'highlight_code' => true,
             'highlight_theme' => 'github',
             'shortcode_tag' => 'djot',
-            'filter_priority' => 31,
         ];
 
         $options = get_option('wp_djot_settings', []);

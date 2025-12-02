@@ -98,10 +98,13 @@ class Converter
 
     /**
      * Convert for articles/blog posts using configured profile.
+     *
+     * Posts are processed before WordPress filters (wptexturize, wpautop)
+     * so we receive raw content without HTML artifacts.
      */
     public function convertArticle(string $djot): string
     {
-        $djot = $this->preProcess($djot);
+        $djot = $this->preProcess($djot, true);
         $converter = $this->getProfileConverter($this->postProfile, false);
         $html = $converter->convert($djot);
 

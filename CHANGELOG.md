@@ -56,5 +56,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/php-collective/wp-djot/releases/tag/v1.0.0
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/php-collective/wp-djot/releases/tag/1.0.0

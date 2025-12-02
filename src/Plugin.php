@@ -88,10 +88,9 @@ class Plugin
         }
 
         if ($this->options['enable_comments']) {
-            // Comments MUST run after wpautop (priority 30) to handle <br> tags
-            // Enforce minimum priority of 31 regardless of user setting
-            $commentPriority = max($priority, 31);
-            add_filter('comment_text', [$this, 'filterComment'], $commentPriority);
+            // Run BEFORE wptexturize (priority 10) to get clean content
+            // This avoids smart quote mangling of code fences like ```
+            add_filter('comment_text', [$this, 'filterComment'], 5);
         }
     }
 

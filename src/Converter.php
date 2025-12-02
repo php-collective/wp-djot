@@ -110,10 +110,13 @@ class Converter
 
     /**
      * Convert for comments using configured profile (always with safe mode).
+     *
+     * Comments are processed before WordPress filters (wptexturize, wpautop)
+     * so we receive raw content without HTML artifacts.
      */
     public function convertComment(string $djot): string
     {
-        $djot = $this->preProcess($djot);
+        $djot = $this->preProcess($djot, true);
         $converter = $this->getProfileConverter($this->commentProfile, true);
         $html = $converter->convert($djot);
 
@@ -122,8 +125,10 @@ class Converter
 
     /**
      * Pre-process Djot content before conversion.
+     *
+     * @param bool $isRaw True if content is raw (before WordPress filters), false if already processed by wpautop/wptexturize
      */
-    private function preProcess(string $djot): string
+    private function preProcess(string $djot, bool $isRaw = false): string
     {
         // Trim leading/trailing whitespace
         $djot = trim($djot);
@@ -131,27 +136,25 @@ class Converter
         // Normalize line endings
         $djot = str_replace(["\r\n", "\r"], "\n", $djot);
 
-        // Remove <br> tags that WordPress wpautop() may have added
-        // This is critical for fenced code blocks - <br> before ``` breaks recognition
-        $djot = preg_replace('/<br\s*\/?>\n?/i', "\n", $djot) ?? $djot;
+        // Only clean up WordPress HTML artifacts if content was already processed
+        if (!$isRaw) {
+            // Remove <br> tags that WordPress wpautop() may have added
+            // This is critical for fenced code blocks - <br> before ``` breaks recognition
+            $djot = preg_replace('/<br\s*\/?>\n?/i', "\n", $djot) ?? $djot;
 
-        // Remove <p>...</p> wrapper tags that wpautop() adds (preserve content)
-        $djot = preg_replace('/<p>(.*?)<\/p>/s', "$1\n\n", $djot) ?? $djot;
+            // Remove <p>...</p> wrapper tags that wpautop() adds (preserve content)
+            $djot = preg_replace('/<p>(.*?)<\/p>/s', "$1\n\n", $djot) ?? $djot;
 
-        // WordPress sometimes adds empty paragraph tags - remove them
-        $djot = preg_replace('/<p>\s*<\/p>/', '', $djot) ?? $djot;
+            // WordPress sometimes adds empty paragraph tags - remove them
+            $djot = preg_replace('/<p>\s*<\/p>/', '', $djot) ?? $djot;
 
-        // Decode HTML entities that WordPress may have encoded
-        $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            // Decode HTML entities that WordPress may have encoded
+            $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-        // Fix smart quotes that wptexturize() converted from backticks
-        // ``` becomes "` or "` (curly quote + backtick) - convert back
-        // Using explicit Unicode: U+201C (") and U+201D (")
-        $djot = str_replace(["\u{201C}`", "`\u{201D}", "\u{201D}`", "`\u{201C}"], '```', $djot);
-
-        // Ensure blank line before code fences (required by Djot for block recognition)
-        // Without a blank line, ``` is treated as inline code, not a code block
-        $djot = preg_replace('/([^\n])\n(```)/m', "$1\n\n$2", $djot) ?? $djot;
+            // Ensure blank line before code fences (required by Djot for block recognition)
+            // Without a blank line, ``` is treated as inline code, not a code block
+            $djot = preg_replace('/([^\n])\n(```)/m', "$1\n\n$2", $djot) ?? $djot;
+        }
 
         /**
          * Filter Djot content before conversion.

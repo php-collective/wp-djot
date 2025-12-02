@@ -147,6 +147,24 @@ class Settings
             ['field' => 'safe_mode', 'description' => __('Block dangerous URL schemes and strip event handlers. Recommended for untrusted content.', 'djot-markup-for-wp')],
         );
 
+        add_settings_field(
+            'post_profile',
+            __('Posts/Pages Profile', 'djot-markup-for-wp'),
+            [$this, 'renderProfileSelect'],
+            self::PAGE_SLUG,
+            'wp_djot_security',
+            ['field' => 'post_profile', 'description' => __('Feature restrictions for posts and pages.', 'djot-markup-for-wp')],
+        );
+
+        add_settings_field(
+            'comment_profile',
+            __('Comments Profile', 'djot-markup-for-wp'),
+            [$this, 'renderProfileSelect'],
+            self::PAGE_SLUG,
+            'wp_djot_security',
+            ['field' => 'comment_profile', 'description' => __('Feature restrictions for user comments.', 'djot-markup-for-wp')],
+        );
+
         // Code Highlighting Section
         add_settings_section(
             'wp_djot_highlighting',
@@ -189,15 +207,6 @@ class Settings
             'wp_djot_advanced',
             ['field' => 'shortcode_tag', 'description' => __('The shortcode tag to use (default: djot).', 'djot-markup-for-wp')],
         );
-
-        add_settings_field(
-            'filter_priority',
-            __('Filter Priority', 'djot-markup-for-wp'),
-            [$this, 'renderNumberField'],
-            self::PAGE_SLUG,
-            'wp_djot_advanced',
-            ['field' => 'filter_priority', 'description' => __('Priority for content filters (lower = earlier, default: 10).', 'djot-markup-for-wp')],
-        );
     }
 
     /**
@@ -209,6 +218,10 @@ class Settings
      */
     public function sanitizeSettings(array $input): array
     {
+        $validPostProfiles = ['full', 'article', 'comment', 'minimal'];
+        // Comments can never use 'full' profile for security reasons
+        $validCommentProfiles = ['article', 'comment', 'minimal'];
+
         return [
             'enable_posts' => !empty($input['enable_posts']),
             'enable_pages' => !empty($input['enable_pages']),
@@ -216,10 +229,15 @@ class Settings
             'process_full_content' => !empty($input['process_full_content']),
             'process_full_comments' => !empty($input['process_full_comments']),
             'safe_mode' => !empty($input['safe_mode']),
+            'post_profile' => in_array($input['post_profile'] ?? '', $validPostProfiles, true)
+                ? $input['post_profile']
+                : 'article',
+            'comment_profile' => in_array($input['comment_profile'] ?? '', $validCommentProfiles, true)
+                ? $input['comment_profile']
+                : 'comment',
             'highlight_code' => !empty($input['highlight_code']),
             'highlight_theme' => sanitize_text_field($input['highlight_theme'] ?? 'github'),
             'shortcode_tag' => sanitize_key($input['shortcode_tag'] ?? 'djot'),
-            'filter_priority' => (int)($input['filter_priority'] ?? 5),
         ];
     }
 
@@ -305,29 +323,6 @@ class Settings
     }
 
     /**
-     * Render number field.
-     *
-     * @param array<string, mixed> $args
-     */
-    public function renderNumberField(array $args): void
-    {
-        $options = get_option(self::OPTION_GROUP, []);
-        $field = $args['field'];
-        $value = $options[$field] ?? 10;
-
-        printf(
-            '<input type="number" id="%1$s" name="%2$s[%1$s]" value="%3$s" class="small-text" min="1" max="100" />',
-            esc_attr($field),
-            esc_attr(self::OPTION_GROUP),
-            esc_attr((string)$value),
-        );
-
-        if (!empty($args['description'])) {
-            printf('<p class="description">%s</p>', esc_html($args['description']));
-        }
-    }
-
-    /**
      * Render theme select dropdown.
      *
      * @param array<string, mixed> $args
@@ -370,5 +365,79 @@ class Settings
 
         echo '</select>';
         echo '<p class="description">' . esc_html__('Choose a syntax highlighting color scheme.', 'djot-markup-for-wp') . '</p>';
+    }
+
+    /**
+     * Render profile select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
+    public function renderProfileSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $isCommentProfile = $field === 'comment_profile';
+        $default = $isCommentProfile ? 'comment' : 'article';
+        $current = $options[$field] ?? $default;
+
+        $profiles = [
+            'full' => [
+                'label' => __('Full', 'djot-markup-for-wp'),
+                'description' => __('All features enabled. Use only for fully trusted content.', 'djot-markup-for-wp'),
+                'posts_only' => true,
+            ],
+            'article' => [
+                'label' => __('Article', 'djot-markup-for-wp'),
+                'description' => __('All formatting, no raw HTML. Good for blog posts.', 'djot-markup-for-wp'),
+                'posts_only' => false,
+            ],
+            'comment' => [
+                'label' => __('Comment', 'djot-markup-for-wp'),
+                'description' => __('Basic formatting only. No headings, images, or tables. Links get nofollow.', 'djot-markup-for-wp'),
+                'posts_only' => false,
+            ],
+            'minimal' => [
+                'label' => __('Minimal', 'djot-markup-for-wp'),
+                'description' => __('Text formatting and lists only. No links or images.', 'djot-markup-for-wp'),
+                'posts_only' => false,
+            ],
+        ];
+
+        // Filter out posts-only profiles for comments
+        if ($isCommentProfile) {
+            $profiles = array_filter($profiles, fn ($p) => !$p['posts_only']);
+        }
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+
+        foreach ($profiles as $value => $profile) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr($value),
+                selected($current, $value, false),
+                esc_html($profile['label']),
+            );
+        }
+
+        echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
+
+        // Show profile details
+        echo '<ul class="description" style="margin-top: 5px; font-size: 12px;">';
+        foreach ($profiles as $value => $profile) {
+            printf(
+                '<li><strong>%s:</strong> %s</li>',
+                esc_html($profile['label']),
+                esc_html($profile['description']),
+            );
+        }
+        echo '</ul>';
     }
 }

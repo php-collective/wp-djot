@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WpDjot;
 
 use Djot\DjotConverter;
+use Djot\Profile;
 use HTMLPurifier;
 use HTMLPurifier_Config;
 
@@ -21,11 +22,44 @@ class Converter
 
     private bool $defaultSafeMode;
 
-    public function __construct(bool $safeMode = true)
+    private string $postProfile;
+
+    private string $commentProfile;
+
+    /**
+     * @var array<string, \Djot\DjotConverter>
+     */
+    private array $profileConverters = [];
+
+    public function __construct(bool $safeMode = true, string $postProfile = 'article', string $commentProfile = 'comment')
     {
         $this->defaultSafeMode = $safeMode;
+        $this->postProfile = $postProfile;
+        $this->commentProfile = $commentProfile;
         $this->converter = new DjotConverter(safeMode: false);
         $this->safeConverter = new DjotConverter(safeMode: true);
+    }
+
+    /**
+     * Get or create a converter for the specified profile.
+     */
+    private function getProfileConverter(string $profileName, bool $safeMode): DjotConverter
+    {
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe');
+
+        if (!isset($this->profileConverters[$key])) {
+            $profile = match ($profileName) {
+                'full' => Profile::full(),
+                'article' => Profile::article(),
+                'comment' => Profile::comment(),
+                'minimal' => Profile::minimal(),
+                default => Profile::article(),
+            };
+
+            $this->profileConverters[$key] = new DjotConverter(safeMode: $safeMode, profile: $profile);
+        }
+
+        return $this->profileConverters[$key];
     }
 
     /**
@@ -63,9 +97,42 @@ class Converter
     }
 
     /**
-     * Pre-process Djot content before conversion.
+     * Convert for articles/blog posts using configured profile.
+     *
+     * Posts are processed before WordPress filters (wptexturize, wpautop)
+     * so we receive raw content without HTML artifacts.
      */
-    private function preProcess(string $djot): string
+    public function convertArticle(string $djot): string
+    {
+        $djot = $this->preProcess($djot, true);
+        $converter = $this->getProfileConverter($this->postProfile, false);
+        $html = $converter->convert($djot);
+
+        return $this->postProcess($html, false);
+    }
+
+    /**
+     * Convert for comments using configured profile (always with safe mode).
+     *
+     * Comments are processed before WordPress filters (wptexturize, wpautop)
+     * so we receive raw content without HTML artifacts.
+     */
+    public function convertComment(string $djot): string
+    {
+        $djot = $this->preProcess($djot, true);
+        $converter = $this->getProfileConverter($this->commentProfile, true);
+        $html = $converter->convert($djot);
+
+        return $this->postProcess($html, true);
+    }
+
+    /**
+     * Pre-process Djot content before conversion.
+     *
+     * @param string $djot
+     * @param bool $isRaw True if content is raw (before WordPress filters), false if already processed by wpautop/wptexturize
+     */
+    private function preProcess(string $djot, bool $isRaw = false): string
     {
         // Trim leading/trailing whitespace
         $djot = trim($djot);
@@ -73,11 +140,25 @@ class Converter
         // Normalize line endings
         $djot = str_replace(["\r\n", "\r"], "\n", $djot);
 
-        // WordPress sometimes adds extra paragraph tags - remove them
-        $djot = preg_replace('/<p>\s*<\/p>/', '', $djot) ?? $djot;
+        // Only clean up WordPress HTML artifacts if content was already processed
+        if (!$isRaw) {
+            // Remove <br> tags that WordPress wpautop() may have added
+            // This is critical for fenced code blocks - <br> before ``` breaks recognition
+            $djot = preg_replace('/<br\s*\/?>\n?/i', "\n", $djot) ?? $djot;
 
-        // Decode HTML entities that WordPress may have encoded
-        $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            // Remove <p>...</p> wrapper tags that wpautop() adds (preserve content)
+            $djot = preg_replace('/<p>(.*?)<\/p>/s', "$1\n\n", $djot) ?? $djot;
+
+            // WordPress sometimes adds empty paragraph tags - remove them
+            $djot = preg_replace('/<p>\s*<\/p>/', '', $djot) ?? $djot;
+
+            // Decode HTML entities that WordPress may have encoded
+            $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            // Ensure blank line before code fences (required by Djot for block recognition)
+            // Without a blank line, ``` is treated as inline code, not a code block
+            $djot = preg_replace('/([^\n])\n(```)/m', "$1\n\n$2", $djot) ?? $djot;
+        }
 
         /**
          * Filter Djot content before conversion.

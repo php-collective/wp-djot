@@ -52,14 +52,19 @@ class DjotShortcode
             $tag,
         );
 
-        // Determine safe mode
-        $safeMode = null;
+        // Determine if safe mode is explicitly set
+        $explicitSafeMode = null;
         if ($attributes['safe'] !== null) {
-            $safeMode = filter_var($attributes['safe'], FILTER_VALIDATE_BOOLEAN);
+            $explicitSafeMode = filter_var($attributes['safe'], FILTER_VALIDATE_BOOLEAN);
         }
 
-        // Convert content
-        $html = $this->converter->convert($content, $safeMode);
+        // Convert content using post profile (shortcodes are typically in posts/pages)
+        // If safe="true" is explicitly set, use safe converter instead
+        if ($explicitSafeMode === true) {
+            $html = $this->converter->convertSafe($content);
+        } else {
+            $html = $this->converter->convertArticle($content);
+        }
 
         // Add custom class if provided
         if (!empty($attributes['class'])) {

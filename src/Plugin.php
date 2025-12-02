@@ -34,7 +34,11 @@ class Plugin
     public function init(): void
     {
         $this->options = $this->getOptions();
-        $this->converter = new Converter($this->options['safe_mode']);
+        $this->converter = new Converter(
+            $this->options['safe_mode'],
+            $this->options['post_profile'],
+            $this->options['comment_profile'],
+        );
         $this->shortcode = new DjotShortcode($this->converter);
 
         // Register shortcode
@@ -74,17 +78,18 @@ class Plugin
 
     /**
      * Register content filters based on settings.
+     *
+     * We run at priority 5 (before wptexturize/wpautop at 10) to get clean content.
+     * Our HTML output uses <pre><code> which these filters respect and skip.
      */
     private function registerFilters(): void
     {
-        $priority = (int)$this->options['filter_priority'];
-
         if ($this->options['enable_posts'] || $this->options['enable_pages']) {
-            add_filter('the_content', [$this, 'filterContent'], $priority);
+            add_filter('the_content', [$this, 'filterContent'], 5);
         }
 
         if ($this->options['enable_comments']) {
-            add_filter('comment_text', [$this, 'filterComment'], $priority);
+            add_filter('comment_text', [$this, 'filterComment'], 5);
         }
     }
 
@@ -103,9 +108,9 @@ class Plugin
             return $this->processContent($content, false);
         }
 
-        // Process full content as Djot
+        // Process full content as Djot using configured post profile
         if ($this->options['process_full_content']) {
-            return $this->converter->convert($content, false);
+            return $this->converter->convertArticle($content);
         }
 
         // Only process {djot}...{/djot} blocks
@@ -113,13 +118,20 @@ class Plugin
     }
 
     /**
-     * Filter comment content (always uses safe mode).
+     * Filter comment content (uses comment profile with safe mode).
+     *
+     * Comment profile restrictions:
+     * - No headings (prevents disrupting page structure)
+     * - No images (prevents spam/inappropriate content)
+     * - No tables (too complex for comments)
+     * - No raw HTML (XSS prevention)
+     * - Links get rel="nofollow ugc" (SEO spam prevention)
      */
     public function filterComment(string $content): string
     {
-        // Process full comment as Djot
+        // Process full comment as Djot with comment profile
         if ($this->options['process_full_comments']) {
-            return $this->converter->convertSafe($content);
+            return $this->converter->convertComment($content);
         }
 
         // Only process {djot}...{/djot} blocks
@@ -128,20 +140,23 @@ class Plugin
 
     /**
      * Process content with Djot converter.
+     *
+     * @param string $content
+     * @param bool $isComment Whether this is comment content (uses comment profile)
      */
-    private function processContent(string $content, bool $forceSafeMode): string
+    private function processContent(string $content, bool $isComment): string
     {
         // Check for {djot}...{/djot} blocks
         $pattern = '/\{djot\}(.*?)\{\/djot\}/s';
 
-        return (string)preg_replace_callback($pattern, function (array $matches) use ($forceSafeMode): string {
+        return (string)preg_replace_callback($pattern, function (array $matches) use ($isComment): string {
             $djotContent = $matches[1];
 
-            if ($forceSafeMode) {
-                return $this->converter->convertSafe($djotContent);
+            if ($isComment) {
+                return $this->converter->convertComment($djotContent);
             }
 
-            return $this->converter->convert($djotContent);
+            return $this->converter->convertArticle($djotContent);
         }, $content);
     }
 
@@ -222,10 +237,11 @@ class Plugin
             'process_full_content' => true,
             'process_full_comments' => true,
             'safe_mode' => true,
+            'post_profile' => 'article',
+            'comment_profile' => 'comment',
             'highlight_code' => true,
             'highlight_theme' => 'github',
             'shortcode_tag' => 'djot',
-            'filter_priority' => 6,
         ];
 
         $options = get_option('wp_djot_settings', []);

@@ -18,8 +18,12 @@ if (empty($content)) {
     return;
 }
 
-$converter = new WpDjot\Converter(false);
-$html = $converter->convert($content);
+// Get settings to use configured post profile
+$options = get_option('wp_djot_settings', []);
+$postProfile = $options['post_profile'] ?? 'article';
+
+$converter = new WpDjot\Converter(false, $postProfile, 'comment');
+$html = $converter->convertArticle($content);
 
 // Escape shortcode brackets inside <code> and <pre> tags to prevent WordPress processing
 $html = preg_replace_callback(

@@ -88,7 +88,10 @@ class Plugin
         }
 
         if ($this->options['enable_comments']) {
-            add_filter('comment_text', [$this, 'filterComment'], $priority);
+            // Comments MUST run after wpautop (priority 30) to handle <br> tags
+            // Enforce minimum priority of 31 regardless of user setting
+            $commentPriority = max($priority, 31);
+            add_filter('comment_text', [$this, 'filterComment'], $commentPriority);
         }
     }
 

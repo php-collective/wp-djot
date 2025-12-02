@@ -227,7 +227,9 @@ class Settings
      */
     public function sanitizeSettings(array $input): array
     {
-        $validProfiles = ['full', 'article', 'comment', 'minimal'];
+        $validPostProfiles = ['full', 'article', 'comment', 'minimal'];
+        // Comments can never use 'full' profile for security reasons
+        $validCommentProfiles = ['article', 'comment', 'minimal'];
 
         return [
             'enable_posts' => !empty($input['enable_posts']),
@@ -236,10 +238,10 @@ class Settings
             'process_full_content' => !empty($input['process_full_content']),
             'process_full_comments' => !empty($input['process_full_comments']),
             'safe_mode' => !empty($input['safe_mode']),
-            'post_profile' => in_array($input['post_profile'] ?? 'article', $validProfiles, true)
+            'post_profile' => in_array($input['post_profile'] ?? '', $validPostProfiles, true)
                 ? $input['post_profile']
                 : 'article',
-            'comment_profile' => in_array($input['comment_profile'] ?? 'comment', $validProfiles, true)
+            'comment_profile' => in_array($input['comment_profile'] ?? '', $validCommentProfiles, true)
                 ? $input['comment_profile']
                 : 'comment',
             'highlight_code' => !empty($input['highlight_code']),
@@ -407,27 +409,37 @@ class Settings
     {
         $options = get_option(self::OPTION_GROUP, []);
         $field = $args['field'];
-        $default = $field === 'comment_profile' ? 'comment' : 'article';
+        $isCommentProfile = $field === 'comment_profile';
+        $default = $isCommentProfile ? 'comment' : 'article';
         $current = $options[$field] ?? $default;
 
         $profiles = [
             'full' => [
                 'label' => __('Full', 'djot-markup-for-wp'),
                 'description' => __('All features enabled. Use only for fully trusted content.', 'djot-markup-for-wp'),
+                'posts_only' => true,
             ],
             'article' => [
                 'label' => __('Article', 'djot-markup-for-wp'),
                 'description' => __('All formatting, no raw HTML. Good for blog posts.', 'djot-markup-for-wp'),
+                'posts_only' => false,
             ],
             'comment' => [
                 'label' => __('Comment', 'djot-markup-for-wp'),
                 'description' => __('Basic formatting only. No headings, images, or tables. Links get nofollow.', 'djot-markup-for-wp'),
+                'posts_only' => false,
             ],
             'minimal' => [
                 'label' => __('Minimal', 'djot-markup-for-wp'),
                 'description' => __('Text formatting and lists only. No links or images.', 'djot-markup-for-wp'),
+                'posts_only' => false,
             ],
         ];
+
+        // Filter out posts-only profiles for comments
+        if ($isCommentProfile) {
+            $profiles = array_filter($profiles, fn ($p) => !$p['posts_only']);
+        }
 
         printf(
             '<select id="%1$s" name="%2$s[%1$s]">',

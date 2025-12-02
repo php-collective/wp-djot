@@ -107,9 +107,9 @@ class Plugin
             return $this->processContent($content, false);
         }
 
-        // Process full content as Djot
+        // Process full content as Djot using configured post profile
         if ($this->options['process_full_content']) {
-            return $this->converter->convert($content, false);
+            return $this->converter->convertArticle($content);
         }
 
         // Only process {djot}...{/djot} blocks
@@ -154,7 +154,7 @@ class Plugin
                 return $this->converter->convertComment($djotContent);
             }
 
-            return $this->converter->convert($djotContent);
+            return $this->converter->convertArticle($djotContent);
         }, $content);
     }
 

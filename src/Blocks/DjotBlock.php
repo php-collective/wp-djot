@@ -75,7 +75,7 @@ class DjotBlock
             return new WP_REST_Response(['html' => ''], 200);
         }
 
-        $html = $this->converter->convert($content, false);
+        $html = $this->converter->convertArticle($content);
 
         // Remove the wrapper div for preview (it's added by the block itself)
         $html = preg_replace('/^<div class="djot-content">(.*)<\/div>$/s', '$1', $html) ?? $html;

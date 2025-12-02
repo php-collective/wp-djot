@@ -17,17 +17,25 @@ use WpDjot\Converter;
  *
  * @param string $djot The Djot markup to convert.
  * @param bool $safeMode Whether to use safe mode (default: true).
+ * @param string|null $context Context: 'post' uses post profile, 'comment' uses comment profile.
  * @return string The converted HTML.
  */
-function wp_djot_to_html(string $djot, bool $safeMode = true): string
+function wp_djot_to_html(string $djot, bool $safeMode = true, ?string $context = 'post'): string
 {
     static $converter = null;
 
     if ($converter === null) {
-        $converter = new Converter($safeMode);
+        $options = get_option('wp_djot_settings', []);
+        $postProfile = $options['post_profile'] ?? 'article';
+        $commentProfile = $options['comment_profile'] ?? 'comment';
+        $converter = new Converter($safeMode, $postProfile, $commentProfile);
     }
 
-    return $converter->convert($djot, $safeMode);
+    if ($context === 'comment') {
+        return $converter->convertComment($djot);
+    }
+
+    return $converter->convertArticle($djot);
 }
 
 /**
@@ -35,11 +43,12 @@ function wp_djot_to_html(string $djot, bool $safeMode = true): string
  *
  * @param string $djot The Djot markup to convert.
  * @param bool $safeMode Whether to use safe mode (default: true).
+ * @param string|null $context Context: 'post' uses post profile, 'comment' uses comment profile.
  */
-function wp_djot_the(string $djot, bool $safeMode = true): void
+function wp_djot_the(string $djot, bool $safeMode = true, ?string $context = 'post'): void
 {
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML output is intentional, already sanitized by converter
-    echo wp_kses_post(wp_djot_to_html($djot, $safeMode));
+    echo wp_kses_post(wp_djot_to_html($djot, $safeMode, $context));
 }
 
 /**

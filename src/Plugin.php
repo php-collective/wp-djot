@@ -141,6 +141,7 @@ class Plugin
     /**
      * Process content with Djot converter.
      *
+     * @param string $content
      * @param bool $isComment Whether this is comment content (uses comment profile)
      */
     private function processContent(string $content, bool $isComment): string

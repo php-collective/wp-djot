@@ -27,7 +27,7 @@ class Converter
     private string $commentProfile;
 
     /**
-     * @var array<string, DjotConverter>
+     * @var array<string, \Djot\DjotConverter>
      */
     private array $profileConverters = [];
 
@@ -129,6 +129,7 @@ class Converter
     /**
      * Pre-process Djot content before conversion.
      *
+     * @param string $djot
      * @param bool $isRaw True if content is raw (before WordPress filters), false if already processed by wpautop/wptexturize
      */
     private function preProcess(string $djot, bool $isRaw = false): string

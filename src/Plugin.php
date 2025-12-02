@@ -131,9 +131,6 @@ class Plugin
      */
     public function filterComment(string $content): string
     {
-        // Debug: Uncomment to see what content looks like
-        // error_log('Comment content: ' . var_export($content, true));
-
         // Process full comment as Djot with comment profile
         if ($this->options['process_full_comments']) {
             return $this->converter->convertComment($content);

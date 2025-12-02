@@ -141,12 +141,17 @@ class Converter
         // WordPress sometimes adds empty paragraph tags - remove them
         $djot = preg_replace('/<p>\s*<\/p>/', '', $djot) ?? $djot;
 
+        // Decode HTML entities that WordPress may have encoded
+        $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        // Fix smart quotes that wptexturize() converted from backticks
+        // ``` becomes "` or "` (curly quote + backtick) - convert back
+        // Using explicit Unicode: U+201C (") and U+201D (")
+        $djot = str_replace(["\u{201C}`", "`\u{201D}", "\u{201D}`", "`\u{201C}"], '```', $djot);
+
         // Ensure blank line before code fences (required by Djot for block recognition)
         // Without a blank line, ``` is treated as inline code, not a code block
         $djot = preg_replace('/([^\n])\n(```)/m', "$1\n\n$2", $djot) ?? $djot;
-
-        // Decode HTML entities that WordPress may have encoded
-        $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         /**
          * Filter Djot content before conversion.

@@ -89,6 +89,7 @@ When installed, HTMLPurifier will automatically be used for sanitizing comment o
 ## More Documentation
 
 - [Content Profiles](profiles.md) - Configure feature restrictions for posts and comments
+- [Customization](customization.md) - Extend Djot with custom patterns, render handlers, @mentions, and more
 - [WP-CLI Commands](wp-cli.md) - Migrate existing content to Djot
 - [Hooks and Filters](hooks.md) - Customize plugin behavior
 - [Djot Syntax](syntax.md) - Quick reference for Djot markup

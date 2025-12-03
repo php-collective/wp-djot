@@ -42,8 +42,10 @@ class Converter
 
     /**
      * Get or create a converter for the specified profile.
+     *
+     * @param string $context Context name for filters: 'article' or 'comment'
      */
-    private function getProfileConverter(string $profileName, bool $safeMode): DjotConverter
+    private function getProfileConverter(string $profileName, bool $safeMode, string $context = 'article'): DjotConverter
     {
         $key = $profileName . ($safeMode ? '_safe' : '_unsafe');
 
@@ -56,7 +58,22 @@ class Converter
                 default => Profile::article(),
             };
 
-            $this->profileConverters[$key] = new DjotConverter(safeMode: $safeMode, profile: $profile);
+            $converter = new DjotConverter(safeMode: $safeMode, profile: $profile);
+
+            // Allow customization via WordPress filters
+            if (function_exists('apply_filters')) {
+                /** @var DjotConverter $converter */
+                $converter = apply_filters('wp_djot_converter', $converter, $context);
+
+                // Post-type specific filter
+                $postType = function_exists('get_post_type') ? get_post_type() : null;
+                if ($postType) {
+                    /** @var DjotConverter $converter */
+                    $converter = apply_filters("wp_djot_converter_{$postType}", $converter, $context);
+                }
+            }
+
+            $this->profileConverters[$key] = $converter;
         }
 
         return $this->profileConverters[$key];
@@ -105,7 +122,7 @@ class Converter
     public function convertArticle(string $djot): string
     {
         $djot = $this->preProcess($djot, true);
-        $converter = $this->getProfileConverter($this->postProfile, false);
+        $converter = $this->getProfileConverter($this->postProfile, false, 'article');
         $html = $converter->convert($djot);
 
         return $this->postProcess($html, false);
@@ -120,7 +137,7 @@ class Converter
     public function convertComment(string $djot): string
     {
         $djot = $this->preProcess($djot, true);
-        $converter = $this->getProfileConverter($this->commentProfile, true);
+        $converter = $this->getProfileConverter($this->commentProfile, true, 'comment');
         $html = $converter->convert($djot);
 
         return $this->postProcess($html, true);

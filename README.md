@@ -91,6 +91,7 @@ composer install --no-dev
 
 - [Usage & Configuration](docs/README.md) - Getting started guide
 - [Content Profiles](docs/profiles.md) - Configure feature restrictions
+- [Customization](docs/customization.md) - Custom patterns, @mentions, render handlers
 - [WP-CLI Commands](docs/wp-cli.md) - Migrate existing content
 - [Hooks and Filters](docs/hooks.md) - Customize plugin behavior
 - [Djot Syntax](docs/syntax.md) - Quick reference

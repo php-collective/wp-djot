@@ -222,8 +222,8 @@ class Plugin
             );
         }
 
-        // Comment toolbar (only on singular posts/pages with comments open)
-        if ($this->options['enable_comments'] && is_singular() && comments_open()) {
+        // Comment toolbar (on singular posts/pages when comments are enabled)
+        if ($this->options['enable_comments'] && is_singular()) {
             wp_enqueue_script(
                 'wp-djot-comment-toolbar',
                 WP_DJOT_PLUGIN_URL . 'assets/js/comment-toolbar.js',

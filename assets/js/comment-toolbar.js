@@ -64,10 +64,13 @@
 
         if (btn.line) {
             // Line-based formatting (quote) - apply to each line
+            // Add newline before if not at start of line
+            const needsNewlineBefore = start > 0 && text[start - 1] !== '\n';
+            const prefix = needsNewlineBefore ? '\n' : '';
             const lines = selected.split('\n');
             const formatted = lines.map(line => before + line).join('\n');
-            newText = text.substring(0, start) + formatted + text.substring(end);
-            cursorPos = start + formatted.length;
+            newText = text.substring(0, start) + prefix + formatted + text.substring(end);
+            cursorPos = start + prefix.length + formatted.length;
         } else if (btn.block) {
             // Block formatting - add newlines if needed
             const needsNewlineBefore = start > 0 && text[start - 1] !== '\n';

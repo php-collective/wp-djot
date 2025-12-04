@@ -221,6 +221,17 @@ class Plugin
                 'document.addEventListener("DOMContentLoaded", function() { hljs.highlightAll(); });',
             );
         }
+
+        // Comment toolbar (only on singular posts/pages with comments open)
+        if ($this->options['enable_comments'] && is_singular() && comments_open()) {
+            wp_enqueue_script(
+                'wp-djot-comment-toolbar',
+                WP_DJOT_PLUGIN_URL . 'assets/js/comment-toolbar.js',
+                [],
+                WP_DJOT_VERSION,
+                true,
+            );
+        }
     }
 
     /**

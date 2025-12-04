@@ -231,6 +231,12 @@ class Plugin
                 WP_DJOT_VERSION,
                 true,
             );
+
+            // Pass REST API settings to JavaScript for preview
+            wp_localize_script('wp-djot-comment-toolbar', 'wpDjotSettings', [
+                'restUrl' => rest_url(),
+                'nonce' => wp_create_nonce('wp_rest'),
+            ]);
         }
     }
 

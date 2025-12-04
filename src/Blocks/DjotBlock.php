@@ -38,10 +38,11 @@ class DjotBlock
     }
 
     /**
-     * Register REST API route for live preview.
+     * Register REST API routes for live preview.
      */
     public function registerRestRoute(): void
     {
+        // Editor preview (requires edit_posts capability)
         register_rest_route('wp-djot/v1', '/render', [
             'methods' => 'POST',
             'callback' => [$this, 'renderPreview'],
@@ -55,6 +56,20 @@ class DjotBlock
                     // 1. permission_callback requiring edit_posts capability
                     // 2. Profile-based feature restrictions in the converter
                     'sanitize_callback' => static fn (string $value): string => wp_unslash($value),
+                ],
+            ],
+        ]);
+
+        // Comment preview (public, uses restricted comment profile)
+        register_rest_route('wp-djot/v1', '/preview-comment', [
+            'methods' => 'POST',
+            'callback' => [$this, 'renderCommentPreview'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'content' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_textarea_field',
                 ],
             ],
         ]);
@@ -82,6 +97,27 @@ class DjotBlock
         $html = $this->converter->convertArticle($content);
 
         // Remove the wrapper div for preview (it's added by the block itself)
+        $html = preg_replace('/^<div class="djot-content">(.*)<\/div>$/s', '$1', $html) ?? $html;
+
+        return new WP_REST_Response(['html' => $html], 200);
+    }
+
+    /**
+     * Render Djot comment content for preview.
+     *
+     * Uses comment profile with restricted features for safety.
+     */
+    public function renderCommentPreview(WP_REST_Request $request): WP_REST_Response
+    {
+        $content = $request->get_param('content');
+
+        if (!$content) {
+            return new WP_REST_Response(['html' => ''], 200);
+        }
+
+        $html = $this->converter->convertComment($content);
+
+        // Remove the wrapper div for preview
         $html = preg_replace('/^<div class="djot-content">(.*)<\/div>$/s', '$1', $html) ?? $html;
 
         return new WP_REST_Response(['html' => $html], 200);

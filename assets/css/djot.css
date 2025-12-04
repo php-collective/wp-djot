@@ -256,21 +256,32 @@
     padding: 8px 16px;
     font-size: 14px;
     font-weight: 500;
-    color: #57606a;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
+    color: #57606a !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
     cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 
-.djot-tab:hover {
-    color: #24292f;
+.djot-tab:hover,
+.djot-tab:focus {
+    color: #24292f !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    outline: none;
+    box-shadow: none !important;
 }
 
 .djot-tab.active {
-    color: #24292f;
-    border-bottom-color: #fd8c73;
+    color: #24292f !important;
+    background: transparent !important;
+    border-bottom-color: #fd8c73 !important;
+}
+
+.djot-tab.active:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Comment Toolbar */
@@ -371,15 +382,22 @@
     }
 
     .djot-tab {
-        color: #8b949e;
+        color: #8b949e !important;
     }
 
-    .djot-tab:hover {
-        color: #c9d1d9;
+    .djot-tab:hover,
+    .djot-tab:focus {
+        color: #c9d1d9 !important;
+        background: rgba(255, 255, 255, 0.05) !important;
     }
 
     .djot-tab.active {
-        color: #c9d1d9;
+        color: #c9d1d9 !important;
+        background: transparent !important;
+    }
+
+    .djot-tab.active:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
     }
 
     .djot-comment-toolbar {

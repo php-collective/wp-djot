@@ -98,9 +98,14 @@ composer install --no-dev
 
 For complete Djot syntax documentation, visit [djot.net](https://djot.net/).
 
+## See Also
+
+- [Djot](https://djot.net/) - Official Djot website with syntax reference and playground
+- [jgm/djot](https://github.com/jgm/djot) - Reference implementation in JavaScript by John MacFarlane
+- [JetBrains IDE support](https://github.com/php-collective/djot-intellij) - Plugin for PhpStorm, IntelliJ IDEA, WebStorm, etc.
+ 
 ## Credits
 
-- [Djot](https://djot.net/) by John MacFarlane
 - [djot-php](https://github.com/php-collective/djot-php) by PHP Collective
 - [highlight.js](https://highlightjs.org/) for syntax highlighting
 

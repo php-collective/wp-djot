@@ -292,13 +292,13 @@
             function onListUl() { insertBlockMarkup( '- ', 'list item' ); }
             function onListOl() { insertBlockMarkup( '1. ', 'list item' ); }
             function onHorizontalRule() { insertBlockMarkup( '\n---\n', '' ); }
-            function onCodeBlock() { insertMultiLineBlock( '```', '```', 'code here' ); }
-            function onDiv() { insertMultiLineBlock( '::: note', ':::', 'content' ); }
+            function onCodeBlock() { insertMultiLineBlock( '\n```', '```\n', 'code here' ); }
+            function onDiv() { insertMultiLineBlock( '\n::: note', ':::\n', 'content' ); }
             function onFootnote() { insertMarkup( '[^', ']', 'note' ); }
 
             function onTable() {
-                const tableTemplate = '| Column 1 | Column 2 | Column 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |\n';
-                insertMultiLineBlock( '', '', tableTemplate );
+                const tableTemplate = '| Column 1 | Column 2 | Column 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |';
+                insertMultiLineBlock( '\n', '\n', tableTemplate );
             }
 
             // Keyboard shortcut handler for textarea

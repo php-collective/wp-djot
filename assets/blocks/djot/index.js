@@ -407,20 +407,18 @@
                 var headerCells = [];
                 var separatorCells = [];
                 for ( var c = 1; c <= cols; c++ ) {
-                    headerCells.push( ' Column ' + c + ' ' );
-                    separatorCells.push( '----------' );
+                    headerCells.push( '     ' );
+                    separatorCells.push( '-----' );
                 }
                 var header = '|' + headerCells.join( '|' ) + '|';
                 var separator = '|' + separatorCells.join( '|' ) + '|';
 
                 // Build data rows
                 var dataRows = [];
-                var cellNum = 1;
                 for ( var r = 1; r <= rows; r++ ) {
                     var rowCells = [];
                     for ( var c = 1; c <= cols; c++ ) {
-                        rowCells.push( ' Cell ' + cellNum + '   ' );
-                        cellNum++;
+                        rowCells.push( '     ' );
                     }
                     dataRows.push( '|' + rowCells.join( '|' ) + '|' );
                 }

@@ -193,7 +193,7 @@
                 restoreFocus( textarea, newCursorPos );
             }
 
-            // Insert block-level markup (on new line)
+            // Insert block-level markup at cursor position
             function insertBlockMarkup( markup, placeholder ) {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
@@ -201,18 +201,31 @@
                 const start = textarea.selectionStart;
                 const text = content || '';
 
-                // Find start of current line
-                let lineStart = start;
-                while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
-                    lineStart--;
+                // Check how many newlines needed before
+                let prefix = '';
+                if ( start === 0 ) {
+                    // At beginning, no newlines needed
+                } else if ( start >= 2 && text[ start - 1 ] === '\n' && text[ start - 2 ] === '\n' ) {
+                    // Already have blank line, no extra needed
+                } else if ( text[ start - 1 ] === '\n' ) {
+                    // On a newline - this is where block goes, no extra newline
+                } else {
+                    // In middle of line, need newline to start new line
+                    prefix = '\n';
                 }
 
-                // Check if we need a newline before
-                const needsNewlineBefore = lineStart > 0 && text[ lineStart - 1 ] !== '\n';
-                const prefix = needsNewlineBefore ? '\n' : '';
+                // Always add two newlines after for blank line separation
+                let suffix = '\n\n';
+                if ( start < text.length - 1 && text[ start ] === '\n' && text[ start + 1 ] === '\n' ) {
+                    // Already have blank line after
+                    suffix = '';
+                } else if ( start < text.length && text[ start ] === '\n' ) {
+                    // Have one newline, add one more
+                    suffix = '\n';
+                }
 
-                const newText = text.substring( 0, lineStart ) + prefix + markup + placeholder + text.substring( start );
-                const newCursorPos = lineStart + prefix.length + markup.length + placeholder.length;
+                const newText = text.substring( 0, start ) + prefix + markup + placeholder + suffix + text.substring( start );
+                const newCursorPos = start + prefix.length + markup.length + placeholder.length + suffix.length;
 
                 setAttributes( { content: newText } );
                 restoreFocus( textarea, newCursorPos );
@@ -228,9 +241,46 @@
                 const text = content || '';
                 const selectedText = text.substring( start, end );
 
+                // Check newlines before cursor
+                let prefixNewlines = '';
+                if ( start === 0 ) {
+                    // At beginning, no newlines needed
+                } else if ( start >= 2 && text[ start - 1 ] === '\n' && text[ start - 2 ] === '\n' ) {
+                    // Already have blank line, no extra needed
+                } else if ( text[ start - 1 ] === '\n' ) {
+                    // On a newline, need one more for blank line
+                    prefixNewlines = '\n';
+                } else {
+                    // In middle of line, need two newlines
+                    prefixNewlines = '\n\n';
+                }
+
+                // Check newlines after cursor - always want blank line after block
+                let suffixNewlines = '\n\n';
+                if ( end < text.length - 1 && text[ end ] === '\n' && text[ end + 1 ] === '\n' ) {
+                    // Already have blank line after
+                    suffixNewlines = '';
+                } else if ( end < text.length && text[ end ] === '\n' ) {
+                    // Have one newline, add one more
+                    suffixNewlines = '\n';
+                }
+
                 const contentToWrap = selectedText || placeholder;
-                const newText = text.substring( 0, start ) + startTag + '\n' + contentToWrap + '\n' + endTag + text.substring( end );
-                const newCursorPos = start + startTag.length + 1 + contentToWrap.length;
+                let blockContent;
+                let newCursorPos;
+
+                if ( ! contentToWrap && ! endTag ) {
+                    // Simple block like horizontal rule - cursor goes to blank line after
+                    blockContent = prefixNewlines + startTag + suffixNewlines;
+                    // Position cursor after first newline (on the blank line)
+                    newCursorPos = start + prefixNewlines.length + startTag.length + 1;
+                } else {
+                    // Multi-line block with content
+                    blockContent = prefixNewlines + startTag + '\n' + contentToWrap + '\n' + endTag + suffixNewlines;
+                    newCursorPos = start + prefixNewlines.length + startTag.length + 1 + contentToWrap.length;
+                }
+
+                const newText = text.substring( 0, start ) + blockContent + text.substring( end );
 
                 setAttributes( { content: newText } );
                 restoreFocus( textarea, newCursorPos );
@@ -291,14 +341,14 @@
             function onBlockquote() { insertBlockMarkup( '> ', 'quote' ); }
             function onListUl() { insertBlockMarkup( '- ', 'list item' ); }
             function onListOl() { insertBlockMarkup( '1. ', 'list item' ); }
-            function onHorizontalRule() { insertBlockMarkup( '\n---\n', '' ); }
-            function onCodeBlock() { insertMultiLineBlock( '\n```', '```\n', 'code here' ); }
-            function onDiv() { insertMultiLineBlock( '\n::: note', ':::\n', 'content' ); }
+            function onHorizontalRule() { insertMultiLineBlock( '---', '', '' ); }
+            function onCodeBlock() { insertMultiLineBlock( '```', '```', 'code here' ); }
+            function onDiv() { insertMultiLineBlock( '::: note', ':::', 'content' ); }
             function onFootnote() { insertMarkup( '[^', ']', 'note' ); }
 
             function onTable() {
                 const tableTemplate = '| Column 1 | Column 2 | Column 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |';
-                insertMultiLineBlock( '\n', '\n', tableTemplate );
+                insertMultiLineBlock( '', '', tableTemplate );
             }
 
             // Keyboard shortcut handler for textarea

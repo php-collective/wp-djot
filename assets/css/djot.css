@@ -219,10 +219,25 @@
     font-weight: 600;
 }
 
-/* Strikethrough */
+/* Strikethrough / Deleted - GitHub style red */
 .djot-content del,
 .djot-content s {
     text-decoration: line-through;
+    background-color: #ffebe9;
+    color: #82071e;
+}
+
+/* Inserted - GitHub style green */
+.djot-content ins {
+    text-decoration: none;
+    background-color: #dafbe1;
+    color: #116329;
+}
+
+/* Highlighted / Mark - GitHub style yellow */
+.djot-content mark {
+    background-color: #fff8c5;
+    color: inherit;
 }
 
 /* Superscript and Subscript */
@@ -475,5 +490,21 @@
 
     .djot-content .tip {
         background-color: rgba(46, 160, 67, 0.15);
+    }
+
+    .djot-content del,
+    .djot-content s {
+        background-color: rgba(248, 81, 73, 0.2);
+        color: #ff7b72;
+    }
+
+    .djot-content ins {
+        background-color: rgba(63, 185, 80, 0.2);
+        color: #7ee787;
+    }
+
+    .djot-content mark {
+        background-color: rgba(187, 128, 9, 0.3);
+        color: inherit;
     }
 }

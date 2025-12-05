@@ -2,9 +2,9 @@
 Contributors: dereuromark
 Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -89,6 +89,14 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 == Changelog ==
 
+= 1.1.0 =
+* Comment formatting toolbar with buttons for Bold, Italic, Code, Link, Quote, and Code Block
+* Write/Preview tabs for comment toolbar with live Djot preview
+* Syntax highlighting in comment preview
+* Excerpt filter to render Djot content on archive pages
+* Support for extracting Djot content from Gutenberg blocks for excerpts
+* Fixed archive pages to properly show excerpts with "Read more" links
+
 = 1.0.0 =
 * Initial release
 * Full Djot syntax support
@@ -99,6 +107,9 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Template tags for theme developers
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Adds comment formatting toolbar with preview, and fixes archive page excerpts.
 
 = 1.0.0 =
 Initial release.

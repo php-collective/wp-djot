@@ -31,6 +31,7 @@ cp -r vendor "${DIST_DIR}/"
 cp wp-djot.php "${DIST_DIR}/"
 cp uninstall.php "${DIST_DIR}/"
 cp readme.txt "${DIST_DIR}/"
+cp composer.json "${DIST_DIR}/"
 cp LICENSE "${DIST_DIR}/"
 
 # Create zip

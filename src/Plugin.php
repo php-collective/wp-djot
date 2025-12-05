@@ -126,9 +126,10 @@ class Plugin
     public function filterExcerpt(string $excerpt): string
     {
         // If there's already a manual excerpt, use it
-        if (!empty($excerpt)) {
+        if ($excerpt) {
             // Still process it as Djot in case it contains markup
             $html = $this->converter->convertArticle($excerpt);
+
             // Strip tags for clean excerpt
             return wp_strip_all_tags($html);
         }
@@ -183,7 +184,7 @@ class Plugin
                     $djotParts[] = $decoded;
                 }
             }
-            if (!empty($djotParts)) {
+            if ($djotParts) {
                 return implode("\n\n", $djotParts);
             }
         }
@@ -197,7 +198,7 @@ class Plugin
                     $djotParts[] = $data['content'];
                 }
             }
-            if (!empty($djotParts)) {
+            if ($djotParts) {
                 return implode("\n\n", $djotParts);
             }
         }

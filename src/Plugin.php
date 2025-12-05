@@ -86,6 +86,7 @@ class Plugin
     {
         if ($this->options['enable_posts'] || $this->options['enable_pages']) {
             add_filter('the_content', [$this, 'filterContent'], 5);
+            add_filter('get_the_excerpt', [$this, 'filterExcerpt'], 5);
         }
 
         if ($this->options['enable_comments']) {
@@ -115,6 +116,53 @@ class Plugin
 
         // Only process {djot}...{/djot} blocks
         return $this->processContent($content, false);
+    }
+
+    /**
+     * Filter excerpt for archive pages.
+     *
+     * Renders Djot content and extracts plain text for excerpts.
+     */
+    public function filterExcerpt(string $excerpt): string
+    {
+        // If there's already a manual excerpt, use it
+        if (!empty($excerpt)) {
+            // Still process it as Djot in case it contains markup
+            $html = $this->converter->convertArticle($excerpt);
+            // Strip tags for clean excerpt
+            return wp_strip_all_tags($html);
+        }
+
+        // Get the post content and generate excerpt from it
+        $post = get_post();
+        if (!$post) {
+            return $excerpt;
+        }
+
+        $content = $post->post_content;
+
+        // Handle <!-- more --> tag - get content before it
+        if (str_contains($content, '<!--more-->')) {
+            $content = explode('<!--more-->', $content)[0];
+        }
+
+        // Convert Djot to HTML
+        $html = $this->converter->convertArticle($content);
+
+        // Strip HTML tags to get plain text
+        $text = wp_strip_all_tags($html);
+
+        // Trim to excerpt length (default 55 words)
+        $excerptLength = (int)apply_filters('excerpt_length', 55);
+        $excerptMore = apply_filters('excerpt_more', ' [&hellip;]');
+
+        $words = explode(' ', $text, $excerptLength + 1);
+        if (count($words) > $excerptLength) {
+            array_pop($words);
+            $text = implode(' ', $words) . $excerptMore;
+        }
+
+        return $text;
     }
 
     /**

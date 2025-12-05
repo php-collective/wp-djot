@@ -208,10 +208,11 @@
                 } else if ( start >= 2 && text[ start - 1 ] === '\n' && text[ start - 2 ] === '\n' ) {
                     // Already have blank line, no extra needed
                 } else if ( text[ start - 1 ] === '\n' ) {
-                    // On a newline - this is where block goes, no extra newline
-                } else {
-                    // In middle of line, need newline to start new line
+                    // On a newline, need one more for blank line
                     prefix = '\n';
+                } else {
+                    // In middle of line, need two newlines for blank line
+                    prefix = '\n\n';
                 }
 
                 // Always add two newlines after for blank line separation

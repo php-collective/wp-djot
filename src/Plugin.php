@@ -170,6 +170,12 @@ class Plugin
             return false;
         }
 
+        // Skip archive pages (home, category, tag, search, author, date archives)
+        // These show excerpts/teasers where Djot processing would break the "Read more" link
+        if (!is_singular()) {
+            return false;
+        }
+
         // Check post type
         $postType = get_post_type();
 

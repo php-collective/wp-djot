@@ -108,15 +108,22 @@
                 }
             }
 
-            // Auto-grow textarea
+            // Auto-grow textarea without causing scroll jumps
             function autoGrow( textarea ) {
-                if ( textarea ) {
-                    textarea.style.height = 'auto';
-                    textarea.style.height = textarea.scrollHeight + 'px';
-                }
+                if ( ! textarea ) return;
+
+                // Save scroll position
+                const scrollTop = window.scrollY;
+
+                // Use a hidden div to measure the content height
+                textarea.style.height = '0';
+                textarea.style.height = textarea.scrollHeight + 'px';
+
+                // Restore scroll position
+                window.scrollTo( 0, scrollTop );
             }
 
-            // Auto-grow on content change or when returning from preview
+            // Auto-grow only when returning from preview (not on every keystroke)
             useEffect( function() {
                 if ( ! isPreviewMode && textareaRef.current ) {
                     // Small delay to ensure textarea is rendered
@@ -125,7 +132,7 @@
                         autoGrow( textarea );
                     }, 10 );
                 }
-            }, [ content, isPreviewMode ] );
+            }, [ isPreviewMode ] );
 
             // Insert text at cursor or wrap selection
             function insertMarkup( before, after, placeholder ) {

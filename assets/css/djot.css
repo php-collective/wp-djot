@@ -331,7 +331,9 @@
     transition: background-color 0.15s, border-color 0.15s;
 }
 
-.djot-toolbar-btn:hover {
+.djot-toolbar-btn:hover,
+.djot-comment-toolbar .djot-toolbar-btn:hover {
+    color: #24292f;
     background: #f3f4f6;
     border-color: #1f2328;
 }

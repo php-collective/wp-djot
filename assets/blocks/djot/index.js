@@ -134,6 +134,61 @@
                 }
             }, [ isPreviewMode ] );
 
+            // Track scroll position for undo/redo recovery
+            const lastScrollY = useRef( window.scrollY );
+            const lastScrollX = useRef( window.scrollX );
+            const isInternalChange = useRef( false );
+
+            // Continuously track scroll position
+            useEffect( function() {
+                function saveScroll() {
+                    lastScrollY.current = window.scrollY;
+                    lastScrollX.current = window.scrollX;
+                }
+
+                document.addEventListener( 'scroll', saveScroll, { passive: true, capture: true } );
+                document.addEventListener( 'keydown', saveScroll, { passive: true } );
+                document.addEventListener( 'mousedown', saveScroll, { passive: true } );
+
+                return function() {
+                    document.removeEventListener( 'scroll', saveScroll, { capture: true } );
+                    document.removeEventListener( 'keydown', saveScroll );
+                    document.removeEventListener( 'mousedown', saveScroll );
+                };
+            }, [] );
+
+            // Restore scroll after any content change (handles undo/redo and toolbar)
+            useEffect( function() {
+                if ( isInternalChange.current ) {
+                    isInternalChange.current = false;
+                    return;
+                }
+
+                // External content change (undo/redo) - restore scroll
+                if ( ! isPreviewMode ) {
+                    var savedY = lastScrollY.current;
+                    var savedX = lastScrollX.current;
+                    requestAnimationFrame( function() {
+                        window.scrollTo( savedX, savedY );
+                    } );
+                }
+            }, [ content ] );
+
+            // Restore focus and scroll position after React re-render
+            function restoreFocus( textarea, cursorPos ) {
+                const scrollY = window.scrollY;
+                const scrollX = window.scrollX;
+                isInternalChange.current = true;
+
+                requestAnimationFrame( function() {
+                    if ( textarea ) {
+                        textarea.focus( { preventScroll: true } );
+                        textarea.setSelectionRange( cursorPos, cursorPos );
+                    }
+                    window.scrollTo( scrollX, scrollY );
+                } );
+            }
+
             // Insert text at cursor or wrap selection
             function insertMarkup( before, after, placeholder ) {
                 after = after || '';
@@ -161,12 +216,7 @@
                 }
 
                 setAttributes( { content: newText } );
-
-                // Restore focus and cursor position
-                setTimeout( function() {
-                    textarea.focus();
-                    textarea.setSelectionRange( newCursorPos, newCursorPos );
-                }, 10 );
+                restoreFocus( textarea, newCursorPos );
             }
 
             // Insert block-level markup (on new line)
@@ -191,11 +241,7 @@
                 const newCursorPos = lineStart + prefix.length + markup.length + placeholder.length;
 
                 setAttributes( { content: newText } );
-
-                setTimeout( function() {
-                    textarea.focus();
-                    textarea.setSelectionRange( newCursorPos, newCursorPos );
-                }, 10 );
+                restoreFocus( textarea, newCursorPos );
             }
 
             // Insert multi-line block (like code blocks, divs)
@@ -213,11 +259,7 @@
                 const newCursorPos = start + startTag.length + 1 + contentToWrap.length;
 
                 setAttributes( { content: newText } );
-
-                setTimeout( function() {
-                    textarea.focus();
-                    textarea.setSelectionRange( newCursorPos, newCursorPos );
-                }, 10 );
+                restoreFocus( textarea, newCursorPos );
             }
 
             // Toolbar button handlers

@@ -157,7 +157,9 @@ class Plugin
         $text = wp_strip_all_tags($html);
 
         // Trim to excerpt length (default 55 words)
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WP filter
         $excerptLength = (int)apply_filters('excerpt_length', 55);
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WP filter
         $excerptMore = apply_filters('excerpt_more', ' [&hellip;]');
 
         $words = explode(' ', $text, $excerptLength + 1);

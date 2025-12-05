@@ -99,6 +99,9 @@
             const [ tableCols, setTableCols ] = useState( 3 );
             const [ tableRows, setTableRows ] = useState( 2 );
             const [ cursorInTable, setCursorInTable ] = useState( false );
+            const [ showImportModal, setShowImportModal ] = useState( false );
+            const [ markdownInput, setMarkdownInput ] = useState( '' );
+            const [ djotPreview, setDjotPreview ] = useState( '' );
             const textareaRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
             const [ selectionEnd, setSelectionEnd ] = useState( 0 );
@@ -548,6 +551,153 @@
                 restoreFocus( textarea, newCursorPos );
             }
 
+            // Convert Markdown to Djot
+            function convertMarkdownToDjot( md ) {
+                var result = md;
+
+                // Protect code blocks first (store and replace with placeholders)
+                var codeBlocks = [];
+                result = result.replace( /```[\s\S]*?```/g, function( match ) {
+                    codeBlocks.push( match );
+                    return '%%CODEBLOCK' + ( codeBlocks.length - 1 ) + '%%';
+                } );
+
+                // Protect inline code
+                var inlineCode = [];
+                result = result.replace( /`[^`]+`/g, function( match ) {
+                    inlineCode.push( match );
+                    return '%%INLINECODE' + ( inlineCode.length - 1 ) + '%%';
+                } );
+
+                // Convert indented code blocks to fenced (4 spaces or 1 tab)
+                result = result.replace( /^((?:(?:    |\t).+\n?)+)/gm, function( match ) {
+                    var code = match.replace( /^(    |\t)/gm, '' ).trimEnd();
+                    return '```\n' + code + '\n```\n';
+                } );
+
+                // Bold: **text** or __text__ → *text*
+                result = result.replace( /\*\*([^*]+)\*\*/g, '*$1*' );
+                result = result.replace( /__([^_]+)__/g, '*$1*' );
+
+                // Italic: *text* or _text_ → _text_ (but not inside words)
+                // Only convert *text* that's not already bold
+                result = result.replace( /(?<!\*)\*([^*]+)\*(?!\*)/g, '_$1_' );
+
+                // Strikethrough: ~~text~~ → {~text~}
+                result = result.replace( /~~([^~]+)~~/g, '{~$1~}' );
+
+                // Highlight: ==text== → {=text=}
+                result = result.replace( /==([^=]+)==/g, '{=$1=}' );
+
+                // Headers: ensure space after # (Djot requires it)
+                result = result.replace( /^(#{1,6})([^ #\n])/gm, '$1 $2' );
+
+                // Remove trailing # from headers (Djot treats them as content)
+                result = result.replace( /^(#{1,6} .+?)\s*#+\s*$/gm, '$1' );
+
+                // Setext-style headers: convert to ATX style
+                // H1: text followed by line of ===
+                result = result.replace( /^(.+)\n=+$/gm, '# $1' );
+                // H2: text followed by line of ---
+                result = result.replace( /^(.+)\n-+$/gm, '## $1' );
+
+                // Ensure blank line after headers (Djot requires it)
+                result = result.replace( /^(#{1,6} .+)$(\n?)(?!\n)/gm, '$1\n\n' );
+
+                // Link titles: [text](url "title") → [text](url){title="title"}
+                result = result.replace( /\[([^\]]+)\]\(([^)"]+)\s+"([^"]+)"\)/g, '[$1]($2){title="$3"}' );
+                result = result.replace( /\[([^\]]+)\]\(([^)']+)\s+'([^']+)'\)/g, "[$1]($2){title='$3'}" );
+
+                // Hard line breaks: trailing two spaces → backslash
+                result = result.replace( /  $/gm, '\\' );
+
+                // Blockquotes: ensure space after > (unless followed by newline)
+                result = result.replace( /^>([^ \n>])/gm, '> $1' );
+
+                // Ensure blank line before blockquotes
+                result = result.replace( /([^\n])\n(>)/gm, '$1\n\n$2' );
+
+                // Ensure blank line before lists
+                result = result.replace( /([^\n])\n([-*+] |\d+\. )/gm, '$1\n\n$2' );
+
+                // Raw HTML: wrap in djot raw syntax
+                result = result.replace( /<([a-z][a-z0-9]*)([ >])/gi, function( match, tag, after ) {
+                    // Skip common safe tags that might be intentional
+                    var safeTags = [ 'http', 'https' ];
+                    if ( safeTags.indexOf( tag.toLowerCase() ) >= 0 ) {
+                        return match;
+                    }
+                    return '`<' + tag + after.trimEnd() + '`{=html}';
+                } );
+
+                // Restore inline code
+                inlineCode.forEach( function( code, idx ) {
+                    result = result.replace( '%%INLINECODE' + idx + '%%', code );
+                } );
+
+                // Restore code blocks
+                codeBlocks.forEach( function( block, idx ) {
+                    result = result.replace( '%%CODEBLOCK' + idx + '%%', block );
+                } );
+
+                // Clean up excessive blank lines (more than 2 consecutive)
+                result = result.replace( /\n{3,}/g, '\n\n' );
+
+                return result;
+            }
+
+            // Open import modal
+            function onImportMarkdown() {
+                setMarkdownInput( '' );
+                setDjotPreview( '' );
+                setShowImportModal( true );
+            }
+
+            // Update preview when markdown input changes
+            function onMarkdownInputChange( value ) {
+                setMarkdownInput( value );
+                setDjotPreview( convertMarkdownToDjot( value ) );
+            }
+
+            // Insert converted djot at cursor position
+            function onInsertImported() {
+                if ( ! djotPreview.trim() ) {
+                    setShowImportModal( false );
+                    return;
+                }
+
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                var text = content || '';
+                var start = textarea ? textarea.selectionStart : text.length;
+
+                // Add newlines if needed
+                var prefix = '';
+                if ( start > 0 && text[ start - 1 ] !== '\n' ) {
+                    prefix = '\n\n';
+                } else if ( start > 1 && text[ start - 2 ] !== '\n' ) {
+                    prefix = '\n';
+                }
+
+                var suffix = '\n\n';
+                if ( start < text.length - 1 && text[ start ] === '\n' && text[ start + 1 ] === '\n' ) {
+                    suffix = '';
+                } else if ( start < text.length && text[ start ] === '\n' ) {
+                    suffix = '\n';
+                }
+
+                var newText = text.substring( 0, start ) + prefix + djotPreview + suffix + text.substring( start );
+                var newCursorPos = start + prefix.length + djotPreview.length;
+
+                setAttributes( { content: newText } );
+                setShowImportModal( false );
+                setMarkdownInput( '' );
+                setDjotPreview( '' );
+
+                if ( textarea ) {
+                    restoreFocus( textarea, newCursorPos );
+                }
+            }
+
             // Keyboard shortcut handler for textarea
             function handleTextareaKeyDown( e ) {
                 const isMod = e.ctrlKey || e.metaKey;
@@ -882,6 +1032,15 @@
                             wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+X' ), ' Strikethrough' ),
                             wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'ESC' ), ' Exit preview' )
                         )
+                    ),
+                    wp.element.createElement(
+                        PanelBody,
+                        { title: __( 'Tools', 'wp-djot' ), initialOpen: false },
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: onImportMarkdown,
+                            style: { width: '100%' },
+                        }, __( 'Import Markdown', 'wp-djot' ) )
                     )
                 ),
                 // Link Modal
@@ -979,6 +1138,52 @@
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowTableModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'wp-djot' ) )
+                    )
+                ),
+                // Import Markdown Modal
+                showImportModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Import Markdown', 'wp-djot' ),
+                        onRequestClose: function() { setShowImportModal( false ); },
+                        style: { width: '600px', maxWidth: '90vw' },
+                    },
+                    wp.element.createElement( 'div', { style: { display: 'flex', gap: '16px' } },
+                        wp.element.createElement( 'div', { style: { flex: 1 } },
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } }, __( 'Markdown Input', 'wp-djot' ) ),
+                            wp.element.createElement( 'textarea', {
+                                value: markdownInput,
+                                onChange: function( e ) { onMarkdownInputChange( e.target.value ); },
+                                style: { width: '100%', height: '200px', fontFamily: 'monospace', fontSize: '13px', padding: '8px' },
+                                placeholder: __( 'Paste your Markdown here...', 'wp-djot' ),
+                            } )
+                        ),
+                        wp.element.createElement( 'div', { style: { flex: 1 } },
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } }, __( 'Djot Preview', 'wp-djot' ) ),
+                            wp.element.createElement( 'textarea', {
+                                value: djotPreview,
+                                readOnly: true,
+                                style: { width: '100%', height: '200px', fontFamily: 'monospace', fontSize: '13px', padding: '8px', background: '#f9f9f9' },
+                                placeholder: __( 'Converted Djot will appear here...', 'wp-djot' ),
+                            } )
+                        )
+                    ),
+                    wp.element.createElement( 'p', { style: { marginTop: '12px', fontSize: '12px', color: '#666' } },
+                        __( 'Converts: **bold** → *bold*, *italic* → _italic_, ~~strike~~ → {~strike~}, ==highlight== → {=highlight=}', 'wp-djot' )
+                    ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertImported,
+                            disabled: ! djotPreview.trim(),
+                        }, __( 'Insert', 'wp-djot' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowImportModal( false ); },
                             style: { marginLeft: '8px' },
                         }, __( 'Cancel', 'wp-djot' ) )
                     )

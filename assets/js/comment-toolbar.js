@@ -121,6 +121,12 @@
         .then(response => response.json())
         .then(data => {
             previewPane.innerHTML = data.html || '<p class="djot-preview-empty">Nothing to preview</p>';
+            // Apply syntax highlighting to code blocks if highlight.js is loaded
+            if (typeof hljs !== 'undefined') {
+                previewPane.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+            }
         })
         .catch(() => {
             previewPane.innerHTML = '<p class="djot-preview-error">Preview unavailable</p>';

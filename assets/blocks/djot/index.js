@@ -1,7 +1,7 @@
 ( function( wp ) {
     const { registerBlockType } = wp.blocks;
     const { useState, useEffect, useCallback, useRef } = wp.element;
-    const { TextareaControl, PanelBody, ToggleControl, Placeholder, Spinner, ToolbarGroup, ToolbarButton, ToolbarDropdownMenu, Modal, TextControl, Button } = wp.components;
+    const { TextareaControl, PanelBody, ToggleControl, Placeholder, Spinner, ToolbarGroup, ToolbarButton, ToolbarDropdownMenu, Modal, TextControl, Button, RangeControl } = wp.components;
     const { InspectorControls, BlockControls, useBlockProps } = wp.blockEditor;
     const { __ } = wp.i18n;
     const apiFetch = wp.apiFetch;
@@ -87,10 +87,13 @@
             const [ isLoading, setIsLoading ] = useState( false );
             const [ showLinkModal, setShowLinkModal ] = useState( false );
             const [ showImageModal, setShowImageModal ] = useState( false );
+            const [ showTableModal, setShowTableModal ] = useState( false );
             const [ linkUrl, setLinkUrl ] = useState( '' );
             const [ linkText, setLinkText ] = useState( '' );
             const [ imageUrl, setImageUrl ] = useState( '' );
             const [ imageAlt, setImageAlt ] = useState( '' );
+            const [ tableCols, setTableCols ] = useState( 3 );
+            const [ tableRows, setTableRows ] = useState( 2 );
             const textareaRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
             const [ selectionEnd, setSelectionEnd ] = useState( 0 );
@@ -133,14 +136,14 @@
                 };
             }, [] );
 
-            // Restore scroll after any content change (handles undo/redo and toolbar)
+            // Restore scroll after any content change (handles undo/redo)
             useEffect( function() {
                 if ( isInternalChange.current ) {
                     isInternalChange.current = false;
                     return;
                 }
 
-                // External content change (undo/redo) - restore scroll
+                // External content change (undo/redo) - restore scroll only
                 if ( ! isPreviewMode ) {
                     var savedY = lastScrollY.current;
                     var savedX = lastScrollX.current;
@@ -391,8 +394,40 @@
             function onFootnote() { insertMarkup( '[^', ']', 'note' ); }
 
             function onTable() {
-                const tableTemplate = '| Column 1 | Column 2 | Column 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |';
+                setTableCols( 3 );
+                setTableRows( 2 );
+                setShowTableModal( true );
+            }
+
+            function onInsertTable() {
+                var cols = Math.max( 1, Math.min( 10, tableCols ) );
+                var rows = Math.max( 1, Math.min( 20, tableRows ) );
+
+                // Build header row
+                var headerCells = [];
+                var separatorCells = [];
+                for ( var c = 1; c <= cols; c++ ) {
+                    headerCells.push( ' Column ' + c + ' ' );
+                    separatorCells.push( '----------' );
+                }
+                var header = '|' + headerCells.join( '|' ) + '|';
+                var separator = '|' + separatorCells.join( '|' ) + '|';
+
+                // Build data rows
+                var dataRows = [];
+                var cellNum = 1;
+                for ( var r = 1; r <= rows; r++ ) {
+                    var rowCells = [];
+                    for ( var c = 1; c <= cols; c++ ) {
+                        rowCells.push( ' Cell ' + cellNum + '   ' );
+                        cellNum++;
+                    }
+                    dataRows.push( '|' + rowCells.join( '|' ) + '|' );
+                }
+
+                var tableTemplate = header + '\n' + separator + '\n' + dataRows.join( '\n' ) + '\n';
                 insertMultiLineBlock( '', '', tableTemplate );
+                setShowTableModal( false );
             }
 
             // Keyboard shortcut handler for textarea
@@ -786,6 +821,41 @@
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowImageModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'wp-djot' ) )
+                    )
+                ),
+                // Table Modal
+                showTableModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Table', 'wp-djot' ),
+                        onRequestClose: function() { setShowTableModal( false ); },
+                    },
+                    wp.element.createElement( RangeControl, {
+                        label: __( 'Columns', 'wp-djot' ),
+                        value: tableCols,
+                        onChange: setTableCols,
+                        min: 1,
+                        max: 10,
+                    } ),
+                    wp.element.createElement( RangeControl, {
+                        label: __( 'Rows (excluding header)', 'wp-djot' ),
+                        value: tableRows,
+                        onChange: setTableRows,
+                        min: 1,
+                        max: 20,
+                    } ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertTable,
+                        }, __( 'Insert Table', 'wp-djot' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowTableModal( false ); },
                             style: { marginLeft: '8px' },
                         }, __( 'Cancel', 'wp-djot' ) )
                     )

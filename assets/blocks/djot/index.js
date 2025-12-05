@@ -108,32 +108,6 @@
                 }
             }
 
-            // Auto-grow textarea without causing scroll jumps
-            function autoGrow( textarea ) {
-                if ( ! textarea ) return;
-
-                // Save scroll position
-                const scrollTop = window.scrollY;
-
-                // Use a hidden div to measure the content height
-                textarea.style.height = '0';
-                textarea.style.height = textarea.scrollHeight + 'px';
-
-                // Restore scroll position
-                window.scrollTo( 0, scrollTop );
-            }
-
-            // Auto-grow only when returning from preview (not on every keystroke)
-            useEffect( function() {
-                if ( ! isPreviewMode && textareaRef.current ) {
-                    // Small delay to ensure textarea is rendered
-                    setTimeout( function() {
-                        const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
-                        autoGrow( textarea );
-                    }, 10 );
-                }
-            }, [ isPreviewMode ] );
-
             // Track scroll position for undo/redo recovery
             const lastScrollY = useRef( window.scrollY );
             const lastScrollX = useRef( window.scrollX );
@@ -323,7 +297,7 @@
             function onFootnote() { insertMarkup( '[^', ']', 'note' ); }
 
             function onTable() {
-                const tableTemplate = '| Column 1 | Column 2 | Column 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |';
+                const tableTemplate = '| Column 1 | Column 2 | Column 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |\n';
                 insertMultiLineBlock( '', '', tableTemplate );
             }
 

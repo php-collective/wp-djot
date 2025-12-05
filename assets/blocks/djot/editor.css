@@ -111,6 +111,29 @@
     color: #666;
 }
 
+/* Tables */
+.wp-djot-preview.djot-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.wp-djot-preview.djot-content th,
+.wp-djot-preview.djot-content td {
+    border: 1px solid #d0d7de;
+    padding: 0.5em 1em;
+    text-align: left;
+}
+
+.wp-djot-preview.djot-content th {
+    background-color: #f6f8fa;
+    font-weight: 600;
+}
+
+.wp-djot-preview.djot-content tr:nth-child(even) {
+    background-color: #f6f8fa;
+}
+
 /* Placeholder styles */
 .wp-djot-block .components-placeholder {
     min-height: auto;

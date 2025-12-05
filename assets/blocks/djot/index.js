@@ -310,6 +310,21 @@
                 }
             }, [ content, isPreviewMode ] );
 
+            // Apply syntax highlighting after preview renders
+            useEffect( function() {
+                if ( isPreviewMode && preview && ! isLoading && typeof window.hljs !== 'undefined' ) {
+                    // Small delay to ensure DOM is updated
+                    setTimeout( function() {
+                        var previewEl = document.querySelector( '.wp-djot-preview.djot-content' );
+                        if ( previewEl ) {
+                            previewEl.querySelectorAll( 'pre code' ).forEach( function( block ) {
+                                window.hljs.highlightElement( block );
+                            } );
+                        }
+                    }, 10 );
+                }
+            }, [ preview, isLoading, isPreviewMode ] );
+
             function onChangeContent( newContent ) {
                 setAttributes( { content: newContent } );
             }

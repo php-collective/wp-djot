@@ -27,6 +27,7 @@ class DjotBlock
     {
         add_action('init', [$this, 'register']);
         add_action('rest_api_init', [$this, 'registerRestRoute']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueueEditorAssets']);
     }
 
     /**
@@ -35,6 +36,36 @@ class DjotBlock
     public function register(): void
     {
         register_block_type(WP_DJOT_PLUGIN_DIR . 'assets/blocks/djot');
+    }
+
+    /**
+     * Enqueue highlight.js for block editor preview.
+     */
+    public function enqueueEditorAssets(): void
+    {
+        $options = get_option('wp_djot_settings', []);
+        $highlightCode = $options['highlight_code'] ?? true;
+
+        if (!$highlightCode) {
+            return;
+        }
+
+        $theme = $options['highlight_theme'] ?? 'github';
+
+        wp_enqueue_style(
+            'wp-djot-highlight-editor',
+            WP_DJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
+            [],
+            WP_DJOT_VERSION,
+        );
+
+        wp_enqueue_script(
+            'wp-djot-highlight-editor',
+            WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
+            [],
+            WP_DJOT_VERSION,
+            true,
+        );
     }
 
     /**

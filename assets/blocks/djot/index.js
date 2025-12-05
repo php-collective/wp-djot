@@ -285,6 +285,43 @@
                 insertMultiLineBlock( '', '', tableTemplate );
             }
 
+            // Keyboard shortcut handler for textarea
+            function handleTextareaKeyDown( e ) {
+                const isMod = e.ctrlKey || e.metaKey;
+                if ( ! isMod ) return;
+
+                var handled = false;
+
+                if ( e.shiftKey ) {
+                    switch ( e.key.toLowerCase() ) {
+                        case 'x': onStrikethrough(); handled = true; break;
+                        case 'e': onCodeBlock(); handled = true; break;
+                        case 'h': onHighlight(); handled = true; break;
+                        case 'i': onImage(); handled = true; break;
+                        case '.': onBlockquote(); handled = true; break;
+                        case '8': onListUl(); handled = true; break;
+                        case '7': onListOl(); handled = true; break;
+                    }
+                } else {
+                    switch ( e.key.toLowerCase() ) {
+                        case 'b': onBold(); handled = true; break;
+                        case 'i': onItalic(); handled = true; break;
+                        case 'e': onCode(); handled = true; break;
+                        case 'k': onLink(); handled = true; break;
+                        case '.': onSuperscript(); handled = true; break;
+                        case ',': onSubscript(); handled = true; break;
+                        case '1': onHeading( 1 ); handled = true; break;
+                        case '2': onHeading( 2 ); handled = true; break;
+                        case '3': onHeading( 3 ); handled = true; break;
+                    }
+                }
+
+                if ( handled ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+
             // Debounced preview fetch
             const fetchPreview = useCallback(
                 debounce( function( djotContent ) {
@@ -331,6 +368,23 @@
                     }, 10 );
                 }
             }, [ preview, isLoading, isPreviewMode ] );
+
+            // ESC key exits preview mode
+            useEffect( function() {
+                if ( ! isPreviewMode ) return;
+
+                function handleKeyDown( e ) {
+                    if ( e.key === 'Escape' ) {
+                        e.preventDefault();
+                        setIsPreviewMode( false );
+                    }
+                }
+
+                document.addEventListener( 'keydown', handleKeyDown );
+                return function() {
+                    document.removeEventListener( 'keydown', handleKeyDown );
+                };
+            }, [ isPreviewMode ] );
 
             function onChangeContent( newContent ) {
                 setAttributes( { content: newContent } );
@@ -525,6 +579,38 @@
                                 wp.element.createElement( 'a', { href: 'https://djot.net/', target: '_blank' }, __( 'Full Djot Documentation →', 'wp-djot' ) )
                             )
                         )
+                    ),
+                    wp.element.createElement(
+                        PanelBody,
+                        { title: __( 'Keyboard Shortcuts', 'wp-djot' ), initialOpen: false },
+                        wp.element.createElement( 'div', { className: 'wp-djot-shortcuts-help', style: { fontSize: '12px' } },
+                            wp.element.createElement( 'p', { style: { marginBottom: '8px' } },
+                                wp.element.createElement( 'strong', null, 'Formatting:' )
+                            ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+B' ), ' Bold' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+I' ), ' Italic' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+E' ), ' Inline code' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+K' ), ' Link' ),
+                            wp.element.createElement( 'p', { style: { marginTop: '12px', marginBottom: '8px' } },
+                                wp.element.createElement( 'strong', null, 'Headings:' )
+                            ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+1/2/3' ), ' H1/H2/H3' ),
+                            wp.element.createElement( 'p', { style: { marginTop: '12px', marginBottom: '8px' } },
+                                wp.element.createElement( 'strong', null, 'Blocks (Ctrl+Shift):' )
+                            ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+E' ), ' Code block' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+.' ), ' Blockquote' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+8' ), ' Bullet list' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+7' ), ' Numbered list' ),
+                            wp.element.createElement( 'p', { style: { marginTop: '12px', marginBottom: '8px' } },
+                                wp.element.createElement( 'strong', null, 'Other:' )
+                            ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+.' ), ' Superscript' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+,' ), ' Subscript' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+H' ), ' Highlight' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+X' ), ' Strikethrough' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'ESC' ), ' Exit preview' )
+                        )
                     )
                 ),
                 // Link Modal
@@ -604,6 +690,7 @@
                                   onSelect: updateSelection,
                                   onClick: updateSelection,
                                   onKeyUp: updateSelection,
+                                  onKeyDown: handleTextareaKeyDown,
                                   rows: 12,
                                   className: 'wp-djot-editor',
                                   placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'wp-djot' ),
@@ -621,8 +708,9 @@
                                           {
                                               className: 'wp-djot-edit-button',
                                               onClick: function() { setIsPreviewMode( false ); },
+                                              title: __( 'Press ESC to exit preview', 'wp-djot' ),
                                           },
-                                          __( 'Edit', 'wp-djot' )
+                                          __( 'Edit (ESC)', 'wp-djot' )
                                       )
                                   ),
                                   isLoading
@@ -649,6 +737,7 @@
                                   onSelect: updateSelection,
                                   onClick: updateSelection,
                                   onKeyUp: updateSelection,
+                                  onKeyDown: handleTextareaKeyDown,
                                   rows: 8,
                                   className: 'wp-djot-editor',
                                   placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'wp-djot' ),

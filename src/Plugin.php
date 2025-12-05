@@ -141,6 +141,9 @@ class Plugin
 
         $content = $post->post_content;
 
+        // Extract Djot content from Gutenberg blocks if present
+        $content = $this->extractDjotContent($content);
+
         // Handle <!-- more --> tag - get content before it
         if (str_contains($content, '<!--more-->')) {
             $content = explode('<!--more-->', $content)[0];
@@ -163,6 +166,44 @@ class Plugin
         }
 
         return $text;
+    }
+
+    /**
+     * Extract Djot content from Gutenberg blocks or raw content.
+     */
+    private function extractDjotContent(string $content): string
+    {
+        // Check for wp-djot/djot Gutenberg blocks
+        if (preg_match_all('/<!-- wp:wp-djot\/djot \{["\']content["\']:["\'](.+?)["\']\} \/-->/s', $content, $matches)) {
+            $djotParts = [];
+            foreach ($matches[1] as $match) {
+                // Decode JSON-encoded content
+                $decoded = json_decode('"' . $match . '"');
+                if ($decoded !== null) {
+                    $djotParts[] = $decoded;
+                }
+            }
+            if (!empty($djotParts)) {
+                return implode("\n\n", $djotParts);
+            }
+        }
+
+        // Check for JSON attribute format (content may have complex escaping)
+        if (preg_match_all('/<!-- wp:wp-djot\/djot (\{.+?\}) \/-->/s', $content, $matches)) {
+            $djotParts = [];
+            foreach ($matches[1] as $jsonStr) {
+                $data = json_decode($jsonStr, true);
+                if ($data && isset($data['content'])) {
+                    $djotParts[] = $data['content'];
+                }
+            }
+            if (!empty($djotParts)) {
+                return implode("\n\n", $djotParts);
+            }
+        }
+
+        // Return original content if no blocks found
+        return $content;
     }
 
     /**

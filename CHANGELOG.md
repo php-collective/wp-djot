@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-12-05
+
+### Added
+
+- Comment formatting toolbar with buttons for Bold, Italic, Code, Link, Quote, and Code Block
+- Write/Preview tabs for comment toolbar with live Djot preview via REST API
+- Syntax highlighting in comment preview using highlight.js
+- Excerpt filter to render Djot content on archive pages (homepage, category, tag, etc.)
+- Support for extracting Djot content from Gutenberg blocks for excerpts
+
+### Fixed
+
+- Archive pages now properly show excerpts with "Read more" links instead of raw Djot/block markup
+- Tab hover styles now properly override theme button styles
+- Quote button inserts newline before blockquote when not at start of line
+
 ## [1.0.0] - 2025-12-02
 
 ### Added
@@ -56,5 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/php-collective/wp-djot/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/php-collective/wp-djot/releases/tag/1.0.0

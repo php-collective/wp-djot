@@ -698,8 +698,117 @@
                 }
             }
 
+            // Indent/outdent handlers
+            function indentLines() {
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                var text = content || '';
+                var start = textarea.selectionStart;
+                var end = textarea.selectionEnd;
+
+                // Find line boundaries
+                var lineStart = start;
+                while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
+                    lineStart--;
+                }
+                var lineEnd = end;
+                while ( lineEnd < text.length && text[ lineEnd ] !== '\n' ) {
+                    lineEnd++;
+                }
+
+                // Get selected lines and indent each
+                var selectedText = text.substring( lineStart, lineEnd );
+                var indentedText = selectedText.split( '\n' ).map( function( line ) {
+                    return '    ' + line;
+                } ).join( '\n' );
+
+                var newText = text.substring( 0, lineStart ) + indentedText + text.substring( lineEnd );
+                var lineCount = selectedText.split( '\n' ).length;
+                var newStart = start + 4;
+                var newEnd = end + ( lineCount * 4 );
+
+                setAttributes( { content: newText } );
+                requestAnimationFrame( function() {
+                    textarea.focus( { preventScroll: true } );
+                    textarea.setSelectionRange( newStart, newEnd );
+                } );
+            }
+
+            function outdentLines() {
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                var text = content || '';
+                var start = textarea.selectionStart;
+                var end = textarea.selectionEnd;
+
+                // Find line boundaries
+                var lineStart = start;
+                while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
+                    lineStart--;
+                }
+                var lineEnd = end;
+                while ( lineEnd < text.length && text[ lineEnd ] !== '\n' ) {
+                    lineEnd++;
+                }
+
+                // Get selected lines and outdent each
+                var selectedText = text.substring( lineStart, lineEnd );
+                var removedTotal = 0;
+                var removedFirst = 0;
+                var isFirst = true;
+                var outdentedText = selectedText.split( '\n' ).map( function( line ) {
+                    var removed = 0;
+                    // Remove up to 4 spaces or 1 tab
+                    if ( line.startsWith( '    ' ) ) {
+                        line = line.substring( 4 );
+                        removed = 4;
+                    } else if ( line.startsWith( '\t' ) ) {
+                        line = line.substring( 1 );
+                        removed = 1;
+                    } else if ( line.startsWith( '   ' ) ) {
+                        line = line.substring( 3 );
+                        removed = 3;
+                    } else if ( line.startsWith( '  ' ) ) {
+                        line = line.substring( 2 );
+                        removed = 2;
+                    } else if ( line.startsWith( ' ' ) ) {
+                        line = line.substring( 1 );
+                        removed = 1;
+                    }
+                    if ( isFirst ) {
+                        removedFirst = removed;
+                        isFirst = false;
+                    }
+                    removedTotal += removed;
+                    return line;
+                } ).join( '\n' );
+
+                var newText = text.substring( 0, lineStart ) + outdentedText + text.substring( lineEnd );
+                var newStart = Math.max( lineStart, start - removedFirst );
+                var newEnd = Math.max( newStart, end - removedTotal );
+
+                setAttributes( { content: newText } );
+                requestAnimationFrame( function() {
+                    textarea.focus( { preventScroll: true } );
+                    textarea.setSelectionRange( newStart, newEnd );
+                } );
+            }
+
             // Keyboard shortcut handler for textarea
             function handleTextareaKeyDown( e ) {
+                // Handle Tab/Shift+Tab for indent/outdent
+                if ( e.key === 'Tab' ) {
+                    e.preventDefault();
+                    if ( e.shiftKey ) {
+                        outdentLines();
+                    } else {
+                        indentLines();
+                    }
+                    return;
+                }
+
                 const isMod = e.ctrlKey || e.metaKey;
                 if ( ! isMod ) return;
 
@@ -1030,6 +1139,8 @@
                             wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+,' ), ' Subscript' ),
                             wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+H' ), ' Highlight' ),
                             wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+X' ), ' Strikethrough' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Tab' ), ' Indent' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Shift+Tab' ), ' Outdent' ),
                             wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'ESC' ), ' Exit preview' )
                         )
                     ),

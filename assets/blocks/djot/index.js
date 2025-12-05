@@ -59,7 +59,9 @@
             wp.element.createElement( 'path', { d: 'M10 19h4v-3h-4v3zM5 4v3h5v3h4V7h5V4H5zM3 14h18v-2H3v2z' } )
         ),
         horizontalRule: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
-            wp.element.createElement( 'path', { d: 'M4 11h16v2H4z' } )
+            wp.element.createElement( 'line', { x1: 4, y1: 12, x2: 8, y2: 12, stroke: 'currentColor', strokeWidth: 2 } ),
+            wp.element.createElement( 'circle', { cx: 12, cy: 12, r: 1.5, fill: 'currentColor' } ),
+            wp.element.createElement( 'line', { x1: 16, y1: 12, x2: 20, y2: 12, stroke: 'currentColor', strokeWidth: 2 } )
         ),
         footnote: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
             wp.element.createElement( 'text', { x: 6, y: 16, fontSize: 12, fontWeight: 'bold' }, 'F' ),
@@ -199,7 +201,12 @@
                 if ( ! textarea ) return;
 
                 const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
                 const text = content || '';
+                const selectedText = text.substring( start, end );
+
+                // Use selected text or placeholder
+                const blockText = selectedText || placeholder;
 
                 // Check how many newlines needed before
                 let prefix = '';
@@ -217,16 +224,16 @@
 
                 // Always add two newlines after for blank line separation
                 let suffix = '\n\n';
-                if ( start < text.length - 1 && text[ start ] === '\n' && text[ start + 1 ] === '\n' ) {
+                if ( end < text.length - 1 && text[ end ] === '\n' && text[ end + 1 ] === '\n' ) {
                     // Already have blank line after
                     suffix = '';
-                } else if ( start < text.length && text[ start ] === '\n' ) {
+                } else if ( end < text.length && text[ end ] === '\n' ) {
                     // Have one newline, add one more
                     suffix = '\n';
                 }
 
-                const newText = text.substring( 0, start ) + prefix + markup + placeholder + suffix + text.substring( start );
-                const newCursorPos = start + prefix.length + markup.length + placeholder.length + suffix.length;
+                const newText = text.substring( 0, start ) + prefix + markup + blockText + suffix + text.substring( end );
+                const newCursorPos = start + prefix.length + markup.length + blockText.length + suffix.length;
 
                 setAttributes( { content: newText } );
                 restoreFocus( textarea, newCursorPos );
@@ -335,8 +342,44 @@
             }
 
             function onHeading( level ) {
-                const hashes = '#'.repeat( level ) + ' ';
-                insertBlockMarkup( hashes, 'Heading ' + level );
+                const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                const text = content || '';
+                const cursorPos = textarea.selectionStart;
+
+                // Find the start of the current line
+                let lineStart = cursorPos;
+                while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
+                    lineStart--;
+                }
+
+                // Find the end of the current line
+                let lineEnd = cursorPos;
+                while ( lineEnd < text.length && text[ lineEnd ] !== '\n' ) {
+                    lineEnd++;
+                }
+
+                const currentLine = text.substring( lineStart, lineEnd );
+
+                // Check if current line has heading markup
+                const headingMatch = currentLine.match( /^(#{1,6})\s+(.*)$/ );
+
+                if ( headingMatch ) {
+                    // Replace existing heading with new level
+                    const headingContent = headingMatch[ 2 ];
+                    const newHashes = '#'.repeat( level ) + ' ';
+                    const newLine = newHashes + headingContent;
+                    const newText = text.substring( 0, lineStart ) + newLine + text.substring( lineEnd );
+                    const newCursorPos = lineStart + newLine.length;
+
+                    setAttributes( { content: newText } );
+                    restoreFocus( textarea, newCursorPos );
+                } else {
+                    // No existing heading on line, use normal block insert
+                    const hashes = '#'.repeat( level ) + ' ';
+                    insertBlockMarkup( hashes, 'Heading ' + level );
+                }
             }
 
             function onBlockquote() { insertBlockMarkup( '> ', 'quote' ); }
@@ -380,6 +423,9 @@
                         case '1': onHeading( 1 ); handled = true; break;
                         case '2': onHeading( 2 ); handled = true; break;
                         case '3': onHeading( 3 ); handled = true; break;
+                        case '4': onHeading( 4 ); handled = true; break;
+                        case '5': onHeading( 5 ); handled = true; break;
+                        case '6': onHeading( 6 ); handled = true; break;
                     }
                 }
 
@@ -661,7 +707,7 @@
                             wp.element.createElement( 'p', { style: { marginTop: '12px', marginBottom: '8px' } },
                                 wp.element.createElement( 'strong', null, 'Headings:' )
                             ),
-                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+1/2/3' ), ' H1/H2/H3' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+[1-6]' ), ' H1-H6' ),
                             wp.element.createElement( 'p', { style: { marginTop: '12px', marginBottom: '8px' } },
                                 wp.element.createElement( 'strong', null, 'Blocks (Ctrl+Shift):' )
                             ),

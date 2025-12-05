@@ -112,6 +112,27 @@
     color: #666;
 }
 
+/* Inserted - GitHub style green */
+.wp-djot-preview.djot-content ins {
+    text-decoration: none;
+    background-color: #dafbe1;
+    color: #116329;
+}
+
+/* Deleted - GitHub style red */
+.wp-djot-preview.djot-content del,
+.wp-djot-preview.djot-content s {
+    text-decoration: line-through;
+    background-color: #ffebe9;
+    color: #82071e;
+}
+
+/* Highlighted / Mark */
+.wp-djot-preview.djot-content mark {
+    background-color: #fff8c5;
+    color: inherit;
+}
+
 /* Tables */
 .wp-djot-preview.djot-content table {
     border-collapse: collapse;

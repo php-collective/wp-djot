@@ -76,6 +76,10 @@
         table: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
             wp.element.createElement( 'path', { d: 'M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z' } )
         ),
+        formatTable: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
+            wp.element.createElement( 'path', { d: 'M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z' } ),
+            wp.element.createElement( 'path', { d: 'M17 17l4 4m0-4l-4 4', stroke: 'currentColor', strokeWidth: 2, fill: 'none' } )
+        ),
     };
 
     registerBlockType( 'wp-djot/djot', {
@@ -94,6 +98,7 @@
             const [ imageAlt, setImageAlt ] = useState( '' );
             const [ tableCols, setTableCols ] = useState( 3 );
             const [ tableRows, setTableRows ] = useState( 2 );
+            const [ cursorInTable, setCursorInTable ] = useState( false );
             const textareaRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
             const [ selectionEnd, setSelectionEnd ] = useState( 0 );
@@ -102,13 +107,27 @@
                 className: 'wp-djot-block',
             } );
 
-            // Track selection in textarea
+            // Track selection in textarea and check if in table
             function updateSelection() {
                 if ( textareaRef.current ) {
                     const textarea = textareaRef.current.querySelector( 'textarea' );
                     if ( textarea ) {
                         setSelectionStart( textarea.selectionStart );
                         setSelectionEnd( textarea.selectionEnd );
+
+                        // Check if cursor is in a table
+                        var text = content || '';
+                        var cursorPos = textarea.selectionStart;
+                        var lineStart = cursorPos;
+                        while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
+                            lineStart--;
+                        }
+                        var lineEnd = cursorPos;
+                        while ( lineEnd < text.length && text[ lineEnd ] !== '\n' ) {
+                            lineEnd++;
+                        }
+                        var currentLine = text.substring( lineStart, lineEnd ).trim();
+                        setCursorInTable( currentLine.startsWith( '|' ) && currentLine.endsWith( '|' ) );
                     }
                 }
             }
@@ -428,6 +447,107 @@
                 setShowTableModal( false );
             }
 
+            // Format table at cursor position
+            function onFormatTable() {
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                var text = content || '';
+                var cursorPos = textarea.selectionStart;
+
+                // Find table boundaries
+                var lines = text.split( '\n' );
+                var lineIndex = 0;
+                var charCount = 0;
+                for ( var i = 0; i < lines.length; i++ ) {
+                    if ( charCount + lines[ i ].length >= cursorPos ) {
+                        lineIndex = i;
+                        break;
+                    }
+                    charCount += lines[ i ].length + 1; // +1 for newline
+                }
+
+                // Find table start (go up until non-table line)
+                var tableStart = lineIndex;
+                while ( tableStart > 0 && lines[ tableStart - 1 ].trim().startsWith( '|' ) ) {
+                    tableStart--;
+                }
+
+                // Find table end (go down until non-table line)
+                var tableEnd = lineIndex;
+                while ( tableEnd < lines.length - 1 && lines[ tableEnd + 1 ].trim().startsWith( '|' ) ) {
+                    tableEnd++;
+                }
+
+                // Extract table lines
+                var tableLines = lines.slice( tableStart, tableEnd + 1 );
+                if ( tableLines.length < 2 ) return; // Need at least header + separator
+
+                // Parse cells
+                var parsedRows = tableLines.map( function( line ) {
+                    // Remove leading/trailing pipes and split
+                    var trimmed = line.trim();
+                    if ( trimmed.startsWith( '|' ) ) trimmed = trimmed.substring( 1 );
+                    if ( trimmed.endsWith( '|' ) ) trimmed = trimmed.substring( 0, trimmed.length - 1 );
+                    return trimmed.split( '|' ).map( function( cell ) {
+                        return cell.trim();
+                    } );
+                } );
+
+                // Find max width per column
+                var colWidths = [];
+                parsedRows.forEach( function( row, rowIdx ) {
+                    row.forEach( function( cell, colIdx ) {
+                        // Skip separator row for width calculation (use dashes count)
+                        var width = cell.length;
+                        if ( rowIdx === 1 && /^[-:]+$/.test( cell ) ) {
+                            width = 3; // minimum for separator
+                        }
+                        if ( ! colWidths[ colIdx ] || width > colWidths[ colIdx ] ) {
+                            colWidths[ colIdx ] = Math.max( width, 3 );
+                        }
+                    } );
+                } );
+
+                // Rebuild table with padding
+                var formattedLines = parsedRows.map( function( row, rowIdx ) {
+                    var cells = row.map( function( cell, colIdx ) {
+                        var width = colWidths[ colIdx ] || 3;
+                        if ( rowIdx === 1 && /^[-:]+$/.test( cell ) ) {
+                            // Separator row - preserve alignment markers
+                            var leftAlign = cell.startsWith( ':' );
+                            var rightAlign = cell.endsWith( ':' );
+                            var dashes = '-'.repeat( width );
+                            if ( leftAlign && rightAlign ) {
+                                return ':' + '-'.repeat( width - 2 ) + ':';
+                            } else if ( leftAlign ) {
+                                return ':' + '-'.repeat( width - 1 );
+                            } else if ( rightAlign ) {
+                                return '-'.repeat( width - 1 ) + ':';
+                            }
+                            return dashes;
+                        }
+                        // Pad cell with spaces
+                        return cell + ' '.repeat( width - cell.length );
+                    } );
+                    return '| ' + cells.join( ' | ' ) + ' |';
+                } );
+
+                // Replace table in content
+                var newLines = lines.slice( 0, tableStart ).concat( formattedLines ).concat( lines.slice( tableEnd + 1 ) );
+                var newText = newLines.join( '\n' );
+
+                // Calculate new cursor position (keep it roughly in same place)
+                var newCursorPos = 0;
+                for ( var i = 0; i < tableStart; i++ ) {
+                    newCursorPos += newLines[ i ].length + 1;
+                }
+                newCursorPos += formattedLines[ 0 ].length; // Put cursor at end of first table line
+
+                setAttributes( { content: newText } );
+                restoreFocus( textarea, newCursorPos );
+            }
+
             // Keyboard shortcut handler for textarea
             function handleTextareaKeyDown( e ) {
                 const isMod = e.ctrlKey || e.metaKey;
@@ -676,6 +796,11 @@
                             icon: icons.table,
                             label: __( 'Table', 'wp-djot' ),
                             onClick: onTable,
+                        } ),
+                        cursorInTable && wp.element.createElement( ToolbarButton, {
+                            icon: icons.formatTable,
+                            label: __( 'Format Table', 'wp-djot' ),
+                            onClick: onFormatTable,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.div,

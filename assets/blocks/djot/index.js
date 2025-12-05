@@ -407,8 +407,8 @@
                 var headerCells = [];
                 var separatorCells = [];
                 for ( var c = 1; c <= cols; c++ ) {
-                    headerCells.push( '     ' );
-                    separatorCells.push( '-----' );
+                    headerCells.push( ' Column ' );
+                    separatorCells.push( '--------' );
                 }
                 var header = '|' + headerCells.join( '|' ) + '|';
                 var separator = '|' + separatorCells.join( '|' ) + '|';

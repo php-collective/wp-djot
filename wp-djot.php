@@ -46,7 +46,7 @@ if (!file_exists($autoloader)) {
 
 require_once $autoloader;
 
-// Initialize pluginhttps://dereuromark.ddev.site:33003/2025/11/27/cakephp-file-management-solution/#-2-comments-
+// Initialize plugin
 add_action('plugins_loaded', static function (): void {
     $plugin = new WpDjot\Plugin();
     $plugin->init();

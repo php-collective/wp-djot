@@ -40,7 +40,7 @@ $html = preg_replace_callback(
     $html
 ) ?? $html;
 
-$wrapper_attributes = get_block_wrapper_attributes(['class' => 'wp-djot-block-rendered']);
+$wrapper_attributes = get_block_wrapper_attributes(['class' => 'wp-djot-block-rendered djot-content']);
 
 // Allow checkbox inputs and ul class for task lists in addition to standard post HTML
 $allowed_html = wp_kses_allowed_html('post');

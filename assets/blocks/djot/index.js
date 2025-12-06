@@ -1197,6 +1197,7 @@
                             label: __( 'Show Preview', 'wp-djot' ),
                             checked: isPreviewMode,
                             onChange: setIsPreviewMode,
+                            __nextHasNoMarginBottom: true,
                         } )
                     ),
                     wp.element.createElement(

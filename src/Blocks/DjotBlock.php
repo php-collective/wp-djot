@@ -31,15 +31,38 @@ class DjotBlock
     }
 
     /**
-     * Register the block.
+     * Register the block with highlight.js styles as editor style dependency.
      */
     public function register(): void
     {
+        $options = get_option('wp_djot_settings', []);
+        $highlightCode = $options['highlight_code'] ?? true;
+        $theme = $options['highlight_theme'] ?? 'github';
+
+        if ($highlightCode) {
+            // Register highlight.js style
+            wp_register_style(
+                'wp-djot-highlight',
+                WP_DJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
+                [],
+                WP_DJOT_VERSION,
+            );
+        }
+
+        // Register the block - this auto-registers wp-djot-djot-editor-style from block.json
         register_block_type(WP_DJOT_PLUGIN_DIR . 'assets/blocks/djot');
+
+        if ($highlightCode) {
+            // Add highlight.js CSS as dependency of the block's editor style
+            $styles = wp_styles();
+            if (isset($styles->registered['wp-djot-djot-editor-style'])) {
+                $styles->registered['wp-djot-djot-editor-style']->deps[] = 'wp-djot-highlight';
+            }
+        }
     }
 
     /**
-     * Enqueue highlight.js for block editor preview.
+     * Enqueue highlight.js script for block editor preview.
      */
     public function enqueueEditorAssets(): void
     {
@@ -50,21 +73,12 @@ class DjotBlock
             return;
         }
 
-        $theme = $options['highlight_theme'] ?? 'github';
-
-        wp_enqueue_style(
-            'wp-djot-highlight-editor',
-            WP_DJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
-            [],
-            WP_DJOT_VERSION,
-        );
-
         wp_enqueue_script(
             'wp-djot-highlight-editor',
             WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
             [],
             WP_DJOT_VERSION,
-            true,
+            false,
         );
     }
 

@@ -1105,6 +1105,10 @@
                             wp.element.createElement( 'code', null, '^super^' ), ' ',
                             wp.element.createElement( 'code', null, '~sub~' ), ' ',
                             wp.element.createElement( 'code', null, '{=highlight=}' ),
+                            wp.element.createElement( 'p', null, wp.element.createElement( 'strong', null, 'Semantic:' ) ),
+                            wp.element.createElement( 'code', null, '[CSS]{abbr="..."}' ), wp.element.createElement( 'br' ),
+                            wp.element.createElement( 'code', null, '[Ctrl]{kbd=""}' ), wp.element.createElement( 'br' ),
+                            wp.element.createElement( 'code', null, '[term]{dfn=""}' ),
                             wp.element.createElement( 'p', null,
                                 wp.element.createElement( 'a', { href: 'https://djot.net/', target: '_blank' }, __( 'Full Djot Documentation →', 'wp-djot' ) )
                             )

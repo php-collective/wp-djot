@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace WpDjot;
 
+use Djot\DjotConverter;
+use Djot\Event\RenderEvent;
+use Djot\Node\Inline\Text;
 use WP_CLI;
 use WpDjot\Admin\Settings;
 use WpDjot\Blocks\DjotBlock;
@@ -47,6 +50,9 @@ class Plugin
         // Register content filters
         $this->registerFilters();
 
+        // Register converter customizations
+        $this->registerConverterFilters();
+
         // Admin settings
         if (is_admin()) {
             $this->settings = new Settings();
@@ -74,6 +80,97 @@ class Plugin
         }
 
         WP_CLI::add_command('djot', MigrateCommand::class);
+    }
+
+    /**
+     * Register converter customizations via WordPress filters.
+     *
+     * Adds support for special attribute handling like abbreviations.
+     */
+    private function registerConverterFilters(): void
+    {
+        add_filter('wp_djot_converter', [$this, 'customizeConverter'], 10, 2);
+    }
+
+    /**
+     * Customize the Djot converter with additional rendering rules.
+     *
+     * @param \Djot\DjotConverter $converter
+     * @param string $context
+     */
+    public function customizeConverter(DjotConverter $converter, string $context): DjotConverter
+    {
+        $converter->getRenderer()->on('render.span', function (RenderEvent $event): void {
+            /** @var \Djot\Node\Inline\Span $node */
+            $node = $event->getNode();
+
+            // Get semantic attributes
+            $abbr = $node->getAttribute('abbr');
+            $kbd = $node->getAttribute('kbd');
+            $dfn = $node->getAttribute('dfn');
+
+            // Track which attributes to exclude from passthrough
+            $excludeAttrs = [];
+
+            // Render children first
+            $children = '';
+            foreach ($node->getChildren() as $child) {
+                if ($child instanceof Text) {
+                    $children .= htmlspecialchars($child->getContent(), ENT_NOQUOTES, 'UTF-8');
+                }
+            }
+
+            $content = $children;
+
+            // Build inner element (abbr or kbd) - these are mutually exclusive
+            if ($abbr !== null) {
+                $abbrTitle = ' title="' . htmlspecialchars((string)$abbr, ENT_QUOTES, 'UTF-8') . '"';
+                $content = '<abbr' . $abbrTitle . '>' . $children . '</abbr>';
+                $excludeAttrs[] = 'abbr';
+            } elseif ($kbd !== null) {
+                $content = '<kbd>' . $children . '</kbd>';
+                $excludeAttrs[] = 'kbd';
+            }
+
+            // Wrap in dfn if present (can combine with abbr/kbd)
+            if ($dfn !== null) {
+                $dfnAttr = '';
+                if ($dfn !== '' && $dfn !== true) {
+                    $dfnAttr = ' title="' . htmlspecialchars((string)$dfn, ENT_QUOTES, 'UTF-8') . '"';
+                }
+                $content = '<dfn' . $dfnAttr . '>' . $content . '</dfn>';
+                $excludeAttrs[] = 'dfn';
+            }
+
+            // If no semantic attributes found, use default rendering
+            if (!$excludeAttrs) {
+                return;
+            }
+
+            // Add remaining attributes (class, id, etc.) to outermost element if any
+            $remainingAttrs = [];
+            foreach ($node->getAttributes() as $key => $value) {
+                if (in_array($key, $excludeAttrs, true)) {
+                    continue;
+                }
+                $remainingAttrs[$key] = $value;
+            }
+
+            // If there are extra attributes, wrap in span
+            if ($remainingAttrs) {
+                $attrStr = '';
+                foreach ($remainingAttrs as $key => $value) {
+                    $attrStr .= ' ' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8')
+                        . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
+                }
+                $content = '<span' . $attrStr . '>' . $content . '</span>';
+            }
+
+            $event->setHtml($content);
+            $event->preventDefault();
+        });
+
+        return $converter;
     }
 
     /**

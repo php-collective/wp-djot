@@ -26,6 +26,9 @@ These features are unique to Djot (not in Markdown):
 | `{+inserted+}` | Inserted text |
 | `{-deleted-}` | Deleted text |
 | `[text]{.class}` | Span with CSS class |
+| `[CSS]{abbr="..."}` | Abbreviation with title |
+| `[Ctrl+C]{kbd=""}` | Keyboard input |
+| `[term]{dfn=""}` | Definition term |
 | `::: note ... :::` | Div with CSS class |
 | `"quotes" -- Pro` | Smart typography |
 

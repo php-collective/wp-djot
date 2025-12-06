@@ -80,6 +80,15 @@
             wp.element.createElement( 'path', { d: 'M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z' } ),
             wp.element.createElement( 'path', { d: 'M17 17l4 4m0-4l-4 4', stroke: 'currentColor', strokeWidth: 2, fill: 'none' } )
         ),
+        taskList: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
+            wp.element.createElement( 'rect', { x: 3, y: 4, width: 4, height: 4, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'path', { d: 'M4 6l1 1 2-2', stroke: 'currentColor', strokeWidth: 1.5, fill: 'none' } ),
+            wp.element.createElement( 'line', { x1: 9, y1: 6, x2: 21, y2: 6, stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'rect', { x: 3, y: 10, width: 4, height: 4, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'line', { x1: 9, y1: 12, x2: 21, y2: 12, stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'rect', { x: 3, y: 16, width: 4, height: 4, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'line', { x1: 9, y1: 18, x2: 21, y2: 18, stroke: 'currentColor', strokeWidth: 1.5 } )
+        ),
     };
 
     registerBlockType( 'wp-djot/djot', {
@@ -102,6 +111,8 @@
             const [ showImportModal, setShowImportModal ] = useState( false );
             const [ markdownInput, setMarkdownInput ] = useState( '' );
             const [ djotPreview, setDjotPreview ] = useState( '' );
+            const [ showTaskListModal, setShowTaskListModal ] = useState( false );
+            const [ taskListItems, setTaskListItems ] = useState( [ { text: '', checked: false } ] );
             const textareaRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
             const [ selectionEnd, setSelectionEnd ] = useState( 0 );
@@ -479,6 +490,43 @@
                 var tableTemplate = header + '\n' + separator + '\n' + dataRows.join( '\n' ) + '\n';
                 insertMultiLineBlock( '', '', tableTemplate );
                 setShowTableModal( false );
+            }
+
+            function onTaskList() {
+                setTaskListItems( [ { text: '', checked: false } ] );
+                setShowTaskListModal( true );
+            }
+
+            function onInsertTaskList() {
+                var items = taskListItems.filter( function( item ) { return item.text.trim() !== ''; } );
+                if ( items.length === 0 ) {
+                    setShowTaskListModal( false );
+                    return;
+                }
+
+                var taskListText = items.map( function( item ) {
+                    return ( item.checked ? '- [x] ' : '- [ ] ' ) + item.text;
+                } ).join( '\n' ) + '\n';
+
+                insertMultiLineBlock( '', '', taskListText );
+                setShowTaskListModal( false );
+            }
+
+            function updateTaskItem( index, field, value ) {
+                var newItems = taskListItems.slice();
+                newItems[ index ] = Object.assign( {}, newItems[ index ], ( function() { var o = {}; o[ field ] = value; return o; } )() );
+                setTaskListItems( newItems );
+            }
+
+            function addTaskItem() {
+                setTaskListItems( taskListItems.concat( [ { text: '', checked: false } ] ) );
+            }
+
+            function removeTaskItem( index ) {
+                if ( taskListItems.length <= 1 ) return;
+                var newItems = taskListItems.slice();
+                newItems.splice( index, 1 );
+                setTaskListItems( newItems );
             }
 
             // Format table at cursor position
@@ -1126,21 +1174,30 @@
                         PanelBody,
                         { title: __( 'Syntax Help', 'wp-djot' ), initialOpen: false },
                         wp.element.createElement( 'div', { className: 'wp-djot-syntax-help' },
-                            wp.element.createElement( 'p', null, wp.element.createElement( 'strong', null, 'Inline:' ) ),
-                            wp.element.createElement( 'code', null, '*bold*' ), ' ',
-                            wp.element.createElement( 'code', null, '_italic_' ), ' ',
-                            wp.element.createElement( 'code', null, '`code`' ),
-                            wp.element.createElement( 'p', null, wp.element.createElement( 'strong', null, 'Links:' ) ),
-                            wp.element.createElement( 'code', null, '[text](url)' ),
-                            wp.element.createElement( 'p', null, wp.element.createElement( 'strong', null, 'Djot-specific:' ) ),
-                            wp.element.createElement( 'code', null, '^super^' ), ' ',
-                            wp.element.createElement( 'code', null, '~sub~' ), ' ',
-                            wp.element.createElement( 'code', null, '{=highlight=}' ),
-                            wp.element.createElement( 'p', null, wp.element.createElement( 'strong', null, 'Semantic:' ) ),
-                            wp.element.createElement( 'code', null, '[CSS]{abbr="..."}' ), wp.element.createElement( 'br' ),
-                            wp.element.createElement( 'code', null, '[Ctrl]{kbd=""}' ), wp.element.createElement( 'br' ),
-                            wp.element.createElement( 'code', null, '[term]{dfn=""}' ),
-                            wp.element.createElement( 'p', null,
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Inline:' ) ),
+                            wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
+                                wp.element.createElement( 'code', null, '*bold*' ), ' ',
+                                wp.element.createElement( 'code', null, '_italic_' ), ' ',
+                                wp.element.createElement( 'code', null, '`code`' )
+                            ),
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Links/Images:' ) ),
+                            wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
+                                wp.element.createElement( 'code', null, '[text](url)' ), wp.element.createElement( 'br' ),
+                                wp.element.createElement( 'code', null, '![alt](src)' )
+                            ),
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Djot-specific:' ) ),
+                            wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
+                                wp.element.createElement( 'code', null, '^super^' ), ' ',
+                                wp.element.createElement( 'code', null, '~sub~' ), ' ',
+                                wp.element.createElement( 'code', null, '{=highlight=}' )
+                            ),
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Semantic:' ) ),
+                            wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
+                                wp.element.createElement( 'code', null, '[CSS]{abbr="title"}' ), wp.element.createElement( 'br' ),
+                                wp.element.createElement( 'code', null, '[Ctrl+C]{kbd=""}' ), wp.element.createElement( 'br' ),
+                                wp.element.createElement( 'code', null, '[term]{dfn=""}' )
+                            ),
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: 0 } },
                                 wp.element.createElement( 'a', { href: 'https://djot.net/', target: '_blank' }, __( 'Full Djot Documentation →', 'wp-djot' ) )
                             )
                         )
@@ -1182,11 +1239,19 @@
                     wp.element.createElement(
                         PanelBody,
                         { title: __( 'Tools', 'wp-djot' ), initialOpen: false },
-                        wp.element.createElement( Button, {
-                            variant: 'secondary',
-                            onClick: onImportMarkdown,
-                            style: { width: '100%' },
-                        }, __( 'Import Markdown', 'wp-djot' ) )
+                        wp.element.createElement( 'div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                icon: icons.taskList,
+                                onClick: onTaskList,
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Insert Task List', 'wp-djot' ) ),
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                onClick: onImportMarkdown,
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Import Markdown', 'wp-djot' ) )
+                        )
                     )
                 ),
                 // Link Modal
@@ -1330,6 +1395,67 @@
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowImportModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'wp-djot' ) )
+                    )
+                ),
+                // Task List Modal
+                showTaskListModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Task List', 'wp-djot' ),
+                        onRequestClose: function() { setShowTaskListModal( false ); },
+                        style: { width: '400px', maxWidth: '90vw' },
+                    },
+                    wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
+                        taskListItems.map( function( item, index ) {
+                            return wp.element.createElement( 'div', {
+                                key: index,
+                                style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' },
+                            },
+                                wp.element.createElement( 'input', {
+                                    type: 'checkbox',
+                                    checked: item.checked,
+                                    onChange: function( e ) { updateTaskItem( index, 'checked', e.target.checked ); },
+                                    style: { width: '18px', height: '18px', cursor: 'pointer' },
+                                } ),
+                                wp.element.createElement( 'input', {
+                                    type: 'text',
+                                    value: item.text,
+                                    onChange: function( e ) { updateTaskItem( index, 'text', e.target.value ); },
+                                    placeholder: __( 'Task item...', 'wp-djot' ),
+                                    style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px' },
+                                    onKeyDown: function( e ) {
+                                        if ( e.key === 'Enter' ) {
+                                            e.preventDefault();
+                                            addTaskItem();
+                                        }
+                                    },
+                                } ),
+                                taskListItems.length > 1 && wp.element.createElement( Button, {
+                                    variant: 'tertiary',
+                                    isDestructive: true,
+                                    onClick: function() { removeTaskItem( index ); },
+                                    style: { padding: '4px' },
+                                }, '✕' )
+                            );
+                        } )
+                    ),
+                    wp.element.createElement( Button, {
+                        variant: 'secondary',
+                        onClick: addTaskItem,
+                        style: { marginBottom: '16px' },
+                    }, __( '+ Add Item', 'wp-djot' ) ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px', borderTop: '1px solid #ddd', paddingTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertTaskList,
+                        }, __( 'Insert Task List', 'wp-djot' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowTaskListModal( false ); },
                             style: { marginLeft: '8px' },
                         }, __( 'Cancel', 'wp-djot' ) )
                     )

@@ -6,6 +6,7 @@ namespace WpDjot;
 
 use Djot\DjotConverter;
 use Djot\Profile;
+use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
 use HTMLPurifier_Config;
 
@@ -26,16 +27,31 @@ class Converter
 
     private string $commentProfile;
 
+    private string $postSoftBreak;
+
+    private string $commentSoftBreak;
+
+    private bool $markdownMode;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
     private array $profileConverters = [];
 
-    public function __construct(bool $safeMode = true, string $postProfile = 'article', string $commentProfile = 'comment')
-    {
+    public function __construct(
+        bool $safeMode = true,
+        string $postProfile = 'article',
+        string $commentProfile = 'comment',
+        string $postSoftBreak = 'newline',
+        string $commentSoftBreak = 'newline',
+        bool $markdownMode = false,
+    ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
         $this->commentProfile = $commentProfile;
+        $this->postSoftBreak = $postSoftBreak;
+        $this->commentSoftBreak = $commentSoftBreak;
+        $this->markdownMode = $markdownMode;
         $this->converter = new DjotConverter(safeMode: false);
         $this->safeConverter = new DjotConverter(safeMode: true);
     }
@@ -49,7 +65,8 @@ class Converter
      */
     private function getProfileConverter(string $profileName, bool $safeMode, string $context = 'article'): DjotConverter
     {
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe');
+        $softBreakSetting = $context === 'comment' ? $this->commentSoftBreak : $this->postSoftBreak;
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '');
 
         if (!isset($this->profileConverters[$key])) {
             $profile = match ($profileName) {
@@ -60,7 +77,20 @@ class Converter
                 default => Profile::article(),
             };
 
-            $converter = new DjotConverter(safeMode: $safeMode, profile: $profile);
+            // Use significantNewlines mode for markdown compatibility
+            if ($this->markdownMode) {
+                $converter = DjotConverter::withSignificantNewlines(safeMode: $safeMode, profile: $profile);
+            } else {
+                $converter = new DjotConverter(safeMode: $safeMode, profile: $profile);
+
+                // Apply soft break mode (only when not in markdown mode, which handles it automatically)
+                $softBreakMode = match ($softBreakSetting) {
+                    'space' => SoftBreakMode::Space,
+                    'br' => SoftBreakMode::Break,
+                    default => SoftBreakMode::Newline,
+                };
+                $converter->getRenderer()->setSoftBreakMode($softBreakMode);
+            }
 
             // Allow customization via WordPress filters
             if (function_exists('apply_filters')) {
@@ -231,16 +261,31 @@ class Converter
             if ($purifier === null) {
                 $config = HTMLPurifier_Config::createDefault();
                 $config->set('Cache.DefinitionImpl', null);
-                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title],ul,ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr');
+                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title],ul[class],ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr,input[type|checked|disabled]');
                 $purifier = new HTMLPurifier($config);
             }
 
             return $purifier->purify($html);
         }
 
-        // Fallback to WordPress sanitization
-        if (function_exists('wp_kses_post')) {
-            return wp_kses_post($html);
+        // Fallback to WordPress sanitization with checkbox support for task lists
+        if (function_exists('wp_kses')) {
+            $allowedHtml = array_merge(
+                wp_kses_allowed_html('post'),
+                [
+                    'input' => [
+                        'type' => true,
+                        'checked' => true,
+                        'disabled' => true,
+                        'class' => true,
+                    ],
+                    'ul' => [
+                        'class' => true,
+                    ],
+                ],
+            );
+
+            return wp_kses($html, $allowedHtml);
         }
 
         return $html;

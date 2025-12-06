@@ -165,6 +165,41 @@ class Settings
             ['field' => 'comment_profile', 'description' => __('Feature restrictions for user comments.', 'djot-markup-for-wp')],
         );
 
+        // Rendering Settings Section
+        add_settings_section(
+            'wp_djot_rendering',
+            __('Rendering Settings', 'djot-markup-for-wp'),
+            [$this, 'renderRenderingSectionDescription'],
+            self::PAGE_SLUG,
+        );
+
+        add_settings_field(
+            'markdown_mode',
+            __('Markdown Compatibility', 'djot-markup-for-wp'),
+            [$this, 'renderCheckboxField'],
+            self::PAGE_SLUG,
+            'wp_djot_rendering',
+            ['field' => 'markdown_mode', 'description' => __('Enable Markdown-like behavior: single line breaks become visible, and blocks can interrupt paragraphs without blank lines.', 'djot-markup-for-wp') . '<br>' . __('Recommended for users migrating from Markdown without having migrated their texts yet.', 'djot-markup-for-wp') . '<br><strong>' . __('Warning: This deviates from the Djot specification.', 'djot-markup-for-wp') . '</strong>'],
+        );
+
+        add_settings_field(
+            'post_soft_break',
+            __('Posts/Pages Line Breaks', 'djot-markup-for-wp'),
+            [$this, 'renderSoftBreakSelect'],
+            self::PAGE_SLUG,
+            'wp_djot_rendering',
+            ['field' => 'post_soft_break', 'description' => __('How single line breaks are rendered in posts and pages. Overridden by Markdown Compatibility when enabled.', 'djot-markup-for-wp')],
+        );
+
+        add_settings_field(
+            'comment_soft_break',
+            __('Comment Line Breaks', 'djot-markup-for-wp'),
+            [$this, 'renderSoftBreakSelect'],
+            self::PAGE_SLUG,
+            'wp_djot_rendering',
+            ['field' => 'comment_soft_break', 'description' => __('How single line breaks are rendered in comments. Overridden by Markdown Compatibility when enabled.', 'djot-markup-for-wp')],
+        );
+
         // Code Highlighting Section
         add_settings_section(
             'wp_djot_highlighting',
@@ -238,6 +273,13 @@ class Settings
             'highlight_code' => !empty($input['highlight_code']),
             'highlight_theme' => sanitize_text_field($input['highlight_theme'] ?? 'github'),
             'shortcode_tag' => sanitize_key($input['shortcode_tag'] ?? 'djot'),
+            'markdown_mode' => !empty($input['markdown_mode']),
+            'post_soft_break' => in_array($input['post_soft_break'] ?? '', ['newline', 'space', 'br'], true)
+                ? $input['post_soft_break']
+                : 'newline',
+            'comment_soft_break' => in_array($input['comment_soft_break'] ?? '', ['newline', 'space', 'br'], true)
+                ? $input['comment_soft_break']
+                : 'newline',
         ];
     }
 
@@ -271,6 +313,11 @@ class Settings
         echo '<p>' . esc_html__('Configure syntax highlighting for code blocks.', 'djot-markup-for-wp') . '</p>';
     }
 
+    public function renderRenderingSectionDescription(): void
+    {
+        echo '<p>' . esc_html__('Configure how Djot content is parsed and rendered to HTML.', 'djot-markup-for-wp') . '</p>';
+    }
+
     public function renderAdvancedSectionDescription(): void
     {
         echo '<p>' . esc_html__('Advanced configuration options.', 'djot-markup-for-wp') . '</p>';
@@ -295,7 +342,7 @@ class Settings
         );
 
         if (!empty($args['description'])) {
-            printf('<p class="description">%s</p>', esc_html($args['description']));
+            printf('<p class="description">%s</p>', wp_kses($args['description'], ['br' => [], 'strong' => []]));
         }
     }
 
@@ -436,6 +483,65 @@ class Settings
                 '<li><strong>%s:</strong> %s</li>',
                 esc_html($profile['label']),
                 esc_html($profile['description']),
+            );
+        }
+        echo '</ul>';
+    }
+
+    /**
+     * Render soft break mode select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
+    public function renderSoftBreakSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $current = $options[$field] ?? 'newline';
+
+        $modes = [
+            'newline' => [
+                'label' => __('Default (invisible)', 'djot-markup-for-wp'),
+                'description' => __('Standard behavior - line breaks are not visible in output.', 'djot-markup-for-wp'),
+            ],
+            'space' => [
+                'label' => __('Space', 'djot-markup-for-wp'),
+                'description' => __('Render as a space character.', 'djot-markup-for-wp'),
+            ],
+            'br' => [
+                'label' => __('Visible line break', 'djot-markup-for-wp'),
+                'description' => __('Render as <br> tag. Useful for poetry, addresses, or preserving line breaks.', 'djot-markup-for-wp'),
+            ],
+        ];
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+
+        foreach ($modes as $value => $mode) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr($value),
+                selected($current, $value, false),
+                esc_html($mode['label']),
+            );
+        }
+
+        echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
+
+        // Show mode details
+        echo '<ul class="description" style="margin-top: 5px; font-size: 12px;">';
+        foreach ($modes as $value => $mode) {
+            printf(
+                '<li><strong>%s:</strong> %s</li>',
+                esc_html($mode['label']),
+                esc_html($mode['description']),
             );
         }
         echo '</ul>';

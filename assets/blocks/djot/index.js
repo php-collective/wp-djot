@@ -114,6 +114,7 @@
             const [ showTaskListModal, setShowTaskListModal ] = useState( false );
             const [ taskListItems, setTaskListItems ] = useState( [ { text: '', checked: false } ] );
             const textareaRef = useRef( null );
+            const previewRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
             const [ selectionEnd, setSelectionEnd ] = useState( 0 );
 
@@ -994,6 +995,34 @@
                 setAttributes( { content: newContent } );
             }
 
+            // Scroll preview to match cursor position in editor
+            function syncPreviewScroll() {
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                var previewEl = previewRef.current;
+                if ( ! textarea || ! previewEl ) return;
+
+                var text = content || '';
+                var cursorPos = textarea.selectionStart;
+
+                // Calculate percentage through the document based on cursor position
+                var percentage = text.length > 0 ? cursorPos / text.length : 0;
+
+                // Apply to preview scroll with a small delay to ensure preview is rendered
+                setTimeout( function() {
+                    var scrollHeight = previewEl.scrollHeight - previewEl.clientHeight;
+                    if ( scrollHeight > 0 ) {
+                        previewEl.scrollTop = scrollHeight * percentage;
+                    }
+                }, 100 );
+            }
+
+            // Sync scroll when entering preview mode
+            useEffect( function() {
+                if ( isPreviewMode && preview && ! isLoading ) {
+                    syncPreviewScroll();
+                }
+            }, [ isPreviewMode, preview, isLoading ] );
+
             // Heading dropdown controls
             const headingControls = [
                 { title: __( 'Heading 1', 'wp-djot' ), onClick: function() { onHeading( 1 ); } },
@@ -1477,6 +1506,7 @@
                                   rows: 12,
                                   className: 'wp-djot-editor',
                                   placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'wp-djot' ),
+                                  __nextHasNoMarginBottom: true,
                               } ),
                           isPreviewMode &&
                               wp.element.createElement(
@@ -1499,6 +1529,7 @@
                                   isLoading
                                       ? wp.element.createElement( Spinner, null )
                                       : wp.element.createElement( 'div', {
+                                            ref: previewRef,
                                             className: 'wp-djot-preview djot-content',
                                             dangerouslySetInnerHTML: { __html: preview },
                                         } )
@@ -1524,6 +1555,7 @@
                                   rows: 8,
                                   className: 'wp-djot-editor',
                                   placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'wp-djot' ),
+                                  __nextHasNoMarginBottom: true,
                               } )
                           )
                       )

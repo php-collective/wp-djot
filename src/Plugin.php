@@ -209,6 +209,11 @@ class Plugin
             return $this->processContent($content, false);
         }
 
+        // Skip if content contains Gutenberg blocks - let do_blocks() handle them at priority 9
+        if (str_contains($content, '<!-- wp:')) {
+            return $content;
+        }
+
         // Process full content as Djot using configured post profile
         if ($this->options['process_full_content']) {
             return $this->converter->convertArticle($content);
@@ -448,7 +453,7 @@ class Plugin
         $defaults = [
             'enable_posts' => true,
             'enable_pages' => true,
-            'enable_comments' => false,
+            'enable_comments' => true,
             'process_full_content' => true,
             'process_full_comments' => true,
             'safe_mode' => true,

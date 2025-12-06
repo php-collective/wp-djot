@@ -27,6 +27,69 @@ add_filter('wp_djot_converter_product', function(Djot\DjotConverter $converter):
 });
 ```
 
+## Built-in Customizations
+
+The plugin includes these customizations out of the box for semantic HTML elements:
+
+### Abbreviations (`abbr`)
+
+Spans with an `abbr` attribute are automatically rendered as `<abbr>` elements:
+
+**Djot syntax:**
+```
+[CSS]{abbr="Cascading Style Sheets"} is used for styling.
+[HTML]{abbr="HyperText Markup Language" .tech-term} is the foundation.
+```
+
+**Renders as:**
+```html
+<abbr title="Cascading Style Sheets">CSS</abbr> is used for styling.
+<abbr title="HyperText Markup Language" class="tech-term">HTML</abbr> is the foundation.
+```
+
+### Keyboard Input (`kbd`)
+
+Use `kbd=""` for keyboard shortcuts and user input:
+
+**Djot syntax:**
+```
+Press [Ctrl+C]{kbd=""} to copy and [Ctrl+V]{kbd=""} to paste.
+Use [Ctrl+Shift+P]{kbd="" .important} for the command palette.
+```
+
+**Renders as:**
+```html
+Press <kbd>Ctrl+C</kbd> to copy and <kbd>Ctrl+V</kbd> to paste.
+Use <kbd class="important">Ctrl+Shift+P</kbd> for the command palette.
+```
+
+### Definitions (`dfn`)
+
+Use `dfn` for terms being defined. Optionally include a title for the full definition:
+
+**Djot syntax:**
+```
+A [closure]{dfn=""} is a function that captures its environment.
+An [API]{dfn="Application Programming Interface"} allows programs to communicate.
+```
+
+**Renders as:**
+```html
+A <dfn>closure</dfn> is a function that captures its environment.
+An <dfn title="Application Programming Interface">API</dfn> allows programs to communicate.
+```
+
+### Summary
+
+| Attribute | Syntax | Output |
+|-----------|--------|--------|
+| `abbr="..."` | `[CSS]{abbr="Cascading Style Sheets"}` | `<abbr title="...">CSS</abbr>` |
+| `kbd=""` | `[Ctrl+C]{kbd=""}` | `<kbd>Ctrl+C</kbd>` |
+| `dfn=""` | `[term]{dfn=""}` | `<dfn>term</dfn>` |
+| `dfn="..."` | `[API]{dfn="Full name"}` | `<dfn title="...">API</dfn>` |
+
+Additional attributes like classes and IDs are preserved on all semantic elements.
+
 ## Render Event Handlers
 
 The converter fires events for each element type during rendering. You can intercept these to customize output.

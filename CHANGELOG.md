@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Upgrade to djot-php 0.1.4
+- Rendering Settings section in admin:
+  - Markdown Compatibility mode for users migrating from Markdown (significant newlines)
+  - Soft break mode settings for posts/pages and comments (invisible, space, or visible `<br>`)
+
 ## [1.1.0] - 2025-12-05
 
 ### Added

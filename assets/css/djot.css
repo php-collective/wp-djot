@@ -109,6 +109,42 @@
     margin: 0;
 }
 
+/* Task Lists */
+.djot-content ul.task-list,
+.djot-content .task-list {
+    list-style: none !important;
+    padding-left: 0 !important;
+}
+
+.djot-content .task-list li,
+.djot-content ul.task-list li,
+article .djot-content .task-list li,
+article .entry-content .djot-content .task-list li {
+    list-style: none !important;
+    position: relative;
+    padding-left: 1.5em;
+}
+
+.djot-content .task-list li input[type="checkbox"] {
+    position: absolute;
+    left: 0;
+    top: 0.3em;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #1a7f37;
+    pointer-events: none;
+}
+
+.djot-content .task-list li input[type="checkbox"]:checked {
+    accent-color: #1a7f37;
+}
+
+.djot-content .task-list li:has(input[type="checkbox"]:checked) {
+    color: #57606a;
+    text-decoration: line-through;
+}
+
 /* Definition Lists */
 .djot-content dl {
     margin: 1em 0;
@@ -545,5 +581,17 @@
         background-color: #21262d;
         border-color: #30363d;
         box-shadow: inset 0 -1px 0 #30363d;
+    }
+
+    .djot-content .task-list li input[type="checkbox"] {
+        accent-color: #3fb950;
+    }
+
+    .djot-content .task-list li input[type="checkbox"]:checked {
+        accent-color: #3fb950;
+    }
+
+    .djot-content .task-list li:has(input[type="checkbox"]:checked) {
+        color: #8b949e;
     }
 }

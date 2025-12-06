@@ -41,6 +41,9 @@ class Plugin
             $this->options['safe_mode'],
             $this->options['post_profile'],
             $this->options['comment_profile'],
+            $this->options['post_soft_break'],
+            $this->options['comment_soft_break'],
+            $this->options['markdown_mode'],
         );
         $this->shortcode = new DjotShortcode($this->converter);
 
@@ -451,6 +454,9 @@ class Plugin
             'safe_mode' => true,
             'post_profile' => 'article',
             'comment_profile' => 'comment',
+            'markdown_mode' => false,
+            'post_soft_break' => 'newline',
+            'comment_soft_break' => 'newline',
             'highlight_code' => true,
             'highlight_theme' => 'github',
             'shortcode_tag' => 'djot',

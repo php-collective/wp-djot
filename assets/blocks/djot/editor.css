@@ -156,6 +156,38 @@
     background-color: #f6f8fa;
 }
 
+/* Task Lists */
+.wp-djot-preview.djot-content ul.task-list,
+.wp-djot-preview.djot-content .task-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.wp-djot-preview.djot-content .task-list li {
+    position: relative;
+    padding-left: 1.5em;
+}
+
+.wp-djot-preview.djot-content .task-list li input[type="checkbox"] {
+    position: absolute;
+    left: 0;
+    top: 0.3em;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #1a7f37;
+    pointer-events: none;
+}
+
+.wp-djot-preview.djot-content .task-list li input[type="checkbox"]:checked {
+    accent-color: #1a7f37;
+}
+
+.wp-djot-preview.djot-content .task-list li:has(input[type="checkbox"]:checked) {
+    color: #57606a;
+    text-decoration: line-through;
+}
+
 /* Placeholder styles */
 .wp-djot-block .components-placeholder {
     min-height: auto;

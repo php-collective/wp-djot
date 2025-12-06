@@ -18,11 +18,16 @@ if (empty($content)) {
     return;
 }
 
-// Get settings to use configured post profile
+// Get settings to use configured profiles and rendering options
 $options = get_option('wp_djot_settings', []);
+$safeMode = !empty($options['safe_mode']);
 $postProfile = $options['post_profile'] ?? 'article';
+$commentProfile = $options['comment_profile'] ?? 'comment';
+$postSoftBreak = $options['post_soft_break'] ?? 'newline';
+$commentSoftBreak = $options['comment_soft_break'] ?? 'newline';
+$markdownMode = !empty($options['markdown_mode']);
 
-$converter = new WpDjot\Converter(false, $postProfile, 'comment');
+$converter = new WpDjot\Converter($safeMode, $postProfile, $commentProfile, $postSoftBreak, $commentSoftBreak, $markdownMode);
 $html = $converter->convertArticle($content);
 
 // Escape shortcode brackets inside <code> and <pre> tags to prevent WordPress processing
@@ -37,9 +42,19 @@ $html = preg_replace_callback(
 
 $wrapper_attributes = get_block_wrapper_attributes(['class' => 'wp-djot-block-rendered']);
 
-// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped by get_block_wrapper_attributes()
+// Allow checkbox inputs and ul class for task lists in addition to standard post HTML
+$allowed_html = wp_kses_allowed_html('post');
+$allowed_html['input'] = [
+    'type' => true,
+    'checked' => true,
+    'disabled' => true,
+    'class' => true,
+];
+$allowed_html['ul']['class'] = true;
+
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped, $html is sanitized by wp_kses
 printf(
     '<div %s>%s</div>',
     $wrapper_attributes,
-    wp_kses_post($html)
+    wp_kses($html, $allowed_html)
 );

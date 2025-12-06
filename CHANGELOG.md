@@ -9,10 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [1.1.1] - 2025-12-06
 
-- Upgrade to djot-php 0.1.4
-- Rendering Settings section in admin:
+### Added
+
+- Rendering Settings section in admin
 - Markdown Compatibility mode for users migrating from Markdown (significant newlines)
 - Soft break mode settings for posts/pages and comments (invisible, space, or visible `<br>`)
+- Interactive task list tool in block editor sidebar
+- Scroll sync when switching to preview mode in block editor
+
+### Changed
+
+- Upgrade to djot-php 0.1.4
+- Import Markdown now uses server-side djot-php converter for more accurate results
+
+### Fixed
+
+- Task list checkboxes now render correctly (wp_kses fix for input elements)
+- Task list styling now overrides theme styles
+- Completed task items now show strikethrough
+- Undo/redo now works properly with individual changes (switched to PlainText component)
+- ToggleControl deprecation warning fixed
 
 ## [1.1.0] - 2025-12-05
 

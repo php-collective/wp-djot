@@ -2,6 +2,7 @@
     const { registerBlockType } = wp.blocks;
     const { useState, useEffect, useCallback, useRef } = wp.element;
     const { TextareaControl, PanelBody, ToggleControl, Placeholder, Spinner, ToolbarGroup, ToolbarButton, ToolbarDropdownMenu, Modal, TextControl, Button, RangeControl } = wp.components;
+    const { PlainText } = wp.blockEditor;
     const { InspectorControls, BlockControls, useBlockProps } = wp.blockEditor;
     const { __ } = wp.i18n;
     const apiFetch = wp.apiFetch;
@@ -111,6 +112,7 @@
             const [ showImportModal, setShowImportModal ] = useState( false );
             const [ markdownInput, setMarkdownInput ] = useState( '' );
             const [ djotPreview, setDjotPreview ] = useState( '' );
+            const [ isConverting, setIsConverting ] = useState( false );
             const [ showTaskListModal, setShowTaskListModal ] = useState( false );
             const [ taskListItems, setTaskListItems ] = useState( [ { text: '', checked: false } ] );
             const textareaRef = useRef( null );
@@ -656,12 +658,17 @@
                 } );
 
                 // Bold: **text** or __text__ → *text*
-                result = result.replace( /\*\*([^*]+)\*\*/g, '*$1*' );
-                result = result.replace( /__([^_]+)__/g, '*$1*' );
+                // Use placeholder to prevent italic conversion from affecting these
+                result = result.replace( /\*\*([^*]+)\*\*/g, '%%DJOTBOLD%%$1%%DJOTBOLDEND%%' );
+                result = result.replace( /__([^_]+)__/g, '%%DJOTBOLD%%$1%%DJOTBOLDEND%%' );
 
                 // Italic: *text* or _text_ → _text_ (but not inside words)
                 // Only convert *text* that's not already bold
                 result = result.replace( /(?<!\*)\*([^*]+)\*(?!\*)/g, '_$1_' );
+
+                // Restore bold markers
+                result = result.replace( /%%DJOTBOLD%%/g, '*' );
+                result = result.replace( /%%DJOTBOLDEND%%/g, '*' );
 
                 // Strikethrough: ~~text~~ → {~text~}
                 result = result.replace( /~~([^~]+)~~/g, '{~$1~}' );
@@ -733,10 +740,37 @@
                 setShowImportModal( true );
             }
 
-            // Update preview when markdown input changes
+            // Update preview when markdown input changes (using server-side converter)
+            const debouncedConvertMarkdown = useCallback(
+                debounce( function( markdown ) {
+                    if ( ! markdown.trim() ) {
+                        setDjotPreview( '' );
+                        setIsConverting( false );
+                        return;
+                    }
+
+                    apiFetch( {
+                        path: '/wp-djot/v1/convert-markdown',
+                        method: 'POST',
+                        data: { content: markdown },
+                    } )
+                        .then( function( response ) {
+                            setDjotPreview( response.djot || '' );
+                            setIsConverting( false );
+                        } )
+                        .catch( function() {
+                            // Fall back to client-side conversion on error
+                            setDjotPreview( convertMarkdownToDjot( markdown ) );
+                            setIsConverting( false );
+                        } );
+                }, 300 ),
+                []
+            );
+
             function onMarkdownInputChange( value ) {
                 setMarkdownInput( value );
-                setDjotPreview( convertMarkdownToDjot( value ) );
+                setIsConverting( true );
+                debouncedConvertMarkdown( value );
             }
 
             // Insert converted djot at cursor position
@@ -1401,8 +1435,11 @@
                                 placeholder: __( 'Paste your Markdown here...', 'wp-djot' ),
                             } )
                         ),
-                        wp.element.createElement( 'div', { style: { flex: 1 } },
-                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } }, __( 'Djot Preview', 'wp-djot' ) ),
+                        wp.element.createElement( 'div', { style: { flex: 1, position: 'relative' } },
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } },
+                                __( 'Djot Preview', 'wp-djot' ),
+                                isConverting && wp.element.createElement( 'span', { style: { marginLeft: '8px', fontSize: '11px', color: '#999' } }, __( 'Converting...', 'wp-djot' ) )
+                            ),
                             wp.element.createElement( 'textarea', {
                                 value: djotPreview,
                                 readOnly: true,
@@ -1420,7 +1457,7 @@
                         wp.element.createElement( Button, {
                             variant: 'primary',
                             onClick: onInsertImported,
-                            disabled: ! djotPreview.trim(),
+                            disabled: isConverting || ! djotPreview.trim(),
                         }, __( 'Insert', 'wp-djot' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
@@ -1496,18 +1533,15 @@
                           'div',
                           { className: 'wp-djot-block-wrapper', ref: textareaRef },
                           ! isPreviewMode &&
-                              wp.element.createElement( TextareaControl, {
-                                  label: __( 'Djot Content', 'wp-djot' ),
+                              wp.element.createElement( PlainText, {
                                   value: content,
                                   onChange: onChangeContent,
                                   onSelect: updateSelection,
                                   onClick: updateSelection,
                                   onKeyUp: updateSelection,
                                   onKeyDown: handleTextareaKeyDown,
-                                  rows: 12,
                                   className: 'wp-djot-editor',
                                   placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'wp-djot' ),
-                                  __nextHasNoMarginBottom: true,
                               } ),
                           isPreviewMode &&
                               wp.element.createElement(
@@ -1546,17 +1580,15 @@
                           wp.element.createElement(
                               'div',
                               { ref: textareaRef, style: { width: '100%' } },
-                              wp.element.createElement( TextareaControl, {
+                              wp.element.createElement( PlainText, {
                                   value: content,
                                   onChange: onChangeContent,
                                   onSelect: updateSelection,
                                   onClick: updateSelection,
                                   onKeyUp: updateSelection,
                                   onKeyDown: handleTextareaKeyDown,
-                                  rows: 8,
                                   className: 'wp-djot-editor',
                                   placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'wp-djot' ),
-                                  __nextHasNoMarginBottom: true,
                               } )
                           )
                       )

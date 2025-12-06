@@ -8,6 +8,7 @@
     padding: 0;
 }
 
+.wp-djot-block .wp-djot-editor,
 .wp-djot-block .wp-djot-editor textarea {
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
     font-size: 13px;
@@ -23,6 +24,7 @@
     field-sizing: content;
 }
 
+.wp-djot-block .wp-djot-editor:focus,
 .wp-djot-block .wp-djot-editor textarea:focus {
     outline: none;
     box-shadow: none;

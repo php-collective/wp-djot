@@ -92,6 +92,19 @@ class DjotBlock
             ],
         ]);
 
+        // Markdown to Djot conversion (requires edit_posts capability)
+        register_rest_route('wp-djot/v1', '/convert-markdown', [
+            'methods' => 'POST',
+            'callback' => [$this, 'convertMarkdown'],
+            'permission_callback' => [$this, 'canEdit'],
+            'args' => [
+                'content' => [
+                    'required' => true,
+                    'type' => 'string',
+                ],
+            ],
+        ]);
+
         // Comment preview (public, uses restricted comment profile)
         register_rest_route('wp-djot/v1', '/preview-comment', [
             'methods' => 'POST',
@@ -153,5 +166,22 @@ class DjotBlock
         $html = preg_replace('/^<div class="djot-content">(.*)<\/div>$/s', '$1', $html) ?? $html;
 
         return new WP_REST_Response(['html' => $html], 200);
+    }
+
+    /**
+     * Convert Markdown to Djot.
+     */
+    public function convertMarkdown(WP_REST_Request $request): WP_REST_Response
+    {
+        $content = $request->get_param('content');
+
+        if (!$content) {
+            return new WP_REST_Response(['djot' => ''], 200);
+        }
+
+        $converter = new \Djot\Converter\MarkdownToDjot();
+        $djot = $converter->convert($content);
+
+        return new WP_REST_Response(['djot' => $djot], 200);
     }
 }

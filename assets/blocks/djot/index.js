@@ -995,17 +995,40 @@
 
             // Apply syntax highlighting after preview renders
             useEffect( function() {
-                if ( isPreviewMode && preview && ! isLoading && typeof window.hljs !== 'undefined' ) {
-                    // Small delay to ensure DOM is updated
-                    setTimeout( function() {
-                        var previewEl = document.querySelector( '.wp-djot-preview.djot-content' );
-                        if ( previewEl ) {
-                            previewEl.querySelectorAll( 'pre code' ).forEach( function( block ) {
-                                window.hljs.highlightElement( block );
-                            } );
-                        }
-                    }, 10 );
+                if ( ! isPreviewMode || ! preview || isLoading ) {
+                    return;
                 }
+
+                function applyHighlighting() {
+                    // Use querySelector as fallback since ref may not be ready
+                    var previewEl = previewRef.current || document.querySelector( '.wp-djot-preview.djot-content' );
+                    if ( previewEl && window.hljs ) {
+                        var codeBlocks = previewEl.querySelectorAll( 'pre code' );
+                        codeBlocks.forEach( function( block ) {
+                            if ( ! block.classList.contains( 'hljs' ) ) {
+                                window.hljs.highlightElement( block );
+                            }
+                        } );
+                    }
+                }
+
+                // Poll for both hljs and DOM element availability
+                var attempts = 0;
+                var maxAttempts = 50; // 5 seconds max
+                var pollInterval = setInterval( function() {
+                    attempts++;
+                    var hasHljs = typeof window.hljs !== 'undefined';
+                    var hasPreview = previewRef.current || document.querySelector( '.wp-djot-preview.djot-content' );
+
+                    if ( hasHljs && hasPreview ) {
+                        clearInterval( pollInterval );
+                        setTimeout( applyHighlighting, 10 );
+                    } else if ( attempts >= maxAttempts ) {
+                        clearInterval( pollInterval );
+                    }
+                }, 100 );
+
+                return function() { clearInterval( pollInterval ); };
             }, [ preview, isLoading, isPreviewMode ] );
 
             // ESC key exits preview mode

@@ -342,12 +342,28 @@
             }
 
             function onInsertLink() {
+                const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = content || '';
+
+                let linkMarkup;
                 if ( linkText.trim() ) {
-                    insertMarkup( '[' + linkText + '](', ')', linkUrl );
+                    linkMarkup = '[' + linkText + '](' + linkUrl + ')';
                 } else {
                     // Use autolink syntax when no text provided
-                    insertMarkup( '<', '>', linkUrl );
+                    linkMarkup = '<' + linkUrl + '>';
                 }
+
+                // Replace selection (or insert at cursor) with the complete link
+                const newText = text.substring( 0, start ) + linkMarkup + text.substring( end );
+                const newCursorPos = start + linkMarkup.length;
+
+                setAttributes( { content: newText } );
+                restoreFocus( textarea, newCursorPos );
+
                 setShowLinkModal( false );
                 setLinkUrl( '' );
                 setLinkText( '' );
@@ -360,7 +376,22 @@
             }
 
             function onInsertImage() {
-                insertMarkup( '![' + imageAlt + '](', ')', imageUrl );
+                const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = content || '';
+
+                const imageMarkup = '![' + imageAlt + '](' + imageUrl + ')';
+
+                // Replace selection (or insert at cursor) with the complete image
+                const newText = text.substring( 0, start ) + imageMarkup + text.substring( end );
+                const newCursorPos = start + imageMarkup.length;
+
+                setAttributes( { content: newText } );
+                restoreFocus( textarea, newCursorPos );
+
                 setShowImageModal( false );
                 setImageUrl( '' );
                 setImageAlt( '' );

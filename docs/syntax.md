@@ -26,9 +26,6 @@ These features are unique to Djot (not in Markdown):
 | `{+inserted+}` | Inserted text |
 | `{-deleted-}` | Deleted text |
 | `[text]{.class}` | Span with CSS class |
-| `[CSS]{abbr="..."}` | Abbreviation with title |
-| `[Ctrl+C]{kbd=""}` | Keyboard input |
-| `[term]{dfn=""}` | Definition term |
 | `::: note ... :::` | Div with CSS class |
 | `"quotes" -- Pro` | Smart typography |
 
@@ -92,6 +89,29 @@ Here is a footnote reference[^1].
 </div>
 ```
 ````
+
+## Custom Attributes
+
+Djot supports adding custom attributes to spans:
+
+| Djot Syntax | HTML Output |
+|-------------|-------------|
+| `[text]{.class}` | `<span class="class">text</span>` |
+| `[text]{#id}` | `<span id="id">text</span>` |
+| `[text]{key="value"}` | `<span key="value">text</span>` |
+
+## Semantic Elements (WP Djot)
+
+WP Djot adds support for semantic HTML elements via special attributes:
+
+| Djot Syntax | HTML Output | Use Case |
+|-------------|-------------|----------|
+| `[CSS]{abbr="Cascading Style Sheets"}` | `<abbr title="...">CSS</abbr>` | Abbreviation |
+| `[Ctrl+C]{kbd=""}` | `<kbd>Ctrl+C</kbd>` | Keyboard input |
+| `[term]{dfn=""}` | `<dfn>term</dfn>` | Definition term |
+| `[term]{dfn="explanation"}` | `<dfn title="...">term</dfn>` | Definition with title |
+
+These can be combined: `[CSS]{abbr="Cascading Style Sheets" dfn=""}` renders as `<dfn><abbr title="...">CSS</abbr></dfn>`.
 
 ## More Information
 

@@ -205,9 +205,8 @@
             }
 
             // Insert text at cursor or wrap selection
-            function insertMarkup( before, after, placeholder ) {
+            function insertMarkup( before, after ) {
                 after = after || '';
-                placeholder = placeholder || '';
 
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
@@ -221,13 +220,13 @@
                 let newCursorPos;
 
                 if ( selectedText ) {
-                    // Wrap selection
+                    // Wrap selection, cursor at end
                     newText = text.substring( 0, start ) + before + selectedText + after + text.substring( end );
                     newCursorPos = start + before.length + selectedText.length + after.length;
                 } else {
-                    // Insert placeholder
-                    newText = text.substring( 0, start ) + before + placeholder + after + text.substring( end );
-                    newCursorPos = start + before.length + placeholder.length;
+                    // Insert markers only, cursor between them
+                    newText = text.substring( 0, start ) + before + after + text.substring( end );
+                    newCursorPos = start + before.length;
                 }
 
                 setAttributes( { content: newText } );
@@ -334,16 +333,16 @@
             }
 
             // Toolbar button handlers
-            function onBold() { insertMarkup( '*', '*', 'bold text' ); }
-            function onItalic() { insertMarkup( '_', '_', 'italic text' ); }
-            function onCode() { insertMarkup( '`', '`', 'code' ); }
-            function onSuperscript() { insertMarkup( '^', '^', 'superscript' ); }
-            function onSubscript() { insertMarkup( '~', '~', 'subscript' ); }
-            function onHighlight() { insertMarkup( '{=', '=}', 'highlighted' ); }
-            function onInsert() { insertMarkup( '{+', '+}', 'inserted' ); }
-            function onDelete() { insertMarkup( '{-', '-}', 'deleted' ); }
-            function onStrikethrough() { insertMarkup( '{~', '~}', 'strikethrough' ); }
-            function onSpan() { insertMarkup( '[', ']{.class}', 'text' ); }
+            function onBold() { insertMarkup( '*', '*' ); }
+            function onItalic() { insertMarkup( '_', '_' ); }
+            function onCode() { insertMarkup( '`', '`' ); }
+            function onSuperscript() { insertMarkup( '^', '^' ); }
+            function onSubscript() { insertMarkup( '~', '~' ); }
+            function onHighlight() { insertMarkup( '{=', '=}' ); }
+            function onInsert() { insertMarkup( '{+', '+}' ); }
+            function onDelete() { insertMarkup( '{-', '-}' ); }
+            function onStrikethrough() { insertMarkup( '{~', '~}' ); }
+            function onSpan() { insertMarkup( '[', ']{.class}' ); }
 
             function onLink() {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
@@ -446,19 +445,19 @@
                     setAttributes( { content: newText } );
                     restoreFocus( textarea, newCursorPos );
                 } else {
-                    // No existing heading on line, use normal block insert
+                    // No existing heading on line, insert heading prefix
                     const hashes = '#'.repeat( level ) + ' ';
-                    insertBlockMarkup( hashes, 'Heading ' + level );
+                    insertBlockMarkup( hashes, '' );
                 }
             }
 
-            function onBlockquote() { insertBlockMarkup( '> ', 'quote' ); }
-            function onListUl() { insertBlockMarkup( '- ', 'list item' ); }
-            function onListOl() { insertBlockMarkup( '1. ', 'list item' ); }
+            function onBlockquote() { insertBlockMarkup( '> ', '' ); }
+            function onListUl() { insertBlockMarkup( '- ', '' ); }
+            function onListOl() { insertBlockMarkup( '1. ', '' ); }
             function onHorizontalRule() { insertMultiLineBlock( '---', '', '' ); }
-            function onCodeBlock() { insertMultiLineBlock( '```', '```', 'code here' ); }
-            function onDiv() { insertMultiLineBlock( '::: note', ':::', 'content' ); }
-            function onFootnote() { insertMarkup( '[^', ']', 'note' ); }
+            function onCodeBlock() { insertMultiLineBlock( '```', '```', '' ); }
+            function onDiv() { insertMultiLineBlock( '::: note', ':::', '' ); }
+            function onFootnote() { insertMarkup( '[^', ']' ); }
 
             function onTable() {
                 setTableCols( 3 );

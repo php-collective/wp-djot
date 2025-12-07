@@ -1280,8 +1280,8 @@
                             wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Semantic:' ) ),
                             wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
                                 wp.element.createElement( 'code', null, '[CSS]{abbr="title"}' ), wp.element.createElement( 'br' ),
-                                wp.element.createElement( 'code', null, '[Ctrl+C]{kbd=""}' ), wp.element.createElement( 'br' ),
-                                wp.element.createElement( 'code', null, '[term]{dfn=""}' )
+                                wp.element.createElement( 'code', null, '[Ctrl+C]{kbd}' ), wp.element.createElement( 'br' ),
+                                wp.element.createElement( 'code', null, '[term]{dfn}' )
                             ),
                             wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: 0 } },
                                 wp.element.createElement( 'a', { href: 'https://djot.net/', target: '_blank' }, __( 'Full Djot Documentation →', 'djot-markup-for-wp' ) )

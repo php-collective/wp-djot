@@ -107,11 +107,21 @@ WP Djot adds support for semantic HTML elements via special attributes:
 | Djot Syntax | HTML Output | Use Case |
 |-------------|-------------|----------|
 | `[CSS]{abbr="Cascading Style Sheets"}` | `<abbr title="...">CSS</abbr>` | Abbreviation |
-| `[Ctrl+C]{kbd=""}` | `<kbd>Ctrl+C</kbd>` | Keyboard input |
-| `[term]{dfn=""}` | `<dfn>term</dfn>` | Definition term |
+| `[Ctrl+C]{kbd}` | `<kbd>Ctrl+C</kbd>` | Keyboard input |
+| `[term]{dfn}` | `<dfn>term</dfn>` | Definition term |
 | `[term]{dfn="explanation"}` | `<dfn title="...">term</dfn>` | Definition with title |
 
-These can be combined: `[CSS]{abbr="Cascading Style Sheets" dfn=""}` renders as `<dfn><abbr title="...">CSS</abbr></dfn>`.
+These can be combined: `[CSS]{abbr="Cascading Style Sheets" dfn}` renders as `<dfn><abbr title="...">CSS</abbr></dfn>`.
+
+## Keyboard Shortcuts (Editor)
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+B` | Bold |
+| `Ctrl+I` | Italic |
+| `Ctrl+K` | Insert link |
+| `Ctrl+Shift+C` | Inline code |
+| `Escape` | Exit preview mode |
 
 ## More Information
 

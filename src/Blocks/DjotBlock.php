@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace WpDjot\Blocks;
 
+use Djot\Converter\HtmlToDjot;
 use Djot\Converter\MarkdownToDjot;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -120,6 +121,19 @@ class DjotBlock
             ],
         ]);
 
+        // HTML to Djot conversion (requires edit_posts capability)
+        register_rest_route('wp-djot/v1', '/convert-html', [
+            'methods' => 'POST',
+            'callback' => [$this, 'convertHtml'],
+            'permission_callback' => [$this, 'canEdit'],
+            'args' => [
+                'content' => [
+                    'required' => true,
+                    'type' => 'string',
+                ],
+            ],
+        ]);
+
         // Comment preview (public, uses restricted comment profile)
         register_rest_route('wp-djot/v1', '/preview-comment', [
             'methods' => 'POST',
@@ -195,6 +209,23 @@ class DjotBlock
         }
 
         $converter = new MarkdownToDjot();
+        $djot = $converter->convert($content);
+
+        return new WP_REST_Response(['djot' => $djot], 200);
+    }
+
+    /**
+     * Convert HTML to Djot.
+     */
+    public function convertHtml(WP_REST_Request $request): WP_REST_Response
+    {
+        $content = $request->get_param('content');
+
+        if (!$content) {
+            return new WP_REST_Response(['djot' => ''], 200);
+        }
+
+        $converter = new HtmlToDjot();
         $djot = $converter->convert($content);
 
         return new WP_REST_Response(['djot' => $djot], 200);

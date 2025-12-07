@@ -416,7 +416,7 @@ class Plugin
                 WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
                 [],
                 WP_DJOT_VERSION,
-                true,
+                ['in_footer' => true, 'strategy' => 'defer'],
             );
 
             wp_add_inline_script(
@@ -432,7 +432,7 @@ class Plugin
                 WP_DJOT_PLUGIN_URL . 'assets/js/comment-toolbar.js',
                 [],
                 WP_DJOT_VERSION,
-                true,
+                ['in_footer' => true, 'strategy' => 'defer'],
             );
 
             // Pass REST API settings to JavaScript for preview

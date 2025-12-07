@@ -13,7 +13,7 @@
         "align": ["wide", "full"],
         "className": true
     },
-    "textdomain": "wp-djot",
+    "textdomain": "djot-markup-for-wp",
     "attributes": {
         "content": {
             "type": "string",

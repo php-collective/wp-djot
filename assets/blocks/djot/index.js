@@ -1081,12 +1081,12 @@
 
             // Heading dropdown controls
             const headingControls = [
-                { title: __( 'Heading 1', 'wp-djot' ), onClick: function() { onHeading( 1 ); } },
-                { title: __( 'Heading 2', 'wp-djot' ), onClick: function() { onHeading( 2 ); } },
-                { title: __( 'Heading 3', 'wp-djot' ), onClick: function() { onHeading( 3 ); } },
-                { title: __( 'Heading 4', 'wp-djot' ), onClick: function() { onHeading( 4 ); } },
-                { title: __( 'Heading 5', 'wp-djot' ), onClick: function() { onHeading( 5 ); } },
-                { title: __( 'Heading 6', 'wp-djot' ), onClick: function() { onHeading( 6 ); } },
+                { title: __( 'Heading 1', 'djot-markup-for-wp' ), onClick: function() { onHeading( 1 ); } },
+                { title: __( 'Heading 2', 'djot-markup-for-wp' ), onClick: function() { onHeading( 2 ); } },
+                { title: __( 'Heading 3', 'djot-markup-for-wp' ), onClick: function() { onHeading( 3 ); } },
+                { title: __( 'Heading 4', 'djot-markup-for-wp' ), onClick: function() { onHeading( 4 ); } },
+                { title: __( 'Heading 5', 'djot-markup-for-wp' ), onClick: function() { onHeading( 5 ); } },
+                { title: __( 'Heading 6', 'djot-markup-for-wp' ), onClick: function() { onHeading( 6 ); } },
             ];
 
             return wp.element.createElement(
@@ -1102,22 +1102,22 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.bold,
-                            label: __( 'Bold (*text*)', 'wp-djot' ),
+                            label: __( 'Bold (*text*)', 'djot-markup-for-wp' ),
                             onClick: onBold,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.italic,
-                            label: __( 'Italic (_text_)', 'wp-djot' ),
+                            label: __( 'Italic (_text_)', 'djot-markup-for-wp' ),
                             onClick: onItalic,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.code,
-                            label: __( 'Inline Code (`code`)', 'wp-djot' ),
+                            label: __( 'Inline Code (`code`)', 'djot-markup-for-wp' ),
                             onClick: onCode,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.strikethrough,
-                            label: __( 'Strikethrough ({~text~})', 'wp-djot' ),
+                            label: __( 'Strikethrough ({~text~})', 'djot-markup-for-wp' ),
                             onClick: onStrikethrough,
                         } )
                     ),
@@ -1127,12 +1127,12 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.link,
-                            label: __( 'Link ([text](url))', 'wp-djot' ),
+                            label: __( 'Link ([text](url))', 'djot-markup-for-wp' ),
                             onClick: onLink,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.image,
-                            label: __( 'Image (![alt](url))', 'wp-djot' ),
+                            label: __( 'Image (![alt](url))', 'djot-markup-for-wp' ),
                             onClick: onImage,
                         } )
                     ),
@@ -1142,7 +1142,7 @@
                         null,
                         wp.element.createElement( ToolbarDropdownMenu, {
                             icon: icons.heading,
-                            label: __( 'Headings', 'wp-djot' ),
+                            label: __( 'Headings', 'djot-markup-for-wp' ),
                             controls: headingControls,
                         } )
                     ),
@@ -1152,22 +1152,22 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.quote,
-                            label: __( 'Blockquote (> quote)', 'wp-djot' ),
+                            label: __( 'Blockquote (> quote)', 'djot-markup-for-wp' ),
                             onClick: onBlockquote,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.listUl,
-                            label: __( 'Unordered List (- item)', 'wp-djot' ),
+                            label: __( 'Unordered List (- item)', 'djot-markup-for-wp' ),
                             onClick: onListUl,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.listOl,
-                            label: __( 'Ordered List (1. item)', 'wp-djot' ),
+                            label: __( 'Ordered List (1. item)', 'djot-markup-for-wp' ),
                             onClick: onListOl,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.codeBlock,
-                            label: __( 'Code Block (```)', 'wp-djot' ),
+                            label: __( 'Code Block (```)', 'djot-markup-for-wp' ),
                             onClick: onCodeBlock,
                         } )
                     ),
@@ -1177,17 +1177,17 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.superscript,
-                            label: __( 'Superscript (^text^)', 'wp-djot' ),
+                            label: __( 'Superscript (^text^)', 'djot-markup-for-wp' ),
                             onClick: onSuperscript,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.subscript,
-                            label: __( 'Subscript (~text~)', 'wp-djot' ),
+                            label: __( 'Subscript (~text~)', 'djot-markup-for-wp' ),
                             onClick: onSubscript,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.highlight,
-                            label: __( 'Highlight ({=text=})', 'wp-djot' ),
+                            label: __( 'Highlight ({=text=})', 'djot-markup-for-wp' ),
                             onClick: onHighlight,
                         } )
                     ),
@@ -1197,17 +1197,17 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.insert,
-                            label: __( 'Insert ({+text+})', 'wp-djot' ),
+                            label: __( 'Insert ({+text+})', 'djot-markup-for-wp' ),
                             onClick: onInsert,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.delete,
-                            label: __( 'Delete ({-text-})', 'wp-djot' ),
+                            label: __( 'Delete ({-text-})', 'djot-markup-for-wp' ),
                             onClick: onDelete,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.horizontalRule,
-                            label: __( 'Horizontal Rule (---)', 'wp-djot' ),
+                            label: __( 'Horizontal Rule (---)', 'djot-markup-for-wp' ),
                             onClick: onHorizontalRule,
                         } )
                     ),
@@ -1217,27 +1217,27 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.table,
-                            label: __( 'Table', 'wp-djot' ),
+                            label: __( 'Table', 'djot-markup-for-wp' ),
                             onClick: onTable,
                         } ),
                         cursorInTable && wp.element.createElement( ToolbarButton, {
                             icon: icons.formatTable,
-                            label: __( 'Format Table', 'wp-djot' ),
+                            label: __( 'Format Table', 'djot-markup-for-wp' ),
                             onClick: onFormatTable,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.div,
-                            label: __( 'Div Block (::: class)', 'wp-djot' ),
+                            label: __( 'Div Block (::: class)', 'djot-markup-for-wp' ),
                             onClick: onDiv,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.span,
-                            label: __( 'Span with Class ([text]{.class})', 'wp-djot' ),
+                            label: __( 'Span with Class ([text]{.class})', 'djot-markup-for-wp' ),
                             onClick: onSpan,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.footnote,
-                            label: __( 'Footnote ([^note])', 'wp-djot' ),
+                            label: __( 'Footnote ([^note])', 'djot-markup-for-wp' ),
                             onClick: onFootnote,
                         } )
                     )
@@ -1248,9 +1248,9 @@
                     null,
                     wp.element.createElement(
                         PanelBody,
-                        { title: __( 'Djot Settings', 'wp-djot' ) },
+                        { title: __( 'Djot Settings', 'djot-markup-for-wp' ) },
                         wp.element.createElement( ToggleControl, {
-                            label: __( 'Show Preview', 'wp-djot' ),
+                            label: __( 'Show Preview', 'djot-markup-for-wp' ),
                             checked: isPreviewMode,
                             onChange: setIsPreviewMode,
                             __nextHasNoMarginBottom: true,
@@ -1258,7 +1258,7 @@
                     ),
                     wp.element.createElement(
                         PanelBody,
-                        { title: __( 'Syntax Help', 'wp-djot' ), initialOpen: false },
+                        { title: __( 'Syntax Help', 'djot-markup-for-wp' ), initialOpen: false },
                         wp.element.createElement( 'div', { className: 'wp-djot-syntax-help' },
                             wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Inline:' ) ),
                             wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
@@ -1284,13 +1284,13 @@
                                 wp.element.createElement( 'code', null, '[term]{dfn=""}' )
                             ),
                             wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: 0 } },
-                                wp.element.createElement( 'a', { href: 'https://djot.net/', target: '_blank' }, __( 'Full Djot Documentation →', 'wp-djot' ) )
+                                wp.element.createElement( 'a', { href: 'https://djot.net/', target: '_blank' }, __( 'Full Djot Documentation →', 'djot-markup-for-wp' ) )
                             )
                         )
                     ),
                     wp.element.createElement(
                         PanelBody,
-                        { title: __( 'Keyboard Shortcuts', 'wp-djot' ), initialOpen: false },
+                        { title: __( 'Keyboard Shortcuts', 'djot-markup-for-wp' ), initialOpen: false },
                         wp.element.createElement( 'div', { className: 'wp-djot-shortcuts-help', style: { fontSize: '12px' } },
                             wp.element.createElement( 'p', { style: { marginBottom: '8px' } },
                                 wp.element.createElement( 'strong', null, 'Formatting:' )
@@ -1324,19 +1324,19 @@
                     ),
                     wp.element.createElement(
                         PanelBody,
-                        { title: __( 'Tools', 'wp-djot' ), initialOpen: false },
+                        { title: __( 'Tools', 'djot-markup-for-wp' ), initialOpen: false },
                         wp.element.createElement( 'div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
                             wp.element.createElement( Button, {
                                 variant: 'secondary',
                                 icon: icons.taskList,
                                 onClick: onTaskList,
                                 style: { width: '100%', justifyContent: 'center' },
-                            }, __( 'Insert Task List', 'wp-djot' ) ),
+                            }, __( 'Insert Task List', 'djot-markup-for-wp' ) ),
                             wp.element.createElement( Button, {
                                 variant: 'secondary',
                                 onClick: onImportMarkdown,
                                 style: { width: '100%', justifyContent: 'center' },
-                            }, __( 'Import Markdown', 'wp-djot' ) )
+                            }, __( 'Import Markdown', 'djot-markup-for-wp' ) )
                         )
                     )
                 ),
@@ -1344,17 +1344,17 @@
                 showLinkModal && wp.element.createElement(
                     Modal,
                     {
-                        title: __( 'Insert Link', 'wp-djot' ),
+                        title: __( 'Insert Link', 'djot-markup-for-wp' ),
                         onRequestClose: function() { setShowLinkModal( false ); },
                     },
                     wp.element.createElement( TextControl, {
-                        label: __( 'URL', 'wp-djot' ),
+                        label: __( 'URL', 'djot-markup-for-wp' ),
                         value: linkUrl,
                         onChange: setLinkUrl,
                         type: 'url',
                     } ),
                     wp.element.createElement( TextControl, {
-                        label: __( 'Link Text (optional, leave empty for autolink)', 'wp-djot' ),
+                        label: __( 'Link Text (optional, leave empty for autolink)', 'djot-markup-for-wp' ),
                         value: linkText,
                         onChange: setLinkText,
                     } ),
@@ -1364,29 +1364,29 @@
                         wp.element.createElement( Button, {
                             variant: 'primary',
                             onClick: onInsertLink,
-                        }, __( 'Insert Link', 'wp-djot' ) ),
+                        }, __( 'Insert Link', 'djot-markup-for-wp' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowLinkModal( false ); },
                             style: { marginLeft: '8px' },
-                        }, __( 'Cancel', 'wp-djot' ) )
+                        }, __( 'Cancel', 'djot-markup-for-wp' ) )
                     )
                 ),
                 // Image Modal
                 showImageModal && wp.element.createElement(
                     Modal,
                     {
-                        title: __( 'Insert Image', 'wp-djot' ),
+                        title: __( 'Insert Image', 'djot-markup-for-wp' ),
                         onRequestClose: function() { setShowImageModal( false ); },
                     },
                     wp.element.createElement( TextControl, {
-                        label: __( 'Image URL', 'wp-djot' ),
+                        label: __( 'Image URL', 'djot-markup-for-wp' ),
                         value: imageUrl,
                         onChange: setImageUrl,
                         type: 'url',
                     } ),
                     wp.element.createElement( TextControl, {
-                        label: __( 'Alt Text (optional)', 'wp-djot' ),
+                        label: __( 'Alt Text (optional)', 'djot-markup-for-wp' ),
                         value: imageAlt,
                         onChange: setImageAlt,
                     } ),
@@ -1396,30 +1396,30 @@
                         wp.element.createElement( Button, {
                             variant: 'primary',
                             onClick: onInsertImage,
-                        }, __( 'Insert Image', 'wp-djot' ) ),
+                        }, __( 'Insert Image', 'djot-markup-for-wp' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowImageModal( false ); },
                             style: { marginLeft: '8px' },
-                        }, __( 'Cancel', 'wp-djot' ) )
+                        }, __( 'Cancel', 'djot-markup-for-wp' ) )
                     )
                 ),
                 // Table Modal
                 showTableModal && wp.element.createElement(
                     Modal,
                     {
-                        title: __( 'Insert Table', 'wp-djot' ),
+                        title: __( 'Insert Table', 'djot-markup-for-wp' ),
                         onRequestClose: function() { setShowTableModal( false ); },
                     },
                     wp.element.createElement( RangeControl, {
-                        label: __( 'Columns', 'wp-djot' ),
+                        label: __( 'Columns', 'djot-markup-for-wp' ),
                         value: tableCols,
                         onChange: setTableCols,
                         min: 1,
                         max: 10,
                     } ),
                     wp.element.createElement( RangeControl, {
-                        label: __( 'Rows (excluding header)', 'wp-djot' ),
+                        label: __( 'Rows (excluding header)', 'djot-markup-for-wp' ),
                         value: tableRows,
                         onChange: setTableRows,
                         min: 1,
@@ -1431,47 +1431,47 @@
                         wp.element.createElement( Button, {
                             variant: 'primary',
                             onClick: onInsertTable,
-                        }, __( 'Insert Table', 'wp-djot' ) ),
+                        }, __( 'Insert Table', 'djot-markup-for-wp' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowTableModal( false ); },
                             style: { marginLeft: '8px' },
-                        }, __( 'Cancel', 'wp-djot' ) )
+                        }, __( 'Cancel', 'djot-markup-for-wp' ) )
                     )
                 ),
                 // Import Markdown Modal
                 showImportModal && wp.element.createElement(
                     Modal,
                     {
-                        title: __( 'Import Markdown', 'wp-djot' ),
+                        title: __( 'Import Markdown', 'djot-markup-for-wp' ),
                         onRequestClose: function() { setShowImportModal( false ); },
                         style: { width: '600px', maxWidth: '90vw' },
                     },
                     wp.element.createElement( 'div', { style: { display: 'flex', gap: '16px' } },
                         wp.element.createElement( 'div', { style: { flex: 1 } },
-                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } }, __( 'Markdown Input', 'wp-djot' ) ),
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } }, __( 'Markdown Input', 'djot-markup-for-wp' ) ),
                             wp.element.createElement( 'textarea', {
                                 value: markdownInput,
                                 onChange: function( e ) { onMarkdownInputChange( e.target.value ); },
                                 style: { width: '100%', height: '200px', fontFamily: 'monospace', fontSize: '13px', padding: '8px' },
-                                placeholder: __( 'Paste your Markdown here...', 'wp-djot' ),
+                                placeholder: __( 'Paste your Markdown here...', 'djot-markup-for-wp' ),
                             } )
                         ),
                         wp.element.createElement( 'div', { style: { flex: 1, position: 'relative' } },
                             wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } },
-                                __( 'Djot Preview', 'wp-djot' ),
-                                isConverting && wp.element.createElement( 'span', { style: { marginLeft: '8px', fontSize: '11px', color: '#999' } }, __( 'Converting...', 'wp-djot' ) )
+                                __( 'Djot Preview', 'djot-markup-for-wp' ),
+                                isConverting && wp.element.createElement( 'span', { style: { marginLeft: '8px', fontSize: '11px', color: '#999' } }, __( 'Converting...', 'djot-markup-for-wp' ) )
                             ),
                             wp.element.createElement( 'textarea', {
                                 value: djotPreview,
                                 readOnly: true,
                                 style: { width: '100%', height: '200px', fontFamily: 'monospace', fontSize: '13px', padding: '8px', background: '#f9f9f9' },
-                                placeholder: __( 'Converted Djot will appear here...', 'wp-djot' ),
+                                placeholder: __( 'Converted Djot will appear here...', 'djot-markup-for-wp' ),
                             } )
                         )
                     ),
                     wp.element.createElement( 'p', { style: { marginTop: '12px', fontSize: '12px', color: '#666' } },
-                        __( 'Converts: **bold** → *bold*, *italic* → _italic_, ~~strike~~ → {~strike~}, ==highlight== → {=highlight=}', 'wp-djot' )
+                        __( 'Converts: **bold** → *bold*, *italic* → _italic_, ~~strike~~ → {~strike~}, ==highlight== → {=highlight=}', 'djot-markup-for-wp' )
                     ),
                     wp.element.createElement(
                         'div',
@@ -1480,19 +1480,19 @@
                             variant: 'primary',
                             onClick: onInsertImported,
                             disabled: isConverting || ! djotPreview.trim(),
-                        }, __( 'Insert', 'wp-djot' ) ),
+                        }, __( 'Insert', 'djot-markup-for-wp' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowImportModal( false ); },
                             style: { marginLeft: '8px' },
-                        }, __( 'Cancel', 'wp-djot' ) )
+                        }, __( 'Cancel', 'djot-markup-for-wp' ) )
                     )
                 ),
                 // Task List Modal
                 showTaskListModal && wp.element.createElement(
                     Modal,
                     {
-                        title: __( 'Insert Task List', 'wp-djot' ),
+                        title: __( 'Insert Task List', 'djot-markup-for-wp' ),
                         onRequestClose: function() { setShowTaskListModal( false ); },
                         style: { width: '400px', maxWidth: '90vw' },
                     },
@@ -1512,7 +1512,7 @@
                                     type: 'text',
                                     value: item.text,
                                     onChange: function( e ) { updateTaskItem( index, 'text', e.target.value ); },
-                                    placeholder: __( 'Task item...', 'wp-djot' ),
+                                    placeholder: __( 'Task item...', 'djot-markup-for-wp' ),
                                     style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px' },
                                     onKeyDown: function( e ) {
                                         if ( e.key === 'Enter' ) {
@@ -1534,19 +1534,19 @@
                         variant: 'secondary',
                         onClick: addTaskItem,
                         style: { marginBottom: '16px' },
-                    }, __( '+ Add Item', 'wp-djot' ) ),
+                    }, __( '+ Add Item', 'djot-markup-for-wp' ) ),
                     wp.element.createElement(
                         'div',
                         { style: { marginTop: '16px', borderTop: '1px solid #ddd', paddingTop: '16px' } },
                         wp.element.createElement( Button, {
                             variant: 'primary',
                             onClick: onInsertTaskList,
-                        }, __( 'Insert Task List', 'wp-djot' ) ),
+                        }, __( 'Insert Task List', 'djot-markup-for-wp' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowTaskListModal( false ); },
                             style: { marginLeft: '8px' },
-                        }, __( 'Cancel', 'wp-djot' ) )
+                        }, __( 'Cancel', 'djot-markup-for-wp' ) )
                     )
                 ),
                 // Main content area
@@ -1563,7 +1563,7 @@
                                   onKeyUp: updateSelection,
                                   onKeyDown: handleTextareaKeyDown,
                                   className: 'wp-djot-editor',
-                                  placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'wp-djot' ),
+                                  placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'djot-markup-for-wp' ),
                               } ),
                           isPreviewMode &&
                               wp.element.createElement(
@@ -1572,15 +1572,15 @@
                                   wp.element.createElement(
                                       'div',
                                       { className: 'wp-djot-preview-header' },
-                                      wp.element.createElement( 'span', null, __( 'Preview', 'wp-djot' ) ),
+                                      wp.element.createElement( 'span', null, __( 'Preview', 'djot-markup-for-wp' ) ),
                                       wp.element.createElement(
                                           'button',
                                           {
                                               className: 'wp-djot-edit-button',
                                               onClick: function() { setIsPreviewMode( false ); },
-                                              title: __( 'Press ESC to exit preview', 'wp-djot' ),
+                                              title: __( 'Press ESC to exit preview', 'djot-markup-for-wp' ),
                                           },
-                                          __( 'Edit (ESC)', 'wp-djot' )
+                                          __( 'Edit (ESC)', 'djot-markup-for-wp' )
                                       )
                                   ),
                                   isLoading
@@ -1596,8 +1596,8 @@
                           Placeholder,
                           {
                               icon: 'editor-code',
-                              label: __( 'Djot', 'wp-djot' ),
-                              instructions: __( 'Write content using Djot markup language. Use the toolbar above for formatting.', 'wp-djot' ),
+                              label: __( 'Djot', 'djot-markup-for-wp' ),
+                              instructions: __( 'Write content using Djot markup language. Use the toolbar above for formatting.', 'djot-markup-for-wp' ),
                           },
                           wp.element.createElement(
                               'div',
@@ -1610,7 +1610,7 @@
                                   onKeyUp: updateSelection,
                                   onKeyDown: handleTextareaKeyDown,
                                   className: 'wp-djot-editor',
-                                  placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'wp-djot' ),
+                                  placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'djot-markup-for-wp' ),
                               } )
                           )
                       )

@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### [1.1.1] - 2025-12-06
+## [1.1.2] - 2025-12-07
+
+### Changed
+
+- Toolbar buttons now insert markers only, placing cursor between them for immediate typing
+- Block markup (headings, quotes, lists, code blocks) now inserts prefix without placeholder text
+- Updated syntax documentation with semantic elements table
+
+## [1.1.1] - 2025-12-06
 
 ### Added
 
@@ -95,6 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.1.2...HEAD
+[1.1.2]: https://github.com/php-collective/wp-djot/compare/1.1.1...1.1.2
+[1.1.1]: https://github.com/php-collective/wp-djot/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/php-collective/wp-djot/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/php-collective/wp-djot/releases/tag/1.0.0

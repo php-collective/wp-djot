@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Upgrade to djot-php 0.1.5
+- Upgrade to djot-php ^0.1.5
 - Toolbar buttons now insert markers only, placing cursor between them for immediate typing
 - Block markup (headings, quotes, lists, code blocks) now inserts prefix without placeholder text
 - Updated syntax documentation with semantic elements table
@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Upgrade to djot-php 0.1.4
+- Upgrade to djot-php ^0.1.4
 - Import Markdown now uses server-side djot-php converter for more accurate results
 
 ### Fixed

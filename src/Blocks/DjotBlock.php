@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace WpDjot\Blocks;
 
+use Djot\Converter\MarkdownToDjot;
 use WP_REST_Request;
 use WP_REST_Response;
 use WpDjot\Converter;
@@ -193,7 +194,7 @@ class DjotBlock
             return new WP_REST_Response(['djot' => ''], 200);
         }
 
-        $converter = new \Djot\Converter\MarkdownToDjot();
+        $converter = new MarkdownToDjot();
         $djot = $converter->convert($content);
 
         return new WP_REST_Response(['djot' => $djot], 200);

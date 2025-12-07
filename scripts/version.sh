@@ -36,9 +36,13 @@ sed -i "s/\"version\": \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/\"version\": \"$VERSION\"/"
 # assets/blocks/djot/index.asset.php
 sed -i "s/'version' => '[0-9]\+\.[0-9]\+\.[0-9]\+'/'version' => '$VERSION'/" "$PLUGIN_DIR/assets/blocks/djot/index.asset.php"
 
+# readme.txt - Stable tag
+sed -i "s/^Stable tag: [0-9]\+\.[0-9]\+\.[0-9]\+/Stable tag: $VERSION/" "$PLUGIN_DIR/readme.txt"
+
 echo "Done! Updated version to $VERSION in:"
 echo "  - wp-djot.php (header and constant)"
 echo "  - assets/blocks/djot/block.json"
 echo "  - assets/blocks/djot/index.asset.php"
+echo "  - readme.txt (stable tag)"
 echo ""
 echo "Don't forget to update CHANGELOG.md!"

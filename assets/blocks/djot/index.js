@@ -110,7 +110,8 @@
             const [ tableRows, setTableRows ] = useState( 2 );
             const [ cursorInTable, setCursorInTable ] = useState( false );
             const [ showImportModal, setShowImportModal ] = useState( false );
-            const [ markdownInput, setMarkdownInput ] = useState( '' );
+            const [ importType, setImportType ] = useState( 'markdown' );
+            const [ importInput, setImportInput ] = useState( '' );
             const [ djotPreview, setDjotPreview ] = useState( '' );
             const [ isConverting, setIsConverting ] = useState( false );
             const [ showTaskListModal, setShowTaskListModal ] = useState( false );
@@ -733,43 +734,48 @@
             }
 
             // Open import modal
-            function onImportMarkdown() {
-                setMarkdownInput( '' );
+            function onImport( type ) {
+                setImportType( type );
+                setImportInput( '' );
                 setDjotPreview( '' );
                 setShowImportModal( true );
             }
 
-            // Update preview when markdown input changes (using server-side converter)
-            const debouncedConvertMarkdown = useCallback(
-                debounce( function( markdown ) {
-                    if ( ! markdown.trim() ) {
+            // Update preview when import input changes (using server-side converter)
+            const debouncedConvert = useCallback(
+                debounce( function( input, type ) {
+                    if ( ! input.trim() ) {
                         setDjotPreview( '' );
                         setIsConverting( false );
                         return;
                     }
 
+                    var endpoint = type === 'html' ? '/wp-djot/v1/convert-html' : '/wp-djot/v1/convert-markdown';
+
                     apiFetch( {
-                        path: '/wp-djot/v1/convert-markdown',
+                        path: endpoint,
                         method: 'POST',
-                        data: { content: markdown },
+                        data: { content: input },
                     } )
                         .then( function( response ) {
                             setDjotPreview( response.djot || '' );
                             setIsConverting( false );
                         } )
                         .catch( function() {
-                            // Fall back to client-side conversion on error
-                            setDjotPreview( convertMarkdownToDjot( markdown ) );
+                            // Fall back to client-side conversion on error (markdown only)
+                            if ( type === 'markdown' ) {
+                                setDjotPreview( convertMarkdownToDjot( input ) );
+                            }
                             setIsConverting( false );
                         } );
                 }, 300 ),
                 []
             );
 
-            function onMarkdownInputChange( value ) {
-                setMarkdownInput( value );
+            function onImportInputChange( value ) {
+                setImportInput( value );
                 setIsConverting( true );
-                debouncedConvertMarkdown( value );
+                debouncedConvert( value, importType );
             }
 
             // Insert converted djot at cursor position
@@ -1334,9 +1340,14 @@
                             }, __( 'Insert Task List', 'djot-markup-for-wp' ) ),
                             wp.element.createElement( Button, {
                                 variant: 'secondary',
-                                onClick: onImportMarkdown,
+                                onClick: function() { onImport( 'markdown' ); },
                                 style: { width: '100%', justifyContent: 'center' },
-                            }, __( 'Import Markdown', 'djot-markup-for-wp' ) )
+                            }, __( 'Import Markdown', 'djot-markup-for-wp' ) ),
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                onClick: function() { onImport( 'html' ); },
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Import HTML', 'djot-markup-for-wp' ) )
                         )
                     )
                 ),
@@ -1439,22 +1450,24 @@
                         }, __( 'Cancel', 'djot-markup-for-wp' ) )
                     )
                 ),
-                // Import Markdown Modal
+                // Import Modal (Markdown/HTML)
                 showImportModal && wp.element.createElement(
                     Modal,
                     {
-                        title: __( 'Import Markdown', 'djot-markup-for-wp' ),
+                        title: importType === 'html' ? __( 'Import HTML', 'djot-markup-for-wp' ) : __( 'Import Markdown', 'djot-markup-for-wp' ),
                         onRequestClose: function() { setShowImportModal( false ); },
                         style: { width: '600px', maxWidth: '90vw' },
                     },
                     wp.element.createElement( 'div', { style: { display: 'flex', gap: '16px' } },
                         wp.element.createElement( 'div', { style: { flex: 1 } },
-                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } }, __( 'Markdown Input', 'djot-markup-for-wp' ) ),
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } },
+                                importType === 'html' ? __( 'HTML Input', 'djot-markup-for-wp' ) : __( 'Markdown Input', 'djot-markup-for-wp' )
+                            ),
                             wp.element.createElement( 'textarea', {
-                                value: markdownInput,
-                                onChange: function( e ) { onMarkdownInputChange( e.target.value ); },
+                                value: importInput,
+                                onChange: function( e ) { onImportInputChange( e.target.value ); },
                                 style: { width: '100%', height: '200px', fontFamily: 'monospace', fontSize: '13px', padding: '8px' },
-                                placeholder: __( 'Paste your Markdown here...', 'djot-markup-for-wp' ),
+                                placeholder: importType === 'html' ? __( 'Paste your HTML here...', 'djot-markup-for-wp' ) : __( 'Paste your Markdown here...', 'djot-markup-for-wp' ),
                             } )
                         ),
                         wp.element.createElement( 'div', { style: { flex: 1, position: 'relative' } },
@@ -1470,7 +1483,7 @@
                             } )
                         )
                     ),
-                    wp.element.createElement( 'p', { style: { marginTop: '12px', fontSize: '12px', color: '#666' } },
+                    importType === 'markdown' && wp.element.createElement( 'p', { style: { marginTop: '12px', fontSize: '12px', color: '#666' } },
                         __( 'Converts: **bold** → *bold*, *italic* → _italic_, ~~strike~~ → {~strike~}, ==highlight== → {=highlight=}', 'djot-markup-for-wp' )
                     ),
                     wp.element.createElement(

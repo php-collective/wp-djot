@@ -9,11 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.2] - 2025-12-07
 
+### Added
+
+- Import HTML tool in block editor sidebar (converts HTML to Djot)
+- Keyboard shortcuts section in syntax documentation
+
 ### Changed
 
 - Upgrade to djot-php ^0.1.5
 - Toolbar buttons now insert markers only, placing cursor between them for immediate typing
 - Block markup (headings, quotes, lists, code blocks) now inserts prefix without placeholder text
+- Simplified semantic attribute syntax (`{kbd}` instead of `{kbd=""}`)
+- Frontend scripts now use `defer` loading strategy for better performance
 - Updated syntax documentation with semantic elements table
 
 ## [1.1.1] - 2025-12-06

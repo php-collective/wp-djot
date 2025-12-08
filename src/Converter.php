@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace WpDjot;
 
 use Djot\DjotConverter;
-use Djot\NodeType;
 use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;

@@ -261,7 +261,7 @@ class Converter
             if ($purifier === null) {
                 $config = HTMLPurifier_Config::createDefault();
                 $config->set('Cache.DefinitionImpl', null);
-                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title],ul[class],ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr,input[type|checked|disabled]');
+                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title],ul[class],ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,caption,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr,input[type|checked|disabled],figure,figcaption');
                 $purifier = new HTMLPurifier($config);
             }
 
@@ -280,6 +280,12 @@ class Converter
                         'class' => true,
                     ],
                     'ul' => [
+                        'class' => true,
+                    ],
+                    'figure' => [
+                        'class' => true,
+                    ],
+                    'figcaption' => [
                         'class' => true,
                     ],
                 ],

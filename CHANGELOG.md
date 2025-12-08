@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Import Markdown/HTML now converts semantic elements (kbd, abbr, dfn) to Djot span syntax
+
 ### Changed
 
 - Upgrade to djot-php ^0.1.6 (fixes blank line handling in Markdown/HTML converters)

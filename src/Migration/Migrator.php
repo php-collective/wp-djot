@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace WpDjot\Migration;
 
-use Djot\Converter\HtmlToDjot;
-use Djot\Converter\MarkdownToDjot;
 use WP_Query;
+use WpDjot\Converter\WpHtmlToDjot;
+use WpDjot\Converter\WpMarkdownToDjot;
 
 /**
  * Handles migration of WordPress content to Djot format.
  */
 class Migrator
 {
-    private HtmlToDjot $htmlConverter;
+    private WpHtmlToDjot $htmlConverter;
 
-    private MarkdownToDjot $markdownConverter;
+    private WpMarkdownToDjot $markdownConverter;
 
     private string $backupMetaKey = '_wp_djot_original_content';
 
@@ -23,8 +23,8 @@ class Migrator
 
     public function __construct()
     {
-        $this->htmlConverter = new HtmlToDjot();
-        $this->markdownConverter = new MarkdownToDjot();
+        $this->htmlConverter = new WpHtmlToDjot();
+        $this->markdownConverter = new WpMarkdownToDjot();
     }
 
     /**

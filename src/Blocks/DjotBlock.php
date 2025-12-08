@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace WpDjot\Blocks;
 
-use Djot\Converter\HtmlToDjot;
-use Djot\Converter\MarkdownToDjot;
 use WP_REST_Request;
+use WpDjot\Converter\WpHtmlToDjot;
+use WpDjot\Converter\WpMarkdownToDjot;
 use WP_REST_Response;
 use WpDjot\Converter;
 
@@ -208,7 +208,7 @@ class DjotBlock
             return new WP_REST_Response(['djot' => ''], 200);
         }
 
-        $converter = new MarkdownToDjot();
+        $converter = new WpMarkdownToDjot();
         $djot = $converter->convert($content);
 
         return new WP_REST_Response(['djot' => $djot], 200);
@@ -225,7 +225,7 @@ class DjotBlock
             return new WP_REST_Response(['djot' => ''], 200);
         }
 
-        $converter = new HtmlToDjot();
+        $converter = new WpHtmlToDjot();
         $djot = $converter->convert($content);
 
         return new WP_REST_Response(['djot' => $djot], 200);

@@ -546,17 +546,13 @@
                     return;
                 }
 
+                // Djot spec syntax: `: term` then blank line, then indented definition
                 var defListText = items.map( function( item ) {
-                    // Multi-line definitions need continuation lines indented with 2 spaces
                     var defLines = item.definition.split( '\n' );
-                    var formattedDef = defLines.map( function( line, idx ) {
-                        if ( idx === 0 ) {
-                            return ': ' + line;
-                        }
-                        // Indent continuation lines with 2 spaces
+                    var indentedDef = defLines.map( function( line ) {
                         return '  ' + line;
                     } ).join( '\n' );
-                    return item.term + '\n' + formattedDef;
+                    return ': ' + item.term + '\n\n' + indentedDef;
                 } ).join( '\n\n' ) + '\n';
 
                 insertMultiLineBlock( '', '', defListText );

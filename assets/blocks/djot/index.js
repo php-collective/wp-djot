@@ -117,7 +117,8 @@
             const [ showTaskListModal, setShowTaskListModal ] = useState( false );
             const [ taskListItems, setTaskListItems ] = useState( [ { text: '', checked: false } ] );
             const [ showDefListModal, setShowDefListModal ] = useState( false );
-            const [ defListItems, setDefListItems ] = useState( [ { term: '', definition: '' } ] );
+            const [ defListTerms, setDefListTerms ] = useState( [ '' ] );
+            const [ defListDefinition, setDefListDefinition ] = useState( '' );
             const textareaRef = useRef( null );
             const previewRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
@@ -535,45 +536,45 @@
             }
 
             function onDefList() {
-                setDefListItems( [ { term: '', definition: '' } ] );
+                setDefListTerms( [ '' ] );
+                setDefListDefinition( '' );
                 setShowDefListModal( true );
             }
 
             function onInsertDefList() {
-                var items = defListItems.filter( function( item ) { return item.term.trim() !== '' || item.definition.trim() !== ''; } );
-                if ( items.length === 0 ) {
+                var terms = defListTerms.filter( function( t ) { return t.trim() !== ''; } );
+                if ( terms.length === 0 && defListDefinition.trim() === '' ) {
                     setShowDefListModal( false );
                     return;
                 }
 
-                // Djot spec syntax: `: term` then blank line, then indented definition
-                var defListText = items.map( function( item ) {
-                    var defLines = item.definition.split( '\n' );
-                    var indentedDef = defLines.map( function( line ) {
-                        return '  ' + line;
-                    } ).join( '\n' );
-                    return ': ' + item.term + '\n\n' + indentedDef;
-                } ).join( '\n\n' ) + '\n';
+                // Djot spec syntax: `: term` lines, then blank line, then indented definition
+                var termsText = terms.map( function( t ) { return ': ' + t; } ).join( '\n' );
+                var defLines = defListDefinition.split( '\n' );
+                var indentedDef = defLines.map( function( line ) {
+                    return '  ' + line;
+                } ).join( '\n' );
+                var defListText = termsText + '\n\n' + indentedDef + '\n';
 
                 insertMultiLineBlock( '', '', defListText );
                 setShowDefListModal( false );
             }
 
-            function updateDefItem( index, field, value ) {
-                var newItems = defListItems.slice();
-                newItems[ index ] = Object.assign( {}, newItems[ index ], ( function() { var o = {}; o[ field ] = value; return o; } )() );
-                setDefListItems( newItems );
+            function updateDefTerm( index, value ) {
+                var newTerms = defListTerms.slice();
+                newTerms[ index ] = value;
+                setDefListTerms( newTerms );
             }
 
-            function addDefItem() {
-                setDefListItems( defListItems.concat( [ { term: '', definition: '' } ] ) );
+            function addDefTerm() {
+                setDefListTerms( defListTerms.concat( [ '' ] ) );
             }
 
-            function removeDefItem( index ) {
-                if ( defListItems.length <= 1 ) return;
-                var newItems = defListItems.slice();
-                newItems.splice( index, 1 );
-                setDefListItems( newItems );
+            function removeDefTerm( index ) {
+                if ( defListTerms.length <= 1 ) return;
+                var newTerms = defListTerms.slice();
+                newTerms.splice( index, 1 );
+                setDefListTerms( newTerms );
             }
 
             // Format table at cursor position
@@ -1619,53 +1620,58 @@
                         onRequestClose: function() { setShowDefListModal( false ); },
                         style: { width: '500px', maxWidth: '90vw' },
                     },
+                    // Terms section
                     wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
-                        defListItems.map( function( item, index ) {
+                        wp.element.createElement( 'label', { style: { display: 'block', fontWeight: 600, marginBottom: '8px' } },
+                            __( 'Terms (dt):', 'djot-markup-for-wp' )
+                        ),
+                        defListTerms.map( function( term, index ) {
                             return wp.element.createElement( 'div', {
                                 key: index,
-                                style: { marginBottom: '16px', padding: '12px', background: '#f9f9f9', borderRadius: '4px' },
+                                style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' },
                             },
-                                wp.element.createElement( 'div', { style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' } },
-                                    wp.element.createElement( 'label', { style: { fontWeight: 600, minWidth: '70px' } }, __( 'Term:', 'djot-markup-for-wp' ) ),
-                                    wp.element.createElement( 'input', {
-                                        type: 'text',
-                                        value: item.term,
-                                        onChange: function( e ) { updateDefItem( index, 'term', e.target.value ); },
-                                        placeholder: __( 'Term...', 'djot-markup-for-wp' ),
-                                        style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px' },
-                                    } ),
-                                    defListItems.length > 1 && wp.element.createElement( Button, {
-                                        variant: 'tertiary',
-                                        isDestructive: true,
-                                        onClick: function() { removeDefItem( index ); },
-                                        style: { padding: '4px' },
-                                    }, '✕' )
-                                ),
-                                wp.element.createElement( 'div', { style: { display: 'flex', alignItems: 'flex-start', gap: '8px' } },
-                                    wp.element.createElement( 'label', { style: { fontWeight: 600, minWidth: '70px', paddingTop: '6px' } }, __( 'Definition:', 'djot-markup-for-wp' ) ),
-                                    wp.element.createElement( 'textarea', {
-                                        value: item.definition,
-                                        onChange: function( e ) { updateDefItem( index, 'definition', e.target.value ); },
-                                        placeholder: __( 'Definition...', 'djot-markup-for-wp' ),
-                                        style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '60px', resize: 'vertical' },
-                                        onKeyDown: function( e ) {
-                                            if ( e.key === 'Enter' && e.ctrlKey ) {
-                                                e.preventDefault();
-                                                addDefItem();
-                                            }
-                                        },
-                                    } )
-                                )
+                                wp.element.createElement( 'input', {
+                                    type: 'text',
+                                    value: term,
+                                    onChange: function( e ) { updateDefTerm( index, e.target.value ); },
+                                    placeholder: __( 'Term...', 'djot-markup-for-wp' ),
+                                    style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px' },
+                                    onKeyDown: function( e ) {
+                                        if ( e.key === 'Enter' ) {
+                                            e.preventDefault();
+                                            addDefTerm();
+                                        }
+                                    },
+                                } ),
+                                defListTerms.length > 1 && wp.element.createElement( Button, {
+                                    variant: 'tertiary',
+                                    isDestructive: true,
+                                    onClick: function() { removeDefTerm( index ); },
+                                    style: { padding: '4px' },
+                                }, '✕' )
                             );
+                        } ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: addDefTerm,
+                            style: { marginTop: '4px' },
+                            isSmall: true,
+                        }, __( '+ Add Term', 'djot-markup-for-wp' ) )
+                    ),
+                    // Definition section
+                    wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
+                        wp.element.createElement( 'label', { style: { display: 'block', fontWeight: 600, marginBottom: '8px' } },
+                            __( 'Definition (dd):', 'djot-markup-for-wp' )
+                        ),
+                        wp.element.createElement( 'textarea', {
+                            value: defListDefinition,
+                            onChange: function( e ) { setDefListDefinition( e.target.value ); },
+                            placeholder: __( 'Definition... (use blank lines for multiple paragraphs)', 'djot-markup-for-wp' ),
+                            style: { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '100px', resize: 'vertical', boxSizing: 'border-box' },
                         } )
                     ),
-                    wp.element.createElement( Button, {
-                        variant: 'secondary',
-                        onClick: addDefItem,
-                        style: { marginBottom: '16px' },
-                    }, __( '+ Add Item', 'djot-markup-for-wp' ) ),
                     wp.element.createElement( 'p', { style: { fontSize: '12px', color: '#666', marginTop: '0' } },
-                        __( 'Tip: Press Ctrl+Enter in definition field to add new item', 'djot-markup-for-wp' )
+                        __( 'Tip: Press Enter in term field to add another term', 'djot-markup-for-wp' )
                     ),
                     wp.element.createElement(
                         'div',
@@ -1673,7 +1679,7 @@
                         wp.element.createElement( Button, {
                             variant: 'primary',
                             onClick: onInsertDefList,
-                        }, __( 'Insert Definition List', 'djot-markup-for-wp' ) ),
+                        }, __( 'Insert', 'djot-markup-for-wp' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowDefListModal( false ); },

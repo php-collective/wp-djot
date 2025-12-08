@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace WpDjot\Blocks;
 
 use WP_REST_Request;
-use WpDjot\Converter\WpHtmlToDjot;
-use WpDjot\Converter\WpMarkdownToDjot;
 use WP_REST_Response;
 use WpDjot\Converter;
+use WpDjot\Converter\WpHtmlToDjot;
+use WpDjot\Converter\WpMarkdownToDjot;
 
 /**
  * Registers the Djot Gutenberg block.

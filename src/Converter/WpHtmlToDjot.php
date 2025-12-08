@@ -6,6 +6,7 @@ namespace WpDjot\Converter;
 
 use Djot\Converter\HtmlToDjot;
 use DOMElement;
+use DOMNode;
 
 /**
  * Extended HTML to Djot converter with WP-Djot semantic element support.
@@ -18,7 +19,7 @@ use DOMElement;
  */
 class WpHtmlToDjot extends HtmlToDjot
 {
-    protected function processNode(\DOMNode $node): string
+    protected function processNode(DOMNode $node): string
     {
         if (!($node instanceof DOMElement)) {
             return parent::processNode($node);

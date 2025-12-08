@@ -35,35 +35,35 @@ class WpMarkdownToDjot extends MarkdownToDjot
         // Convert <kbd>text</kbd> → [text]{kbd}
         $djot = preg_replace_callback(
             '/<kbd>([^<]+)<\/kbd>/i',
-            fn($m) => '[' . $m[1] . ']{kbd}',
+            fn ($m) => '[' . $m[1] . ']{kbd}',
             $djot,
         ) ?? $djot;
 
         // Convert <abbr title="...">text</abbr> → [text]{abbr="..."}
         $djot = preg_replace_callback(
             '/<abbr\s+title=["\']([^"\']+)["\']\s*>([^<]+)<\/abbr>/i',
-            fn($m) => '[' . $m[2] . ']{abbr="' . $this->escapeAttrValue($m[1]) . '"}',
+            fn ($m) => '[' . $m[2] . ']{abbr="' . $this->escapeAttrValue($m[1]) . '"}',
             $djot,
         ) ?? $djot;
 
         // Convert <abbr>text</abbr> (without title) → just text
         $djot = preg_replace_callback(
             '/<abbr>([^<]+)<\/abbr>/i',
-            fn($m) => $m[1],
+            fn ($m) => $m[1],
             $djot,
         ) ?? $djot;
 
         // Convert <dfn title="...">text</dfn> → [text]{dfn="..."}
         $djot = preg_replace_callback(
             '/<dfn\s+title=["\']([^"\']+)["\']\s*>([^<]+)<\/dfn>/i',
-            fn($m) => '[' . $m[2] . ']{dfn="' . $this->escapeAttrValue($m[1]) . '"}',
+            fn ($m) => '[' . $m[2] . ']{dfn="' . $this->escapeAttrValue($m[1]) . '"}',
             $djot,
         ) ?? $djot;
 
         // Convert <dfn>text</dfn> → [text]{dfn}
         $djot = preg_replace_callback(
             '/<dfn>([^<]+)<\/dfn>/i',
-            fn($m) => '[' . $m[1] . ']{dfn}',
+            fn ($m) => '[' . $m[1] . ']{dfn}',
             $djot,
         ) ?? $djot;
 

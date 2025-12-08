@@ -190,6 +190,36 @@
     text-decoration: line-through;
 }
 
+/* Abbreviations */
+.wp-djot-preview.djot-content abbr[title] {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+
+/* Keyboard Input */
+.wp-djot-preview.djot-content kbd {
+    display: inline-block;
+    padding: 0.2em 0.4em;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.85em;
+    line-height: 1;
+    color: #24292f;
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 0 #d0d7de;
+}
+
+/* Definitions */
+.wp-djot-preview.djot-content dfn {
+    font-style: italic;
+}
+
+.wp-djot-preview.djot-content dfn[title] {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+
 /* Placeholder styles */
 .wp-djot-block .components-placeholder {
     min-height: auto;

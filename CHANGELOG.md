@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Definition list tool in block editor sidebar (insert multiple term/definition pairs)
 - Import Markdown/HTML now converts semantic elements (kbd, abbr, dfn) to Djot span syntax
 
 ### Changed

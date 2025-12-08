@@ -116,6 +116,8 @@
             const [ isConverting, setIsConverting ] = useState( false );
             const [ showTaskListModal, setShowTaskListModal ] = useState( false );
             const [ taskListItems, setTaskListItems ] = useState( [ { text: '', checked: false } ] );
+            const [ showDefListModal, setShowDefListModal ] = useState( false );
+            const [ defListItems, setDefListItems ] = useState( [ { term: '', definition: '' } ] );
             const textareaRef = useRef( null );
             const previewRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
@@ -530,6 +532,43 @@
                 var newItems = taskListItems.slice();
                 newItems.splice( index, 1 );
                 setTaskListItems( newItems );
+            }
+
+            function onDefList() {
+                setDefListItems( [ { term: '', definition: '' } ] );
+                setShowDefListModal( true );
+            }
+
+            function onInsertDefList() {
+                var items = defListItems.filter( function( item ) { return item.term.trim() !== '' || item.definition.trim() !== ''; } );
+                if ( items.length === 0 ) {
+                    setShowDefListModal( false );
+                    return;
+                }
+
+                var defListText = items.map( function( item ) {
+                    return item.term + '\n: ' + item.definition;
+                } ).join( '\n\n' ) + '\n';
+
+                insertMultiLineBlock( '', '', defListText );
+                setShowDefListModal( false );
+            }
+
+            function updateDefItem( index, field, value ) {
+                var newItems = defListItems.slice();
+                newItems[ index ] = Object.assign( {}, newItems[ index ], ( function() { var o = {}; o[ field ] = value; return o; } )() );
+                setDefListItems( newItems );
+            }
+
+            function addDefItem() {
+                setDefListItems( defListItems.concat( [ { term: '', definition: '' } ] ) );
+            }
+
+            function removeDefItem( index ) {
+                if ( defListItems.length <= 1 ) return;
+                var newItems = defListItems.slice();
+                newItems.splice( index, 1 );
+                setDefListItems( newItems );
             }
 
             // Format table at cursor position
@@ -1340,6 +1379,11 @@
                             }, __( 'Insert Task List', 'djot-markup-for-wp' ) ),
                             wp.element.createElement( Button, {
                                 variant: 'secondary',
+                                onClick: onDefList,
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Insert Definition List', 'djot-markup-for-wp' ) ),
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
                                 onClick: function() { onImport( 'markdown' ); },
                                 style: { width: '100%', justifyContent: 'center' },
                             }, __( 'Import Markdown', 'djot-markup-for-wp' ) ),
@@ -1558,6 +1602,76 @@
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowTaskListModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup-for-wp' ) )
+                    )
+                ),
+                // Definition List Modal
+                showDefListModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Definition List', 'djot-markup-for-wp' ),
+                        onRequestClose: function() { setShowDefListModal( false ); },
+                        style: { width: '500px', maxWidth: '90vw' },
+                    },
+                    wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
+                        defListItems.map( function( item, index ) {
+                            return wp.element.createElement( 'div', {
+                                key: index,
+                                style: { marginBottom: '16px', padding: '12px', background: '#f9f9f9', borderRadius: '4px' },
+                            },
+                                wp.element.createElement( 'div', { style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' } },
+                                    wp.element.createElement( 'label', { style: { fontWeight: 600, minWidth: '70px' } }, __( 'Term:', 'djot-markup-for-wp' ) ),
+                                    wp.element.createElement( 'input', {
+                                        type: 'text',
+                                        value: item.term,
+                                        onChange: function( e ) { updateDefItem( index, 'term', e.target.value ); },
+                                        placeholder: __( 'Term...', 'djot-markup-for-wp' ),
+                                        style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px' },
+                                    } ),
+                                    defListItems.length > 1 && wp.element.createElement( Button, {
+                                        variant: 'tertiary',
+                                        isDestructive: true,
+                                        onClick: function() { removeDefItem( index ); },
+                                        style: { padding: '4px' },
+                                    }, '✕' )
+                                ),
+                                wp.element.createElement( 'div', { style: { display: 'flex', alignItems: 'flex-start', gap: '8px' } },
+                                    wp.element.createElement( 'label', { style: { fontWeight: 600, minWidth: '70px', paddingTop: '6px' } }, __( 'Definition:', 'djot-markup-for-wp' ) ),
+                                    wp.element.createElement( 'textarea', {
+                                        value: item.definition,
+                                        onChange: function( e ) { updateDefItem( index, 'definition', e.target.value ); },
+                                        placeholder: __( 'Definition...', 'djot-markup-for-wp' ),
+                                        style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '60px', resize: 'vertical' },
+                                        onKeyDown: function( e ) {
+                                            if ( e.key === 'Enter' && e.ctrlKey ) {
+                                                e.preventDefault();
+                                                addDefItem();
+                                            }
+                                        },
+                                    } )
+                                )
+                            );
+                        } )
+                    ),
+                    wp.element.createElement( Button, {
+                        variant: 'secondary',
+                        onClick: addDefItem,
+                        style: { marginBottom: '16px' },
+                    }, __( '+ Add Item', 'djot-markup-for-wp' ) ),
+                    wp.element.createElement( 'p', { style: { fontSize: '12px', color: '#666', marginTop: '0' } },
+                        __( 'Tip: Press Ctrl+Enter in definition field to add new item', 'djot-markup-for-wp' )
+                    ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px', borderTop: '1px solid #ddd', paddingTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertDefList,
+                        }, __( 'Insert Definition List', 'djot-markup-for-wp' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowDefListModal( false ); },
                             style: { marginLeft: '8px' },
                         }, __( 'Cancel', 'djot-markup-for-wp' ) )
                     )

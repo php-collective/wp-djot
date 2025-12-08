@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
+### Changed
 
-- Import Markdown/HTML now produces valid Djot with required blank lines around block elements
+- Upgrade to djot-php ^0.1.6 (fixes blank line handling in Markdown/HTML converters)
 
 ## [1.1.2] - 2025-12-07
 

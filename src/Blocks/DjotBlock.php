@@ -243,6 +243,9 @@ class DjotBlock
      * Djot requires blank lines around block elements (headings, code fences, lists, etc.)
      * The djot-php converters don't always add these, so we fix them here.
      *
+     * Note: This regex-based fix handles most cases but cannot fix nested list structure issues.
+     * Full fix requires djot-php update.
+     *
      * @todo Remove when djot-php includes fix from https://github.com/php-collective/djot-php/pull/28
      */
     private function fixDjotBlankLines(string $djot): string
@@ -262,12 +265,39 @@ class DjotBlock
         // Ensure blank line before blockquotes (if preceded by non-blank non-blockquote content)
         $djot = preg_replace('/([^\n>])\n(> )/m', "$1\n\n$2", $djot) ?? $djot;
 
-        // Ensure blank line before lists (if preceded by non-blank non-list content)
+        // Ensure blank line before top-level lists (if preceded by non-blank non-list content)
         $djot = preg_replace('/([^\n\-\*\d])\n([-*] |\d+\. )/m', "$1\n\n$2", $djot) ?? $djot;
+
+        // Ensure blank line before nested lists (indented list items after non-blank)
+        $djot = preg_replace('/^([-*] .+|^\d+\. .+)\n(\s+[-*] |\s+\d+\. )/m', "$1\n\n$2", $djot) ?? $djot;
 
         // Clean up excessive blank lines (more than 2 consecutive)
         $djot = preg_replace('/\n{3,}/', "\n\n", $djot) ?? $djot;
 
-        return trim($djot);
+        // Remove leading whitespace from non-list, non-code lines
+        $lines = explode("\n", $djot);
+        $inCodeBlock = false;
+        $result = [];
+
+        foreach ($lines as $line) {
+            if (str_starts_with(trim($line), '```')) {
+                $inCodeBlock = !$inCodeBlock;
+                $result[] = $line;
+
+                continue;
+            }
+
+            if ($inCodeBlock) {
+                $result[] = $line;
+            } elseif (preg_match('/^\s*([-*+]|\d+\.)\s/', $line)) {
+                // Preserve list indentation
+                $result[] = $line;
+            } else {
+                // Trim leading whitespace on other lines
+                $result[] = ltrim($line);
+            }
+        }
+
+        return trim(implode("\n", $result));
     }
 }

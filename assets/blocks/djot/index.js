@@ -547,7 +547,16 @@
                 }
 
                 var defListText = items.map( function( item ) {
-                    return item.term + '\n: ' + item.definition;
+                    // Multi-line definitions need continuation lines indented with 2 spaces
+                    var defLines = item.definition.split( '\n' );
+                    var formattedDef = defLines.map( function( line, idx ) {
+                        if ( idx === 0 ) {
+                            return ': ' + line;
+                        }
+                        // Indent continuation lines with 2 spaces
+                        return '  ' + line;
+                    } ).join( '\n' );
+                    return item.term + '\n' + formattedDef;
                 } ).join( '\n\n' ) + '\n';
 
                 insertMultiLineBlock( '', '', defListText );

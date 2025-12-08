@@ -275,7 +275,34 @@
     box-shadow: inset 0 -1px 0 #d0d7de;
 }
 
-/* Definitions */
+/* Definition Lists */
+.wp-djot-preview.djot-content dl {
+    margin: 1em 0;
+}
+
+.wp-djot-preview.djot-content dt {
+    font-weight: 600;
+    margin-top: 1em;
+}
+
+.wp-djot-preview.djot-content dt:first-child {
+    margin-top: 0;
+}
+
+.wp-djot-preview.djot-content dd {
+    margin-left: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.wp-djot-preview.djot-content dd p {
+    margin: 0.5em 0;
+}
+
+.wp-djot-preview.djot-content dd p:first-child {
+    margin-top: 0;
+}
+
+/* Definitions (dfn element) */
 .wp-djot-preview.djot-content dfn {
     font-style: italic;
 }

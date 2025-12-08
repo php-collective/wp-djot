@@ -155,9 +155,21 @@ article .entry-content .djot-content .task-list li {
     margin-top: 1em;
 }
 
+.djot-content dt:first-child {
+    margin-top: 0;
+}
+
 .djot-content dd {
     margin-left: 2em;
     margin-bottom: 0.5em;
+}
+
+.djot-content dd p {
+    margin: 0.5em 0;
+}
+
+.djot-content dd p:first-child {
+    margin-top: 0;
 }
 
 /* Tables */

@@ -14,20 +14,16 @@ declare(strict_types=1);
 
 $content = $attributes['content'] ?? '';
 
-if (empty($content)) {
+if (!$content) {
     return;
 }
 
-// Get settings to use configured profiles and rendering options
+// Get settings
 $options = get_option('wp_djot_settings', []);
-$safeMode = !empty($options['safe_mode']);
 $postProfile = $options['post_profile'] ?? 'article';
-$commentProfile = $options['comment_profile'] ?? 'comment';
-$postSoftBreak = $options['post_soft_break'] ?? 'newline';
-$commentSoftBreak = $options['comment_soft_break'] ?? 'newline';
-$markdownMode = !empty($options['markdown_mode']);
 
-$converter = new WpDjot\Converter($safeMode, $postProfile, $commentProfile, $postSoftBreak, $commentSoftBreak, $markdownMode);
+// Use factory method to ensure all settings are applied
+$converter = WpDjot\Converter::fromSettings();
 $html = $converter->convertArticle($content);
 
 // Escape shortcode brackets inside <code> and <pre> tags to prevent WordPress processing
@@ -42,19 +38,24 @@ $html = preg_replace_callback(
 
 $wrapper_attributes = get_block_wrapper_attributes(['class' => 'wp-djot-block-rendered djot-content']);
 
-// Allow checkbox inputs and ul class for task lists in addition to standard post HTML
-$allowed_html = wp_kses_allowed_html('post');
-$allowed_html['input'] = [
-    'type' => true,
-    'checked' => true,
-    'disabled' => true,
-    'class' => true,
-];
-$allowed_html['ul']['class'] = true;
+// For 'none' or 'full' profile, output directly (trusted content)
+// Otherwise use wp_kses for sanitization
+if ($postProfile === 'none' || $postProfile === 'full') {
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- None/Full profile means trusted content, HTML already processed by Djot converter
+    printf('<div %s>%s</div>', $wrapper_attributes, $html);
+} else {
+    // Allow checkbox inputs and ul class for task lists in addition to standard post HTML
+    $allowed_html = wp_kses_allowed_html('post');
+    $allowed_html['input'] = [
+        'type' => true,
+        'checked' => true,
+        'disabled' => true,
+        'class' => true,
+    ];
+    $allowed_html['ul']['class'] = true;
+    $allowed_html['figure'] = ['class' => true];
+    $allowed_html['figcaption'] = ['class' => true];
 
-// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped, $html is sanitized by wp_kses
-printf(
-    '<div %s>%s</div>',
-    $wrapper_attributes,
-    wp_kses($html, $allowed_html)
-);
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped, $html is sanitized by wp_kses
+    printf('<div %s>%s</div>', $wrapper_attributes, wp_kses($html, $allowed_html));
+}

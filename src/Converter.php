@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WpDjot;
 
 use Djot\DjotConverter;
+use Djot\NodeType;
 use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
@@ -57,6 +58,25 @@ class Converter
     }
 
     /**
+     * Create a Converter instance from WordPress settings.
+     *
+     * This is the preferred way to create a Converter to ensure all settings are applied.
+     */
+    public static function fromSettings(): self
+    {
+        $options = get_option('wp_djot_settings', []);
+
+        return new self(
+            safeMode: !empty($options['safe_mode']),
+            postProfile: $options['post_profile'] ?? 'article',
+            commentProfile: $options['comment_profile'] ?? 'comment',
+            postSoftBreak: $options['post_soft_break'] ?? 'newline',
+            commentSoftBreak: $options['comment_soft_break'] ?? 'newline',
+            markdownMode: !empty($options['markdown_mode']),
+        );
+    }
+
+    /**
      * Get or create a converter for the specified profile.
      *
      * @param string $profileName
@@ -69,7 +89,9 @@ class Converter
         $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '');
 
         if (!isset($this->profileConverters[$key])) {
+            // 'none' means no profile restrictions at all
             $profile = match ($profileName) {
+                'none' => null,
                 'full' => Profile::full(),
                 'article' => Profile::article(),
                 'comment' => Profile::comment(),
@@ -295,28 +317,5 @@ class Converter
         }
 
         return $html;
-    }
-
-    /**
-     * Check if a string contains Djot-specific syntax.
-     */
-    public function containsDjot(string $content): bool
-    {
-        // Check for Djot-specific patterns
-        $patterns = [
-            '/\{[a-z]+\}/', // Attributes like {.class}
-            '/\^\[/', // Footnotes
-            '/\$.*\$/', // Math
-            '/:.*:/', // Symbols
-            '/\{djot\}/', // Our shortcode
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $content)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

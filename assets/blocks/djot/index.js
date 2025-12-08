@@ -90,6 +90,9 @@
             wp.element.createElement( 'rect', { x: 3, y: 16, width: 4, height: 4, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 } ),
             wp.element.createElement( 'line', { x1: 9, y1: 18, x2: 21, y2: 18, stroke: 'currentColor', strokeWidth: 1.5 } )
         ),
+        video: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
+            wp.element.createElement( 'path', { d: 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z' } )
+        ),
     };
 
     registerBlockType( 'wp-djot/djot', {
@@ -119,6 +122,10 @@
             const [ showDefListModal, setShowDefListModal ] = useState( false );
             const [ defListTerms, setDefListTerms ] = useState( [ '' ] );
             const [ defListDefinition, setDefListDefinition ] = useState( '' );
+            const [ showVideoModal, setShowVideoModal ] = useState( false );
+            const [ videoUrl, setVideoUrl ] = useState( '' );
+            const [ videoCaption, setVideoCaption ] = useState( '' );
+            const [ videoWidth, setVideoWidth ] = useState( '' );
             const textareaRef = useRef( null );
             const previewRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
@@ -575,6 +582,30 @@
                 var newTerms = defListTerms.slice();
                 newTerms.splice( index, 1 );
                 setDefListTerms( newTerms );
+            }
+
+            function onVideo() {
+                setVideoUrl( '' );
+                setVideoCaption( '' );
+                setVideoWidth( '' );
+                setShowVideoModal( true );
+            }
+
+            function onInsertVideo() {
+                if ( ! videoUrl.trim() ) {
+                    setShowVideoModal( false );
+                    return;
+                }
+
+                // Build the Djot syntax: ![caption](url){video width=X}
+                var attrs = 'video';
+                if ( videoWidth.trim() ) {
+                    attrs += ' width=' + videoWidth.trim();
+                }
+                var videoText = '![' + videoCaption + '](' + videoUrl.trim() + '){' + attrs + '}\n';
+
+                insertMultiLineBlock( '', '', videoText );
+                setShowVideoModal( false );
             }
 
             // Format table at cursor position
@@ -1397,7 +1428,13 @@
                                 variant: 'secondary',
                                 onClick: function() { onImport( 'html' ); },
                                 style: { width: '100%', justifyContent: 'center' },
-                            }, __( 'Import HTML', 'djot-markup-for-wp' ) )
+                            }, __( 'Import HTML', 'djot-markup-for-wp' ) ),
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                icon: icons.video,
+                                onClick: onVideo,
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Insert Video', 'djot-markup-for-wp' ) )
                         )
                     )
                 ),
@@ -1683,6 +1720,48 @@
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowDefListModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup-for-wp' ) )
+                    )
+                ),
+                // Video Modal
+                showVideoModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Video', 'djot-markup-for-wp' ),
+                        onRequestClose: function() { setShowVideoModal( false ); },
+                    },
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Video URL', 'djot-markup-for-wp' ),
+                        value: videoUrl,
+                        onChange: setVideoUrl,
+                        type: 'url',
+                        placeholder: 'https://www.youtube.com/watch?v=...',
+                        help: __( 'YouTube, Vimeo, TikTok, Twitter, and other oEmbed-supported URLs', 'djot-markup-for-wp' ),
+                    } ),
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Caption (optional)', 'djot-markup-for-wp' ),
+                        value: videoCaption,
+                        onChange: setVideoCaption,
+                    } ),
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Width (optional)', 'djot-markup-for-wp' ),
+                        value: videoWidth,
+                        onChange: setVideoWidth,
+                        type: 'number',
+                        placeholder: '650',
+                        help: __( 'Width in pixels', 'djot-markup-for-wp' ),
+                    } ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertVideo,
+                        }, __( 'Insert Video', 'djot-markup-for-wp' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowVideoModal( false ); },
                             style: { marginLeft: '8px' },
                         }, __( 'Cancel', 'djot-markup-for-wp' ) )
                     )

@@ -253,8 +253,9 @@ class Settings
      */
     public function sanitizeSettings(array $input): array
     {
-        $validPostProfiles = ['full', 'article', 'comment', 'minimal'];
-        // Comments can never use 'full' profile for security reasons
+        // Posts/pages can use 'none' (no profile restrictions) or any profile
+        $validPostProfiles = ['none', 'full', 'article', 'comment', 'minimal'];
+        // Comments can never use 'none' or 'full' profile for security reasons
         $validCommentProfiles = ['article', 'comment', 'minimal'];
 
         return [
@@ -342,7 +343,7 @@ class Settings
         );
 
         if (!empty($args['description'])) {
-            printf('<p class="description">%s</p>', wp_kses($args['description'], ['br' => [], 'strong' => []]));
+            printf('<p class="description">%s</p>', wp_kses($args['description'], ['br' => [], 'strong' => [], 'code' => []]));
         }
     }
 
@@ -428,9 +429,14 @@ class Settings
         $current = $options[$field] ?? $default;
 
         $profiles = [
+            'none' => [
+                'label' => __('None', 'djot-markup-for-wp'),
+                'description' => __('No restrictions. All Djot features including raw HTML. Use only for fully trusted content.', 'djot-markup-for-wp'),
+                'posts_only' => true,
+            ],
             'full' => [
                 'label' => __('Full', 'djot-markup-for-wp'),
-                'description' => __('All features enabled. Use only for fully trusted content.', 'djot-markup-for-wp'),
+                'description' => __('All Djot features including raw HTML, but respects safe mode settings.', 'djot-markup-for-wp'),
                 'posts_only' => true,
             ],
             'article' => [

@@ -257,6 +257,24 @@ article .entry-content .djot-content .task-list li {
     font-style: italic;
 }
 
+/* Video/Media Embeds */
+.wp-djot-embed {
+    margin: 1.5em 0;
+}
+
+.wp-djot-embed iframe {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+figure.wp-djot-embed figcaption {
+    margin-top: 0.75em;
+    font-size: 0.875em;
+    color: #57606a;
+    text-align: center;
+    font-style: italic;
+}
+
 /* Footnotes */
 .djot-content .footnote-ref {
     font-size: 0.75em;
@@ -658,6 +676,10 @@ article .entry-content .djot-content .task-list li {
     }
 
     .djot-content table caption {
+        color: #8b949e;
+    }
+
+    figure.wp-djot-embed figcaption {
         color: #8b949e;
     }
 }

@@ -25,10 +25,7 @@ function wp_djot_to_html(string $djot, bool $safeMode = true, ?string $context =
     static $converter = null;
 
     if ($converter === null) {
-        $options = get_option('wp_djot_settings', []);
-        $postProfile = $options['post_profile'] ?? 'article';
-        $commentProfile = $options['comment_profile'] ?? 'comment';
-        $converter = new Converter($safeMode, $postProfile, $commentProfile);
+        $converter = Converter::fromSettings();
     }
 
     if ($context === 'comment') {

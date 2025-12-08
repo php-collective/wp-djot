@@ -296,6 +296,145 @@ class ConverterTest extends TestCase
         $this->assertStringContainsString('</dfn>', $html);
     }
 
+    public function testNoneProfileAllowsRawHtml(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'none',
+        );
+
+        $html = $converter->convertArticle('`<b>bold</b>`{=html}');
+
+        $this->assertStringContainsString('<b>bold</b>', $html);
+        $this->assertStringNotContainsString('&lt;b&gt;', $html);
+    }
+
+    public function testFullProfileAllowsRawHtml(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'full',
+        );
+
+        $html = $converter->convertArticle('`<b>bold</b>`{=html}');
+
+        $this->assertStringContainsString('<b>bold</b>', $html);
+        $this->assertStringNotContainsString('&lt;b&gt;', $html);
+    }
+
+    public function testArticleProfileEscapesRawHtml(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+        );
+
+        $html = $converter->convertArticle('`<b>bold</b>`{=html}');
+
+        $this->assertStringContainsString('&lt;b&gt;', $html);
+        $this->assertStringNotContainsString('<b>bold</b>', $html);
+    }
+
+    public function testCommentsNeverAllowRawHtml(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'none', // even with no profile for posts
+            commentProfile: 'comment',
+        );
+
+        $html = $converter->convertComment('`<script>alert(1)</script>`{=html}');
+
+        // Should be escaped in comments
+        $this->assertStringNotContainsString('<script>', $html);
+    }
+
+    public function testFigureCaptionRendering(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+        );
+
+        $djot = "![Sunset](sunset.jpg)\n^ A beautiful sunset";
+
+        $html = $converter->convertArticle($djot);
+
+        $this->assertStringContainsString('<figure>', $html);
+        $this->assertStringContainsString('<figcaption>', $html);
+        $this->assertStringContainsString('A beautiful sunset', $html);
+    }
+
+    public function testBlockquoteCaptionRendering(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+        );
+
+        $djot = "> Be the change.\n^ Gandhi";
+
+        $html = $converter->convertArticle($djot);
+
+        $this->assertStringContainsString('<figure>', $html);
+        $this->assertStringContainsString('<blockquote>', $html);
+        $this->assertStringContainsString('<figcaption>', $html);
+        $this->assertStringContainsString('Gandhi', $html);
+    }
+
+    public function testDefinitionListRendering(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+        );
+
+        $djot = ": Term\n\n  Definition here";
+
+        $html = $converter->convertArticle($djot);
+
+        $this->assertStringContainsString('<dl>', $html);
+        $this->assertStringContainsString('<dt>', $html);
+        $this->assertStringContainsString('<dd>', $html);
+        $this->assertStringContainsString('Term', $html);
+        $this->assertStringContainsString('Definition', $html);
+    }
+
+    public function testMarkdownModeEnabled(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+            commentProfile: 'comment',
+            postSoftBreak: 'newline',
+            commentSoftBreak: 'newline',
+            markdownMode: true,
+        );
+
+        // In markdown mode, single line breaks become <br>
+        $html = $converter->convertArticle("Line 1\nLine 2");
+
+        $this->assertStringContainsString('<br', $html);
+    }
+
+    public function testSoftBreakModeSpace(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+            commentProfile: 'comment',
+            postSoftBreak: 'space',
+            commentSoftBreak: 'newline',
+            markdownMode: false,
+        );
+
+        $html = $converter->convertArticle("Line 1\nLine 2");
+
+        // Should have space between lines (soft break renders as space)
+        $this->assertStringContainsString('Line 1', $html);
+        $this->assertStringContainsString('Line 2', $html);
+    }
+
     /**
      * Add the semantic span handler (same logic as Plugin::customizeConverter)
      */

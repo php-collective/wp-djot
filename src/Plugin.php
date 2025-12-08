@@ -37,14 +37,7 @@ class Plugin
     public function init(): void
     {
         $this->options = $this->getOptions();
-        $this->converter = new Converter(
-            $this->options['safe_mode'],
-            $this->options['post_profile'],
-            $this->options['comment_profile'],
-            $this->options['post_soft_break'],
-            $this->options['comment_soft_break'],
-            $this->options['markdown_mode'],
-        );
+        $this->converter = Converter::fromSettings();
         $this->shortcode = new DjotShortcode($this->converter);
 
         // Register shortcode
@@ -103,6 +96,11 @@ class Plugin
      */
     public function customizeConverter(DjotConverter $converter, string $context): DjotConverter
     {
+        // Video embed support - convert image syntax with video URLs to oEmbed
+        $converter->getRenderer()->on('render.image', function (RenderEvent $event): void {
+            $this->handleVideoEmbed($event);
+        });
+
         $converter->getRenderer()->on('render.span', function (RenderEvent $event): void {
             /** @var \Djot\Node\Inline\Span $node */
             $node = $event->getNode();
@@ -174,6 +172,61 @@ class Plugin
         });
 
         return $converter;
+    }
+
+    /**
+     * Handle video embeds using WordPress oEmbed.
+     *
+     * Converts image syntax with video attribute to embedded players:
+     * ![Optional caption](https://www.youtube.com/watch?v=VIDEO_ID){video}
+     * ![Optional caption](https://www.youtube.com/watch?v=VIDEO_ID){video width=650 height=400}
+     */
+    public function handleVideoEmbed(RenderEvent $event): void
+    {
+        /** @var \Djot\Node\Inline\Image $node */
+        $node = $event->getNode();
+
+        // Only process images with video attribute
+        if ($node->getAttribute('video') === null) {
+            return;
+        }
+
+        $url = $node->getSource();
+
+        // Get width/height from attributes
+        $width = $node->getAttribute('width');
+        $height = $node->getAttribute('height');
+
+        // Build oEmbed args
+        $args = [];
+        if ($width) {
+            $args['width'] = (int)$width;
+        }
+        if ($height) {
+            $args['height'] = (int)$height;
+        }
+
+        // Try to get oEmbed HTML from WordPress
+        $embedHtml = wp_oembed_get($url, $args);
+        if (!$embedHtml) {
+            return;
+        }
+
+        // Get alt text for optional caption
+        $alt = $node->getAlt();
+
+        // Wrap in figure if there's a caption (alt text)
+        if ($alt) {
+            $embedHtml = '<figure class="wp-djot-embed">'
+                . $embedHtml
+                . '<figcaption>' . esc_html($alt) . '</figcaption>'
+                . '</figure>';
+        } else {
+            $embedHtml = '<div class="wp-djot-embed">' . $embedHtml . '</div>';
+        }
+
+        $event->setHtml($embedHtml);
+        $event->preventDefault();
     }
 
     /**

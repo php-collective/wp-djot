@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Import Markdown/HTML now produces valid Djot with required blank lines around block elements
+
 ## [1.1.2] - 2025-12-07
 
 ### Added

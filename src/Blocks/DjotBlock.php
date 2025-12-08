@@ -211,6 +211,9 @@ class DjotBlock
         $converter = new MarkdownToDjot();
         $djot = $converter->convert($content);
 
+        // Fix missing blank lines required by Djot spec
+        $djot = $this->fixDjotBlankLines($djot);
+
         return new WP_REST_Response(['djot' => $djot], 200);
     }
 
@@ -228,6 +231,43 @@ class DjotBlock
         $converter = new HtmlToDjot();
         $djot = $converter->convert($content);
 
+        // Fix missing blank lines required by Djot spec
+        $djot = $this->fixDjotBlankLines($djot);
+
         return new WP_REST_Response(['djot' => $djot], 200);
+    }
+
+    /**
+     * Fix missing blank lines in converted Djot content.
+     *
+     * Djot requires blank lines around block elements (headings, code fences, lists, etc.)
+     * The djot-php converters don't always add these, so we fix them here.
+     *
+     * @todo Remove when djot-php includes fix from https://github.com/php-collective/djot-php/pull/28
+     */
+    private function fixDjotBlankLines(string $djot): string
+    {
+        // Ensure blank line after headings (if followed by non-blank content)
+        $djot = preg_replace('/^(#{1,6} .+)$\n(?!\n|#{1,6} )/m', "$1\n\n", $djot) ?? $djot;
+
+        // Ensure blank line before headings (if preceded by non-blank content)
+        $djot = preg_replace('/(?<!\n)\n(#{1,6} )/m', "\n\n$1", $djot) ?? $djot;
+
+        // Ensure blank line before code fences (if preceded by non-blank content)
+        $djot = preg_replace('/([^\n])\n(```)/m', "$1\n\n$2", $djot) ?? $djot;
+
+        // Ensure blank line after code fences (if followed by non-blank content)
+        $djot = preg_replace('/(```)\n(?!\n)/m', "$1\n\n", $djot) ?? $djot;
+
+        // Ensure blank line before blockquotes (if preceded by non-blank non-blockquote content)
+        $djot = preg_replace('/([^\n>])\n(> )/m', "$1\n\n$2", $djot) ?? $djot;
+
+        // Ensure blank line before lists (if preceded by non-blank non-list content)
+        $djot = preg_replace('/([^\n\-\*\d])\n([-*] |\d+\. )/m', "$1\n\n$2", $djot) ?? $djot;
+
+        // Clean up excessive blank lines (more than 2 consecutive)
+        $djot = preg_replace('/\n{3,}/', "\n\n", $djot) ?? $djot;
+
+        return trim($djot);
     }
 }

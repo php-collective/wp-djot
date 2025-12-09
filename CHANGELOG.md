@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] - 2025-12-09
+
+### Fixed
+
+- Dark mode table readability (explicit background colors for all cells)
+
 ## [1.1.3] - 2025-12-09
 
 ### Added

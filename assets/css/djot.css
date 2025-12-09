@@ -611,13 +611,14 @@ figure.wp-djot-embed figcaption {
     .djot-content td {
         border-color: #30363d;
         color: #c9d1d9;
+        background-color: #0d1117;
     }
 
     .djot-content th {
         background-color: #161b22;
     }
 
-    .djot-content tr:nth-child(even) {
+    .djot-content tr:nth-child(even) td {
         background-color: #161b22;
     }
 

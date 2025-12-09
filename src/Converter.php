@@ -305,53 +305,68 @@ class Converter
             return $purifier->purify($html);
         }
 
-        // Fallback to WordPress sanitization with checkbox support for task lists
+        // Fallback to WordPress sanitization
         if (function_exists('wp_kses')) {
-            $allowedHtml = array_merge(
-                wp_kses_allowed_html('post'),
-                [
-                    'input' => [
-                        'type' => true,
-                        'checked' => true,
-                        'disabled' => true,
-                        'class' => true,
-                    ],
-                    'ul' => [
-                        'class' => true,
-                    ],
-                    'figure' => [
-                        'class' => true,
-                    ],
-                    'figcaption' => [
-                        'class' => true,
-                    ],
-                    // Djot inline formatting elements not in WordPress default allowlist
-                    'mark' => [
-                        'class' => true,
-                    ],
-                    'ins' => [
-                        'class' => true,
-                        'datetime' => true,
-                        'cite' => true,
-                    ],
-                    'del' => [
-                        'class' => true,
-                        'datetime' => true,
-                        'cite' => true,
-                    ],
-                ],
-            );
-
-            /**
-             * Filter allowed HTML tags for wp_kses sanitization.
-             *
-             * @param array<string, array<string, bool>> $allowedHtml Allowed HTML tags and attributes.
-             */
-            $allowedHtml = apply_filters('wp_djot_allowed_html', $allowedHtml);
-
-            return wp_kses($html, $allowedHtml);
+            return wp_kses($html, self::getAllowedHtml());
         }
 
         return $html;
+    }
+
+    /**
+     * Get the allowed HTML tags and attributes for wp_kses sanitization.
+     *
+     * This is used by both the Converter and block rendering to ensure consistency.
+     *
+     * @return array<string, array<string, bool>>
+     */
+    public static function getAllowedHtml(): array
+    {
+        $allowedHtml = function_exists('wp_kses_allowed_html')
+            ? wp_kses_allowed_html('post')
+            : [];
+
+        // Djot-specific elements not in WordPress default allowlist
+        $allowedHtml = array_merge($allowedHtml, [
+            'input' => [
+                'type' => true,
+                'checked' => true,
+                'disabled' => true,
+                'class' => true,
+            ],
+            'ul' => [
+                'class' => true,
+            ],
+            'figure' => [
+                'class' => true,
+            ],
+            'figcaption' => [
+                'class' => true,
+            ],
+            'mark' => [
+                'class' => true,
+            ],
+            'ins' => [
+                'class' => true,
+                'datetime' => true,
+                'cite' => true,
+            ],
+            'del' => [
+                'class' => true,
+                'datetime' => true,
+                'cite' => true,
+            ],
+        ]);
+
+        /**
+         * Filter allowed HTML tags for wp_kses sanitization.
+         *
+         * @param array<string, array<string, bool>> $allowedHtml Allowed HTML tags and attributes.
+         */
+        if (function_exists('apply_filters')) {
+            $allowedHtml = apply_filters('wp_djot_allowed_html', $allowedHtml);
+        }
+
+        return $allowedHtml;
     }
 }

@@ -44,18 +44,6 @@ if ($postProfile === 'none' || $postProfile === 'full') {
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- None/Full profile means trusted content, HTML already processed by Djot converter
     printf('<div %s>%s</div>', $wrapper_attributes, $html);
 } else {
-    // Allow checkbox inputs and ul class for task lists in addition to standard post HTML
-    $allowed_html = wp_kses_allowed_html('post');
-    $allowed_html['input'] = [
-        'type' => true,
-        'checked' => true,
-        'disabled' => true,
-        'class' => true,
-    ];
-    $allowed_html['ul']['class'] = true;
-    $allowed_html['figure'] = ['class' => true];
-    $allowed_html['figcaption'] = ['class' => true];
-
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped, $html is sanitized by wp_kses
-    printf('<div %s>%s</div>', $wrapper_attributes, wp_kses($html, $allowed_html));
+    printf('<div %s>%s</div>', $wrapper_attributes, wp_kses($html, WpDjot\Converter::getAllowedHtml()));
 }

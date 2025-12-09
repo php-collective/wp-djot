@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Upgrade to djot-php ^0.1.6 (fixes blank line handling, adds Figure/Caption support)
+- Upgrade to djot-php ^0.1.7 (fixes blank line handling, adds Figure/Caption support)
 - Import Markdown/HTML now converts semantic elements (kbd, abbr, dfn) to Djot span syntax
 - Removed redundant "Allow Raw HTML" setting (use None or Full profile instead)
 - Improved editor preview styles (figures, captions, definition lists)

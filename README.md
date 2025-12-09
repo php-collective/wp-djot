@@ -105,6 +105,7 @@ For complete Djot syntax documentation, visit [djot.net](https://djot.net/).
 - [Djot](https://djot.net/) - Official Djot website with syntax reference and playground
 - [jgm/djot](https://github.com/jgm/djot) - Reference implementation in JavaScript by John MacFarlane
 - [JetBrains IDE support](https://github.com/php-collective/djot-intellij) - Plugin for PhpStorm, IntelliJ IDEA, WebStorm, etc.
+- [Djot playground](https://sandbox.dereuromark.de/sandbox/djot) - Live demo to check out how this markup language works.
  
 ## Credits
 

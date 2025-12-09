@@ -7,14 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2025-12-09
+
 ### Added
 
 - Definition list tool in block editor sidebar (insert multiple term/definition pairs)
-- Import Markdown/HTML now converts semantic elements (kbd, abbr, dfn) to Djot span syntax
+- Video embed tool in block editor sidebar (YouTube, Vimeo, etc. via WordPress oEmbed)
+- "None" profile option for posts/pages (no restrictions, allows raw HTML)
+- `wp_djot_converter` filter for customizing the Djot converter instance
+- `wp_djot_converter_{post_type}` filter for post-type specific customization
+- `wp_djot_htmlpurifier_config` filter for customizing HTMLPurifier configuration
+- `wp_djot_allowed_html` filter for customizing wp_kses allowed tags
+- Figure/caption support for images, blockquotes, and tables
+- Definition list styling in editor preview and frontend
+- Video embed syntax: `![caption](url){video}` with optional width/height attributes
 
 ### Changed
 
-- Upgrade to djot-php ^0.1.6 (fixes blank line handling in Markdown/HTML converters)
+- Upgrade to djot-php ^0.1.6 (fixes blank line handling, adds Figure/Caption support)
+- Import Markdown/HTML now converts semantic elements (kbd, abbr, dfn) to Djot span syntax
+- Removed redundant "Allow Raw HTML" setting (use None or Full profile instead)
+- Improved editor preview styles (figures, captions, definition lists)
+
+### Fixed
+
+- Link/image insertion now correctly replaces selected text
 
 ## [1.1.2] - 2025-12-07
 
@@ -120,7 +137,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.1.2...HEAD
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.1.3...HEAD
+[1.1.3]: https://github.com/php-collective/wp-djot/compare/1.1.2...1.1.3
 [1.1.2]: https://github.com/php-collective/wp-djot/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/php-collective/wp-djot/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/php-collective/wp-djot/compare/1.0.0...1.1.0

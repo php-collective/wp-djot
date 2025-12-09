@@ -14,7 +14,7 @@ A WordPress plugin for [Djot](https://djot.net/) markup language support. Conver
 
 Djot is a light markup syntax created by John MacFarlane (creator of CommonMark and Pandoc). It aims to be a successor to Markdown with cleaner syntax and more consistent parsing rules.
 
-[![Watch the demo video](https://img.youtube.com/vi/z0Nsjzp0gnw/0.jpg)](https://www.youtube.com/watch?v=z0Nsjzp0gnw)
+[![Watch the demo video](https://img.youtube.com/vi/z0Nsjzp0gnw/mqdefault.jpg)](https://www.youtube.com/watch?v=z0Nsjzp0gnw)
 
 ## Features
 

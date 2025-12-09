@@ -472,8 +472,17 @@ class Plugin
                 ['in_footer' => true, 'strategy' => 'defer'],
             );
 
+            // Djot language definition for highlight.js
+            wp_enqueue_script(
+                'wp-djot-highlight-djot',
+                WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/languages/hljs-djot.js',
+                ['wp-djot-highlight'],
+                WP_DJOT_VERSION,
+                ['in_footer' => true, 'strategy' => 'defer'],
+            );
+
             wp_add_inline_script(
-                'wp-djot-highlight',
+                'wp-djot-highlight-djot',
                 'document.addEventListener("DOMContentLoaded", function() { hljs.highlightAll(); });',
             );
         }

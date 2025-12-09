@@ -45,7 +45,7 @@ function wp_djot_to_html(string $djot, bool $safeMode = true, ?string $context =
 function wp_djot_the(string $djot, bool $safeMode = true, ?string $context = 'post'): void
 {
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML output is intentional, already sanitized by converter
-    echo wp_kses_post(wp_djot_to_html($djot, $safeMode, $context));
+    echo wp_djot_to_html($djot, $safeMode, $context);
 }
 
 /**

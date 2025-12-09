@@ -325,6 +325,20 @@ class Converter
                     'figcaption' => [
                         'class' => true,
                     ],
+                    // Djot inline formatting elements not in WordPress default allowlist
+                    'mark' => [
+                        'class' => true,
+                    ],
+                    'ins' => [
+                        'class' => true,
+                        'datetime' => true,
+                        'cite' => true,
+                    ],
+                    'del' => [
+                        'class' => true,
+                        'datetime' => true,
+                        'cite' => true,
+                    ],
                 ],
             );
 

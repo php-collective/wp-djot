@@ -343,19 +343,6 @@ class Converter
             'figcaption' => [
                 'class' => true,
             ],
-            'mark' => [
-                'class' => true,
-            ],
-            'ins' => [
-                'class' => true,
-                'datetime' => true,
-                'cite' => true,
-            ],
-            'del' => [
-                'class' => true,
-                'datetime' => true,
-                'cite' => true,
-            ],
         ]);
 
         /**

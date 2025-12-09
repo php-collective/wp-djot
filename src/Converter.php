@@ -273,6 +273,12 @@ class Converter
      * Purify HTML using HTMLPurifier if available.
      *
      * Falls back to WordPress wp_kses_post() if HTMLPurifier is not installed.
+     *
+     * Customization via filter:
+     * add_filter('wp_djot_htmlpurifier_config', function($config) {
+     *     $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title|rel],...');
+     *     return $config;
+     * });
      */
     private function purifyHtml(string $html): string
     {
@@ -282,7 +288,17 @@ class Converter
             if ($purifier === null) {
                 $config = HTMLPurifier_Config::createDefault();
                 $config->set('Cache.DefinitionImpl', null);
-                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title],ul[class],ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,caption,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr,input[type|checked|disabled],figure,figcaption');
+                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title|rel],ul[class],ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,caption,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr,input[type|checked|disabled],figure,figcaption');
+
+                /**
+                 * Filter HTMLPurifier configuration.
+                 *
+                 * @param \HTMLPurifier_Config $config The HTMLPurifier configuration object.
+                 */
+                if (function_exists('apply_filters')) {
+                    $config = apply_filters('wp_djot_htmlpurifier_config', $config);
+                }
+
                 $purifier = new HTMLPurifier($config);
             }
 
@@ -311,6 +327,13 @@ class Converter
                     ],
                 ],
             );
+
+            /**
+             * Filter allowed HTML tags for wp_kses sanitization.
+             *
+             * @param array<string, array<string, bool>> $allowedHtml Allowed HTML tags and attributes.
+             */
+            $allowedHtml = apply_filters('wp_djot_allowed_html', $allowedHtml);
 
             return wp_kses($html, $allowedHtml);
         }

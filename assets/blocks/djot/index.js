@@ -121,7 +121,7 @@
             const [ taskListItems, setTaskListItems ] = useState( [ { text: '', checked: false } ] );
             const [ showDefListModal, setShowDefListModal ] = useState( false );
             const [ defListTerms, setDefListTerms ] = useState( [ '' ] );
-            const [ defListDefinition, setDefListDefinition ] = useState( '' );
+            const [ defListDefinitions, setDefListDefinitions ] = useState( [ '' ] );
             const [ showVideoModal, setShowVideoModal ] = useState( false );
             const [ videoUrl, setVideoUrl ] = useState( '' );
             const [ videoCaption, setVideoCaption ] = useState( '' );
@@ -544,24 +544,36 @@
 
             function onDefList() {
                 setDefListTerms( [ '' ] );
-                setDefListDefinition( '' );
+                setDefListDefinitions( [ '' ] );
                 setShowDefListModal( true );
             }
 
             function onInsertDefList() {
                 var terms = defListTerms.filter( function( t ) { return t.trim() !== ''; } );
-                if ( terms.length === 0 && defListDefinition.trim() === '' ) {
+                var definitions = defListDefinitions.filter( function( d ) { return d.trim() !== ''; } );
+                if ( terms.length === 0 && definitions.length === 0 ) {
                     setShowDefListModal( false );
                     return;
                 }
 
                 // Djot spec syntax: `: term` lines, then blank line, then indented definition
+                // Multiple dd elements use `: +` continuation marker
                 var termsText = terms.map( function( t ) { return ': ' + t; } ).join( '\n' );
-                var defLines = defListDefinition.split( '\n' );
-                var indentedDef = defLines.map( function( line ) {
-                    return '  ' + line;
-                } ).join( '\n' );
-                var defListText = termsText + '\n\n' + indentedDef + '\n';
+
+                var defsText = definitions.map( function( def, index ) {
+                    var defLines = def.split( '\n' );
+                    var indentedDef = defLines.map( function( line ) {
+                        return '  ' + line;
+                    } ).join( '\n' );
+
+                    // First definition follows terms, subsequent ones use `: +` marker
+                    if ( index === 0 ) {
+                        return indentedDef;
+                    }
+                    return ': +\n\n' + indentedDef;
+                } ).join( '\n\n' );
+
+                var defListText = termsText + '\n\n' + defsText + '\n';
 
                 insertMultiLineBlock( '', '', defListText );
                 setShowDefListModal( false );
@@ -582,6 +594,23 @@
                 var newTerms = defListTerms.slice();
                 newTerms.splice( index, 1 );
                 setDefListTerms( newTerms );
+            }
+
+            function updateDefDefinition( index, value ) {
+                var newDefs = defListDefinitions.slice();
+                newDefs[ index ] = value;
+                setDefListDefinitions( newDefs );
+            }
+
+            function addDefDefinition() {
+                setDefListDefinitions( defListDefinitions.concat( [ '' ] ) );
+            }
+
+            function removeDefDefinition( index ) {
+                if ( defListDefinitions.length <= 1 ) return;
+                var newDefs = defListDefinitions.slice();
+                newDefs.splice( index, 1 );
+                setDefListDefinitions( newDefs );
             }
 
             function onVideo() {
@@ -1695,17 +1724,36 @@
                             isSmall: true,
                         }, __( '+ Add Term', 'djot-markup-for-wp' ) )
                     ),
-                    // Definition section
+                    // Definitions section
                     wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
                         wp.element.createElement( 'label', { style: { display: 'block', fontWeight: 600, marginBottom: '8px' } },
-                            __( 'Definition (dd):', 'djot-markup-for-wp' )
+                            __( 'Definitions (dd):', 'djot-markup-for-wp' )
                         ),
-                        wp.element.createElement( 'textarea', {
-                            value: defListDefinition,
-                            onChange: function( e ) { setDefListDefinition( e.target.value ); },
-                            placeholder: __( 'Definition... (use blank lines for multiple paragraphs)', 'djot-markup-for-wp' ),
-                            style: { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '100px', resize: 'vertical', boxSizing: 'border-box' },
-                        } )
+                        defListDefinitions.map( function( definition, index ) {
+                            return wp.element.createElement( 'div', {
+                                key: index,
+                                style: { display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' },
+                            },
+                                wp.element.createElement( 'textarea', {
+                                    value: definition,
+                                    onChange: function( e ) { updateDefDefinition( index, e.target.value ); },
+                                    placeholder: __( 'Definition... (use blank lines for multiple paragraphs)', 'djot-markup-for-wp' ),
+                                    style: { flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '60px', resize: 'vertical', boxSizing: 'border-box' },
+                                } ),
+                                defListDefinitions.length > 1 && wp.element.createElement( Button, {
+                                    variant: 'tertiary',
+                                    isDestructive: true,
+                                    onClick: function() { removeDefDefinition( index ); },
+                                    style: { padding: '4px', marginTop: '4px' },
+                                }, '✕' )
+                            );
+                        } ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: addDefDefinition,
+                            style: { marginTop: '4px' },
+                            isSmall: true,
+                        }, __( '+ Add Definition', 'djot-markup-for-wp' ) )
                     ),
                     wp.element.createElement( 'p', { style: { fontSize: '12px', color: '#666', marginTop: '0' } },
                         __( 'Tip: Press Enter in term field to add another term', 'djot-markup-for-wp' )

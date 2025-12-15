@@ -136,7 +136,7 @@ class Plugin
             // Wrap in dfn if present (can combine with abbr/kbd)
             if ($dfn !== null) {
                 $dfnAttr = '';
-                if ($dfn !== '' && $dfn !== true) {
+                if ($dfn !== '') {
                     $dfnAttr = ' title="' . htmlspecialchars((string)$dfn, ENT_QUOTES, 'UTF-8') . '"';
                 }
                 $content = '<dfn' . $dfnAttr . '>' . $content . '</dfn>';

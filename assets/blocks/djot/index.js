@@ -4,6 +4,7 @@
     const { TextareaControl, PanelBody, ToggleControl, Placeholder, Spinner, ToolbarGroup, ToolbarButton, ToolbarDropdownMenu, Modal, TextControl, Button, RangeControl } = wp.components;
     const { PlainText } = wp.blockEditor;
     const { InspectorControls, BlockControls, useBlockProps } = wp.blockEditor;
+    const { useDispatch } = wp.data;
     const { __ } = wp.i18n;
     const apiFetch = wp.apiFetch;
 
@@ -99,6 +100,7 @@
         edit: function( props ) {
             const { attributes, setAttributes } = props;
             const { content } = attributes;
+            const { __unstableMarkLastChangeAsPersistent: markUndoBoundary } = useDispatch( 'core/block-editor' );
             const [ preview, setPreview ] = useState( '' );
             const [ isPreviewMode, setIsPreviewMode ] = useState( false );
             const [ isLoading, setIsLoading ] = useState( false );
@@ -160,44 +162,52 @@
                 }
             }
 
-            // Track scroll position for undo/redo recovery
-            const lastScrollY = useRef( window.scrollY );
-            const lastScrollX = useRef( window.scrollX );
+            // Track previous content for undo/redo cursor positioning
+            const previousContent = useRef( content || '' );
             const isInternalChange = useRef( false );
 
-            // Continuously track scroll position
-            useEffect( function() {
-                function saveScroll() {
-                    lastScrollY.current = window.scrollY;
-                    lastScrollX.current = window.scrollX;
+            // Find position where two strings first differ
+            function findDiffPosition( oldStr, newStr ) {
+                oldStr = oldStr || '';
+                newStr = newStr || '';
+                var minLen = Math.min( oldStr.length, newStr.length );
+                for ( var i = 0; i < minLen; i++ ) {
+                    if ( oldStr[ i ] !== newStr[ i ] ) {
+                        return i;
+                    }
                 }
+                // Strings are identical up to minLen, diff is at the end of shorter string
+                return minLen;
+            }
 
-                document.addEventListener( 'scroll', saveScroll, { passive: true, capture: true } );
-                document.addEventListener( 'keydown', saveScroll, { passive: true } );
-                document.addEventListener( 'mousedown', saveScroll, { passive: true } );
-
-                return function() {
-                    document.removeEventListener( 'scroll', saveScroll, { capture: true } );
-                    document.removeEventListener( 'keydown', saveScroll );
-                    document.removeEventListener( 'mousedown', saveScroll );
-                };
-            }, [] );
-
-            // Restore scroll after any content change (handles undo/redo)
+            // Handle external content changes (undo/redo) - position cursor at change location
             useEffect( function() {
                 if ( isInternalChange.current ) {
                     isInternalChange.current = false;
+                    previousContent.current = content || '';
                     return;
                 }
 
-                // External content change (undo/redo) - restore scroll only
+                // External content change (undo/redo)
                 if ( ! isPreviewMode ) {
-                    var savedY = lastScrollY.current;
-                    var savedX = lastScrollX.current;
-                    requestAnimationFrame( function() {
-                        window.scrollTo( savedX, savedY );
-                    } );
+                    var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                    if ( textarea ) {
+                        var oldContent = previousContent.current;
+                        var newContent = content || '';
+                        var diffPos = findDiffPosition( oldContent, newContent );
+
+                        // Position cursor at the change location
+                        requestAnimationFrame( function() {
+                            textarea.focus( { preventScroll: true } );
+                            textarea.setSelectionRange( diffPos, diffPos );
+                            // Scroll textarea to make cursor visible
+                            textarea.blur();
+                            textarea.focus();
+                        } );
+                    }
                 }
+
+                previousContent.current = content || '';
             }, [ content ] );
 
             // Restore focus and scroll position after React re-render
@@ -221,6 +231,11 @@
 
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
 
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
@@ -248,6 +263,11 @@
             function insertBlockMarkup( markup, placeholder ) {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
 
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
@@ -292,6 +312,11 @@
             function insertMultiLineBlock( startTag, endTag, placeholder ) {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
 
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
@@ -369,6 +394,11 @@
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
                 const text = content || '';
@@ -403,6 +433,11 @@
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
                 const text = content || '';
@@ -424,6 +459,11 @@
             function onHeading( level ) {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
 
                 const text = content || '';
                 const cursorPos = textarea.selectionStart;
@@ -641,6 +681,11 @@
             function onFormatTable() {
                 var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
 
                 var text = content || '';
                 var cursorPos = textarea.selectionStart;
@@ -890,6 +935,11 @@
                     return;
                 }
 
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
                 var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 var text = content || '';
                 var start = textarea ? textarea.selectionStart : text.length;
@@ -927,6 +977,11 @@
                 var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
                 var text = content || '';
                 var start = textarea.selectionStart;
                 var end = textarea.selectionEnd;
@@ -962,6 +1017,11 @@
             function outdentLines() {
                 var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
 
                 var text = content || '';
                 var start = textarea.selectionStart;
@@ -1159,6 +1219,7 @@
             }, [ isPreviewMode ] );
 
             function onChangeContent( newContent ) {
+                isInternalChange.current = true;
                 setAttributes( { content: newContent } );
             }
 

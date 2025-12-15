@@ -53,7 +53,9 @@ class Converter
         $this->commentSoftBreak = $commentSoftBreak;
         $this->markdownMode = $markdownMode;
         $this->converter = new DjotConverter(safeMode: false);
+        $this->converter->getRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
+        $this->safeConverter->getRenderer()->setCodeBlockTabWidth(4);
     }
 
     /**
@@ -112,6 +114,9 @@ class Converter
                 };
                 $converter->getRenderer()->setSoftBreakMode($softBreakMode);
             }
+
+            // Convert tabs to 4 spaces in code blocks for consistent display
+            $converter->getRenderer()->setCodeBlockTabWidth(4);
 
             // Allow customization via WordPress filters
             if (function_exists('apply_filters')) {

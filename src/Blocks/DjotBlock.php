@@ -54,6 +54,13 @@ class DjotBlock
         // Register the block - this auto-registers wpdjot-djot-editor-style from block.json
         register_block_type(WPDJOT_PLUGIN_DIR . 'assets/blocks/djot');
 
+        // Register old block name as alias for backward compatibility with existing content
+        register_block_type('wp-djot/djot', [
+            'render_callback' => function (array $attributes): string {
+                return $this->renderLegacyBlock($attributes);
+            },
+        ]);
+
         if ($highlightCode) {
             // Add highlight.js CSS as dependency of the block's editor style
             $styles = wp_styles();
@@ -155,6 +162,42 @@ class DjotBlock
     public function canEdit(): bool
     {
         return current_user_can('edit_posts');
+    }
+
+    /**
+     * Render legacy wp-djot/djot blocks for backward compatibility.
+     *
+     * @param array<string, mixed> $attributes Block attributes.
+     */
+    public function renderLegacyBlock(array $attributes): string
+    {
+        $content = $attributes['content'] ?? '';
+
+        if (!$content) {
+            return '';
+        }
+
+        $options = get_option('wpdjot_settings', []);
+        $postProfile = $options['post_profile'] ?? 'article';
+
+        $html = $this->converter->convertArticle($content);
+
+        // Escape shortcode brackets inside <code> and <pre> tags
+        $html = preg_replace_callback(
+            '/<(code|pre)[^>]*>.*?<\/\1>/is',
+            static function (array $matches): string {
+                return str_replace(['[', ']'], ['&#91;', '&#93;'], $matches[0]);
+            },
+            $html,
+        ) ?? $html;
+
+        $wrapperClass = 'wp-block-wpdjot-djot wpdjot-block-rendered djot-content';
+
+        if ($postProfile === 'none' || $postProfile === 'full') {
+            return sprintf('<div class="%s">%s</div>', esc_attr($wrapperClass), $html);
+        }
+
+        return sprintf('<div class="%s">%s</div>', esc_attr($wrapperClass), wp_kses($html, Converter::getAllowedHtml()));
     }
 
     /**

@@ -334,8 +334,8 @@ class Plugin
      */
     private function extractDjotContent(string $content): string
     {
-        // Check for wpdjot/djot Gutenberg blocks
-        if (preg_match_all('/<!-- wp:wpdjot\/djot \{["\']content["\']:["\'](.+?)["\']\} \/-->/s', $content, $matches)) {
+        // Check for wpdjot/djot Gutenberg blocks (supports both old wp-djot/djot and new wpdjot/djot)
+        if (preg_match_all('/<!-- wp:(?:wp-djot|wpdjot)\/djot \{["\']content["\']:["\'](.+?)["\']\} \/-->/s', $content, $matches)) {
             $djotParts = [];
             foreach ($matches[1] as $match) {
                 // Decode JSON-encoded content
@@ -350,7 +350,7 @@ class Plugin
         }
 
         // Check for JSON attribute format (content may have complex escaping)
-        if (preg_match_all('/<!-- wp:wpdjot\/djot (\{.+?\}) \/-->/s', $content, $matches)) {
+        if (preg_match_all('/<!-- wp:(?:wp-djot|wpdjot)\/djot (\{.+?\}) \/-->/s', $content, $matches)) {
             $djotParts = [];
             foreach ($matches[1] as $jsonStr) {
                 $data = json_decode($jsonStr, true);

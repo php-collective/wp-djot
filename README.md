@@ -1,4 +1,4 @@
-# Djot Markup for WP
+# Djot Markup for WordPress
 
 [![CI](https://github.com/php-collective/wp-djot/actions/workflows/ci.yml/badge.svg)](https://github.com/php-collective/wp-djot/actions/workflows/ci.yml)
 [![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)

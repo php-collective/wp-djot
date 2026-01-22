@@ -9,5 +9,5 @@ return [
         'wp-i18n',
         'wp-api-fetch',
     ],
-    'version' => '1.2.0',
+    'version' => '1.2.1',
 ];

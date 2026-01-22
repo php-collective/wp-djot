@@ -1,10 +1,10 @@
-=== Djot Markup for WP ===
+=== Djot Markup ===
 Contributors: dereuromark
 Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -12,7 +12,7 @@ Djot markup language support for WordPress. A modern, cleaner alternative to Mar
 
 == Description ==
 
-Djot Markup for WP adds support for the [Djot](https://djot.net/) markup language in WordPress. Djot is created by John MacFarlane (creator of CommonMark and Pandoc) and offers cleaner syntax with more consistent parsing rules than Markdown.
+Djot Markup adds support for the [Djot](https://djot.net/) markup language in WordPress. Djot is created by John MacFarlane (creator of CommonMark and Pandoc) and offers cleaner syntax with more consistent parsing rules than Markdown.
 
 = Features =
 
@@ -89,6 +89,17 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 == Changelog ==
 
+= 1.2.1 =
+* Renamed plugin to "Djot Markup" for WordPress.org compliance
+* Added ABSPATH checks to all PHP files for security
+* Prefixed global variables for WordPress coding standards compliance
+
+= 1.2.0 =
+* Changed code prefix from wp_djot/wp-djot to wpdjot for WordPress.org compliance
+* Updated highlight.js from v11.9.0 to v11.11.1
+* Added backward compatibility for existing blocks and settings
+* Added settings migration from old option name
+
 = 1.1.0 =
 * Comment formatting toolbar with buttons for Bold, Italic, Code, Link, Quote, and Code Block
 * Write/Preview tabs for comment toolbar with live Djot preview
@@ -107,6 +118,12 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Template tags for theme developers
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Plugin renamed to "Djot Markup" for WordPress.org compliance.
+
+= 1.2.0 =
+Code prefix changes for WordPress.org compliance. Fully backward compatible.
 
 = 1.1.0 =
 Adds comment formatting toolbar with preview, and fixes archive page excerpts.

@@ -97,10 +97,10 @@ When using template tags, you can specify the context:
 
 ```php
 // Use post profile
-$html = wp_djot_to_html($content, true, 'post');
+$html = wpdjot_to_html($content, true, 'post');
 
 // Use comment profile
-$html = wp_djot_to_html($content, true, 'comment');
+$html = wpdjot_to_html($content, true, 'comment');
 ```
 
 ## Programmatic Access

@@ -4,24 +4,24 @@ WP Djot provides filter hooks to customize the Djot converter for different cont
 
 ## Filter Hooks
 
-### `wp_djot_converter`
+### `wpdjot_converter`
 
 Modify the converter instance before conversion. This is the main hook for adding custom render handlers and patterns.
 
 ```php
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter, string $context): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter, string $context): Djot\DjotConverter {
     // $context is 'article' or 'comment'
     // Add your customizations here
     return $converter;
 }, 10, 2);
 ```
 
-### `wp_djot_converter_{post_type}`
+### `wpdjot_converter_{post_type}`
 
 Customize the converter for a specific post type only.
 
 ```php
-add_filter('wp_djot_converter_product', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter_product', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     // Customization for WooCommerce products only
     return $converter;
 });
@@ -100,7 +100,7 @@ The converter fires events for each element type during rendering. You can inter
 use Djot\Event\RenderEvent;
 use Djot\Node\Inline\Link;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $converter->on('render.link', function (RenderEvent $event): void {
         $link = $event->getNode();
         if (!$link instanceof Link) {
@@ -126,7 +126,7 @@ add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\Dj
 use Djot\Event\RenderEvent;
 use Djot\Node\Inline\Image;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $converter->on('render.image', function (RenderEvent $event): void {
         $image = $event->getNode();
         if (!$image instanceof Image) {
@@ -147,7 +147,7 @@ add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\Dj
 use Djot\Event\RenderEvent;
 use Djot\Node\Inline\Image;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $converter->on('render.image', function (RenderEvent $event): void {
         $image = $event->getNode();
         if (!$image instanceof Image) {
@@ -157,7 +157,7 @@ add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\Dj
         $src = htmlspecialchars($image->getDestination(), ENT_QUOTES, 'UTF-8');
         $alt = htmlspecialchars($image->getAlt(), ENT_QUOTES, 'UTF-8');
 
-        $html = '<figure class="wp-djot-figure">';
+        $html = '<figure class="wpdjot-figure">';
         $html .= '<img src="' . $src . '" alt="' . $alt . '" loading="lazy">';
         if ($alt) {
             $html .= '<figcaption>' . $alt . '</figcaption>';
@@ -179,7 +179,7 @@ Convert `:name:` symbols to emoji:
 use Djot\Event\RenderEvent;
 use Djot\Node\Inline\Symbol;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $emojis = [
         'heart' => '❤️',
         'star' => '⭐',
@@ -217,7 +217,7 @@ Style `::: note`, `::: warning`, etc. as admonition boxes:
 use Djot\Event\RenderEvent;
 use Djot\Node\Block\Div;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $icons = [
         'note' => 'ℹ️',
         'tip' => '💡',
@@ -264,7 +264,7 @@ Add ID anchors to headings for linking:
 use Djot\Event\RenderEvent;
 use Djot\Node\Block\Heading;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $converter->on('render.heading', function (RenderEvent $event): void {
         $heading = $event->getNode();
         if (!$heading instanceof Heading) {
@@ -300,7 +300,7 @@ Convert `@username` to profile links:
 use Djot\Node\Inline\Link;
 use Djot\Node\Inline\Text;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $parser = $converter->getParser()->getInlineParser();
 
     $parser->addInlinePattern('/@([a-zA-Z0-9_]+)/', function ($match, $groups, $p) {
@@ -332,7 +332,7 @@ Convert `#hashtag` to tag archive links:
 use Djot\Node\Inline\Link;
 use Djot\Node\Inline\Text;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $parser = $converter->getParser()->getInlineParser();
 
     $parser->addInlinePattern('/#([a-zA-Z][a-zA-Z0-9_]*)/', function ($match, $groups, $p) {
@@ -361,7 +361,7 @@ Support `wiki:` URL scheme in links:
 ```php
 use Djot\Event\RenderEvent;
 
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $converter->on('render.link', function (RenderEvent $event): void {
         $link = $event->getNode();
         $url = $link->getDestination() ?? '';
@@ -400,7 +400,7 @@ See [Home Page](wiki:) and [the docs](wiki:Documentation).
 ### Different Settings for Posts vs Comments
 
 ```php
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter, string $context): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter, string $context): Djot\DjotConverter {
     if ($context === 'comment') {
         // Comments: add nofollow to all links
         $converter->on('render.link', function (RenderEvent $event): void {
@@ -423,7 +423,7 @@ add_filter('wp_djot_converter', function(Djot\DjotConverter $converter, string $
 ### Per-User Customization
 
 ```php
-add_filter('wp_djot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     // Only allow images for users who can upload files
     if (!current_user_can('upload_files')) {
         $converter->on('render.image', function (RenderEvent $event): void {
@@ -446,7 +446,7 @@ A comprehensive example for a forum plugin:
  * Plugin Name: My Forum Djot Customizations
  */
 
-add_filter('wp_djot_converter_forum_topic', function(Djot\DjotConverter $converter): Djot\DjotConverter {
+add_filter('wpdjot_converter_forum_topic', function(Djot\DjotConverter $converter): Djot\DjotConverter {
     $parser = $converter->getParser()->getInlineParser();
 
     // @mentions link to user profiles

@@ -263,16 +263,16 @@ article .entry-content .djot-content .task-list li {
 }
 
 /* Video/Media Embeds */
-.wp-djot-embed {
+.wpdjot-embed {
     margin: 1.5em 0;
 }
 
-.wp-djot-embed iframe {
+.wpdjot-embed iframe {
     max-width: 100%;
     border-radius: 4px;
 }
 
-figure.wp-djot-embed figcaption {
+figure.wpdjot-embed figcaption {
     margin-top: 0.75em;
     font-size: 0.875em;
     color: #57606a;
@@ -686,7 +686,7 @@ figure.wp-djot-embed figcaption {
         color: #8b949e;
     }
 
-    figure.wp-djot-embed figcaption {
+    figure.wpdjot-embed figcaption {
         color: #8b949e;
     }
 }

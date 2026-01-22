@@ -17,9 +17,9 @@ class Migrator
 
     private WpMarkdownToDjot $markdownConverter;
 
-    private string $backupMetaKey = '_wp_djot_original_content';
+    private string $backupMetaKey = '_wpdjot_original_content';
 
-    private string $commentBackupMetaKey = '_wp_djot_original_comment';
+    private string $commentBackupMetaKey = '_wpdjot_original_comment';
 
     public function __construct()
     {

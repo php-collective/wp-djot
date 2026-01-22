@@ -23,17 +23,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- WP_DJOT_ is our plugin prefix
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Variable is local to this file
-
 // Plugin constants
-define('WP_DJOT_VERSION', '1.1.6');
-define('WP_DJOT_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('WP_DJOT_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('WP_DJOT_PLUGIN_BASENAME', plugin_basename(__FILE__));
+define('WPDJOT_VERSION', '1.1.6');
+define('WPDJOT_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('WPDJOT_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('WPDJOT_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Autoloader
-$autoloader = WP_DJOT_PLUGIN_DIR . 'vendor/autoload.php';
+$autoloader = WPDJOT_PLUGIN_DIR . 'vendor/autoload.php';
 if (!file_exists($autoloader)) {
     add_action('admin_notices', static function (): void {
         echo '<div class="notice notice-error"><p>';
@@ -45,6 +42,15 @@ if (!file_exists($autoloader)) {
 }
 
 require_once $autoloader;
+
+// Migrate settings from old option name (wp_djot_settings -> wpdjot_settings)
+add_action('plugins_loaded', static function (): void {
+    $oldOption = get_option('wp_djot_settings');
+    if ($oldOption !== false && get_option('wpdjot_settings') === false) {
+        add_option('wpdjot_settings', $oldOption);
+        delete_option('wp_djot_settings');
+    }
+}, 5);
 
 // Initialize plugin
 add_action('plugins_loaded', static function (): void {
@@ -66,8 +72,8 @@ register_activation_hook(__FILE__, static function (): void {
         'filter_priority' => 5,
     ];
 
-    if (get_option('wp_djot_settings') === false) {
-        add_option('wp_djot_settings', $defaults);
+    if (get_option('wpdjot_settings') === false) {
+        add_option('wpdjot_settings', $defaults);
     }
 });
 

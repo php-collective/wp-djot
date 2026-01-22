@@ -85,7 +85,7 @@ class Plugin
      */
     private function registerConverterFilters(): void
     {
-        add_filter('wp_djot_converter', [$this, 'customizeConverter'], 10, 2);
+        add_filter('wpdjot_converter', [$this, 'customizeConverter'], 10, 2);
     }
 
     /**
@@ -217,12 +217,12 @@ class Plugin
 
         // Wrap in figure if there's a caption (alt text)
         if ($alt) {
-            $embedHtml = '<figure class="wp-djot-embed">'
+            $embedHtml = '<figure class="wpdjot-embed">'
                 . $embedHtml
                 . '<figcaption>' . esc_html($alt) . '</figcaption>'
                 . '</figure>';
         } else {
-            $embedHtml = '<div class="wp-djot-embed">' . $embedHtml . '</div>';
+            $embedHtml = '<div class="wpdjot-embed">' . $embedHtml . '</div>';
         }
 
         $event->setHtml($embedHtml);
@@ -257,7 +257,7 @@ class Plugin
         }
 
         // Skip if content contains rendered Djot blocks (already processed by Gutenberg)
-        if (str_contains($content, 'wp-djot-block-rendered')) {
+        if (str_contains($content, 'wpdjot-block-rendered')) {
             // Only process {djot}...{/djot} blocks outside of rendered blocks
             return $this->processContent($content, false);
         }
@@ -334,8 +334,8 @@ class Plugin
      */
     private function extractDjotContent(string $content): string
     {
-        // Check for wp-djot/djot Gutenberg blocks
-        if (preg_match_all('/<!-- wp:wp-djot\/djot \{["\']content["\']:["\'](.+?)["\']\} \/-->/s', $content, $matches)) {
+        // Check for wpdjot/djot Gutenberg blocks
+        if (preg_match_all('/<!-- wp:wpdjot\/djot \{["\']content["\']:["\'](.+?)["\']\} \/-->/s', $content, $matches)) {
             $djotParts = [];
             foreach ($matches[1] as $match) {
                 // Decode JSON-encoded content
@@ -350,7 +350,7 @@ class Plugin
         }
 
         // Check for JSON attribute format (content may have complex escaping)
-        if (preg_match_all('/<!-- wp:wp-djot\/djot (\{.+?\}) \/-->/s', $content, $matches)) {
+        if (preg_match_all('/<!-- wp:wpdjot\/djot (\{.+?\}) \/-->/s', $content, $matches)) {
             $djotParts = [];
             foreach ($matches[1] as $jsonStr) {
                 $data = json_decode($jsonStr, true);
@@ -448,9 +448,9 @@ class Plugin
         // Plugin CSS
         wp_enqueue_style(
             'djot-markup-for-wp',
-            WP_DJOT_PLUGIN_URL . 'assets/css/djot.css',
+            WPDJOT_PLUGIN_URL . 'assets/css/djot.css',
             [],
-            WP_DJOT_VERSION,
+            WPDJOT_VERSION,
         );
 
         // Code highlighting
@@ -458,31 +458,31 @@ class Plugin
             $theme = $this->options['highlight_theme'];
 
             wp_enqueue_style(
-                'wp-djot-highlight',
-                WP_DJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
+                'wpdjot-highlight',
+                WPDJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
                 [],
-                WP_DJOT_VERSION,
+                WPDJOT_VERSION,
             );
 
             wp_enqueue_script(
-                'wp-djot-highlight',
-                WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
+                'wpdjot-highlight',
+                WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
                 [],
-                WP_DJOT_VERSION,
+                WPDJOT_VERSION,
                 ['in_footer' => true, 'strategy' => 'defer'],
             );
 
             // Djot language definition for highlight.js
             wp_enqueue_script(
-                'wp-djot-highlight-djot',
-                WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/languages/hljs-djot.js',
-                ['wp-djot-highlight'],
-                WP_DJOT_VERSION,
+                'wpdjot-highlight-djot',
+                WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/languages/hljs-djot.js',
+                ['wpdjot-highlight'],
+                WPDJOT_VERSION,
                 ['in_footer' => true, 'strategy' => 'defer'],
             );
 
             wp_add_inline_script(
-                'wp-djot-highlight-djot',
+                'wpdjot-highlight-djot',
                 'document.addEventListener("DOMContentLoaded", function() { hljs.highlightAll(); });',
             );
         }
@@ -490,15 +490,15 @@ class Plugin
         // Comment toolbar (when comments are enabled in settings)
         if ($this->options['enable_comments']) {
             wp_enqueue_script(
-                'wp-djot-comment-toolbar',
-                WP_DJOT_PLUGIN_URL . 'assets/js/comment-toolbar.js',
+                'wpdjot-comment-toolbar',
+                WPDJOT_PLUGIN_URL . 'assets/js/comment-toolbar.js',
                 [],
-                WP_DJOT_VERSION,
+                WPDJOT_VERSION,
                 ['in_footer' => true, 'strategy' => 'defer'],
             );
 
             // Pass REST API settings to JavaScript for preview
-            wp_localize_script('wp-djot-comment-toolbar', 'wpDjotSettings', [
+            wp_localize_script('wpdjot-comment-toolbar', 'wpDjotSettings', [
                 'restUrl' => rest_url(),
                 'nonce' => wp_create_nonce('wp_rest'),
             ]);
@@ -529,7 +529,7 @@ class Plugin
             'shortcode_tag' => 'djot',
         ];
 
-        $options = get_option('wp_djot_settings', []);
+        $options = get_option('wpdjot_settings', []);
 
         return array_merge($defaults, (array)$options);
     }

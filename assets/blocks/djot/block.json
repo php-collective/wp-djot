@@ -1,8 +1,8 @@
 {
     "$schema": "https://schemas.wp.org/trunk/block.json",
     "apiVersion": 3,
-    "name": "wp-djot/djot",
-    "version": "1.1.5",
+    "name": "wpdjot/djot",
+    "version": "1.1.6",
     "title": "Djot",
     "category": "text",
     "icon": "editor-code",

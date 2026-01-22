@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 use WpDjot\Converter;
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- wp_djot_ is our plugin prefix
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- wpdjot_ is our plugin prefix
 
 /**
  * Convert Djot markup to HTML.
@@ -20,7 +20,7 @@ use WpDjot\Converter;
  * @param string|null $context Context: 'post' uses post profile, 'comment' uses comment profile.
  * @return string The converted HTML.
  */
-function wp_djot_to_html(string $djot, bool $safeMode = true, ?string $context = 'post'): string
+function wpdjot_to_html(string $djot, bool $safeMode = true, ?string $context = 'post'): string
 {
     static $converter = null;
 
@@ -42,10 +42,10 @@ function wp_djot_to_html(string $djot, bool $safeMode = true, ?string $context =
  * @param bool $safeMode Whether to use safe mode (default: true).
  * @param string|null $context Context: 'post' uses post profile, 'comment' uses comment profile.
  */
-function wp_djot_the(string $djot, bool $safeMode = true, ?string $context = 'post'): void
+function wpdjot_the(string $djot, bool $safeMode = true, ?string $context = 'post'): void
 {
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML output is intentional, already sanitized by converter
-    echo wp_djot_to_html($djot, $safeMode, $context);
+    echo wpdjot_to_html($djot, $safeMode, $context);
 }
 
 /**
@@ -54,7 +54,7 @@ function wp_djot_the(string $djot, bool $safeMode = true, ?string $context = 'po
  * @param string $content The content to check.
  * @return bool True if content contains Djot markup.
  */
-function wp_djot_has(string $content): bool
+function wpdjot_has(string $content): bool
 {
     return str_contains($content, '{djot}') || str_contains($content, '[djot]');
 }

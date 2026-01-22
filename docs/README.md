@@ -43,13 +43,13 @@ Your Djot content here...
 
 ```php
 // Convert and return HTML
-$html = wp_djot_to_html('# Hello *World*!');
+$html = wpdjot_to_html('# Hello *World*!');
 
 // Convert and echo HTML
-wp_djot_the('# _Hello_ *World*!');
+wpdjot_the('# _Hello_ *World*!');
 
 // Check if content has Djot
-if (wp_djot_has($content)) {
+if (wpdjot_has($content)) {
     // ...
 }
 ```

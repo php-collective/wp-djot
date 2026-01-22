@@ -10,7 +10,7 @@ use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
 use HTMLPurifier_Config;
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- wp_djot_ is our plugin prefix
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- wpdjot_ is our plugin prefix
 
 /**
  * Wrapper around the Djot converter with WordPress-specific features.
@@ -65,7 +65,7 @@ class Converter
      */
     public static function fromSettings(): self
     {
-        $options = get_option('wp_djot_settings', []);
+        $options = get_option('wpdjot_settings', []);
 
         return new self(
             safeMode: !empty($options['safe_mode']),
@@ -121,13 +121,13 @@ class Converter
             // Allow customization via WordPress filters
             if (function_exists('apply_filters')) {
                 /** @var \Djot\DjotConverter $converter */
-                $converter = apply_filters('wp_djot_converter', $converter, $context);
+                $converter = apply_filters('wpdjot_converter', $converter, $context);
 
                 // Post-type specific filter
                 $postType = function_exists('get_post_type') ? get_post_type() : null;
                 if ($postType) {
                     /** @var \Djot\DjotConverter $converter */
-                    $converter = apply_filters("wp_djot_converter_{$postType}", $converter, $context);
+                    $converter = apply_filters("wpdjot_converter_{$postType}", $converter, $context);
                 }
             }
 
@@ -241,7 +241,7 @@ class Converter
          * @param string $djot The Djot markup.
          */
         if (function_exists('apply_filters')) {
-            $djot = (string)apply_filters('wp_djot_pre_convert', $djot);
+            $djot = (string)apply_filters('wpdjot_pre_convert', $djot);
         }
 
         return $djot;
@@ -268,7 +268,7 @@ class Converter
          * @param string $html The converted HTML.
          */
         if (function_exists('apply_filters')) {
-            $html = (string)apply_filters('wp_djot_post_convert', $html);
+            $html = (string)apply_filters('wpdjot_post_convert', $html);
         }
 
         return $html;
@@ -280,7 +280,7 @@ class Converter
      * Falls back to WordPress wp_kses_post() if HTMLPurifier is not installed.
      *
      * Customization via filter:
-     * add_filter('wp_djot_htmlpurifier_config', function($config) {
+     * add_filter('wpdjot_htmlpurifier_config', function($config) {
      *     $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title|rel],...');
      *     return $config;
      * });
@@ -301,7 +301,7 @@ class Converter
                  * @param \HTMLPurifier_Config $config The HTMLPurifier configuration object.
                  */
                 if (function_exists('apply_filters')) {
-                    $config = apply_filters('wp_djot_htmlpurifier_config', $config);
+                    $config = apply_filters('wpdjot_htmlpurifier_config', $config);
                 }
 
                 $purifier = new HTMLPurifier($config);
@@ -356,7 +356,7 @@ class Converter
          * @param array<string, array<string, bool>> $allowedHtml Allowed HTML tags and attributes.
          */
         if (function_exists('apply_filters')) {
-            $allowedHtml = apply_filters('wp_djot_allowed_html', $allowedHtml);
+            $allowedHtml = apply_filters('wpdjot_allowed_html', $allowedHtml);
         }
 
         return $allowedHtml;

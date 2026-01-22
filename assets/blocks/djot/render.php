@@ -9,6 +9,10 @@
 
 declare(strict_types=1);
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Variables are local to block render context
 // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped by get_block_wrapper_attributes()
 
@@ -19,7 +23,7 @@ if (!$content) {
 }
 
 // Get settings
-$options = get_option('wp_djot_settings', []);
+$options = get_option('wpdjot_settings', []);
 $postProfile = $options['post_profile'] ?? 'article';
 
 // Use factory method to ensure all settings are applied
@@ -36,7 +40,7 @@ $html = preg_replace_callback(
     $html
 ) ?? $html;
 
-$wrapper_attributes = get_block_wrapper_attributes(['class' => 'wp-djot-block-rendered djot-content']);
+$wrapper_attributes = get_block_wrapper_attributes(['class' => 'wpdjot-block-rendered djot-content']);
 
 // For 'none' or 'full' profile, output directly (trusted content)
 // Otherwise use wp_kses for sanitization

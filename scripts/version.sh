@@ -27,8 +27,8 @@ echo "Updating version to $VERSION in all files..."
 # wp-djot.php - Plugin header Version
 sed -i "s/^\( \* Version:\s*\)[0-9]\+\.[0-9]\+\.[0-9]\+/\1$VERSION/" "$PLUGIN_DIR/wp-djot.php"
 
-# wp-djot.php - WP_DJOT_VERSION constant
-sed -i "s/define('WP_DJOT_VERSION', '[0-9]\+\.[0-9]\+\.[0-9]\+')/define('WP_DJOT_VERSION', '$VERSION')/" "$PLUGIN_DIR/wp-djot.php"
+# wp-djot.php - WPDJOT_VERSION constant
+sed -i "s/define('WPDJOT_VERSION', '[0-9]\+\.[0-9]\+\.[0-9]\+')/define('WPDJOT_VERSION', '$VERSION')/" "$PLUGIN_DIR/wp-djot.php"
 
 # assets/blocks/djot/block.json
 sed -i "s/\"version\": \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/\"version\": \"$VERSION\"/" "$PLUGIN_DIR/assets/blocks/djot/block.json"

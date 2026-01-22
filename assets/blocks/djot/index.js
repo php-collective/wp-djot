@@ -96,7 +96,7 @@
         ),
     };
 
-    registerBlockType( 'wp-djot/djot', {
+    registerBlockType( 'wpdjot/djot', {
         edit: function( props ) {
             const { attributes, setAttributes } = props;
             const { content } = attributes;
@@ -134,7 +134,7 @@
             const [ selectionEnd, setSelectionEnd ] = useState( 0 );
 
             const blockProps = useBlockProps( {
-                className: 'wp-djot-block',
+                className: 'wpdjot-block',
             } );
 
             // Track selection in textarea and check if in table
@@ -900,7 +900,7 @@
                         return;
                     }
 
-                    var endpoint = type === 'html' ? '/wp-djot/v1/convert-html' : '/wp-djot/v1/convert-markdown';
+                    var endpoint = type === 'html' ? '/wpdjot/v1/convert-html' : '/wpdjot/v1/convert-markdown';
 
                     apiFetch( {
                         path: endpoint,
@@ -1141,7 +1141,7 @@
 
                     setIsLoading( true );
                     apiFetch( {
-                        path: '/wp-djot/v1/render',
+                        path: '/wpdjot/v1/render',
                         method: 'POST',
                         data: { content: djotContent },
                     } )
@@ -1171,7 +1171,7 @@
 
                 function applyHighlighting() {
                     // Use querySelector as fallback since ref may not be ready
-                    var previewEl = previewRef.current || document.querySelector( '.wp-djot-preview.djot-content' );
+                    var previewEl = previewRef.current || document.querySelector( '.wpdjot-preview.djot-content' );
                     if ( previewEl && window.hljs ) {
                         var codeBlocks = previewEl.querySelectorAll( 'pre code' );
                         codeBlocks.forEach( function( block ) {
@@ -1188,7 +1188,7 @@
                 var pollInterval = setInterval( function() {
                     attempts++;
                     var hasHljs = typeof window.hljs !== 'undefined';
-                    var hasPreview = previewRef.current || document.querySelector( '.wp-djot-preview.djot-content' );
+                    var hasPreview = previewRef.current || document.querySelector( '.wpdjot-preview.djot-content' );
 
                     if ( hasHljs && hasPreview ) {
                         clearInterval( pollInterval );
@@ -1431,7 +1431,7 @@
                     wp.element.createElement(
                         PanelBody,
                         { title: __( 'Syntax Help', 'djot-markup-for-wp' ), initialOpen: false },
-                        wp.element.createElement( 'div', { className: 'wp-djot-syntax-help' },
+                        wp.element.createElement( 'div', { className: 'wpdjot-syntax-help' },
                             wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Inline:' ) ),
                             wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
                                 wp.element.createElement( 'code', null, '*bold*' ), ' ',
@@ -1463,7 +1463,7 @@
                     wp.element.createElement(
                         PanelBody,
                         { title: __( 'Keyboard Shortcuts', 'djot-markup-for-wp' ), initialOpen: false },
-                        wp.element.createElement( 'div', { className: 'wp-djot-shortcuts-help', style: { fontSize: '12px' } },
+                        wp.element.createElement( 'div', { className: 'wpdjot-shortcuts-help', style: { fontSize: '12px' } },
                             wp.element.createElement( 'p', { style: { marginBottom: '8px' } },
                                 wp.element.createElement( 'strong', null, 'Formatting:' )
                             ),
@@ -1879,7 +1879,7 @@
                 content || isPreviewMode
                     ? wp.element.createElement(
                           'div',
-                          { className: 'wp-djot-block-wrapper', ref: textareaRef },
+                          { className: 'wpdjot-block-wrapper', ref: textareaRef },
                           ! isPreviewMode &&
                               wp.element.createElement( PlainText, {
                                   value: content,
@@ -1888,21 +1888,21 @@
                                   onClick: updateSelection,
                                   onKeyUp: updateSelection,
                                   onKeyDown: handleTextareaKeyDown,
-                                  className: 'wp-djot-editor',
+                                  className: 'wpdjot-editor',
                                   placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'djot-markup-for-wp' ),
                               } ),
                           isPreviewMode &&
                               wp.element.createElement(
                                   'div',
-                                  { className: 'wp-djot-preview-wrapper' },
+                                  { className: 'wpdjot-preview-wrapper' },
                                   wp.element.createElement(
                                       'div',
-                                      { className: 'wp-djot-preview-header' },
+                                      { className: 'wpdjot-preview-header' },
                                       wp.element.createElement( 'span', null, __( 'Preview', 'djot-markup-for-wp' ) ),
                                       wp.element.createElement(
                                           'button',
                                           {
-                                              className: 'wp-djot-edit-button',
+                                              className: 'wpdjot-edit-button',
                                               onClick: function() { setIsPreviewMode( false ); },
                                               title: __( 'Press ESC to exit preview', 'djot-markup-for-wp' ),
                                           },
@@ -1913,7 +1913,7 @@
                                       ? wp.element.createElement( Spinner, null )
                                       : wp.element.createElement( 'div', {
                                             ref: previewRef,
-                                            className: 'wp-djot-preview djot-content',
+                                            className: 'wpdjot-preview djot-content',
                                             dangerouslySetInnerHTML: { __html: preview },
                                         } )
                               )
@@ -1935,7 +1935,7 @@
                                   onClick: updateSelection,
                                   onKeyUp: updateSelection,
                                   onKeyDown: handleTextareaKeyDown,
-                                  className: 'wp-djot-editor',
+                                  className: 'wpdjot-editor',
                                   placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'djot-markup-for-wp' ),
                               } )
                           )

@@ -37,28 +37,28 @@ class DjotBlock
      */
     public function register(): void
     {
-        $options = get_option('wp_djot_settings', []);
+        $options = get_option('wpdjot_settings', []);
         $highlightCode = $options['highlight_code'] ?? true;
         $theme = $options['highlight_theme'] ?? 'github';
 
         if ($highlightCode) {
             // Register highlight.js style
             wp_register_style(
-                'wp-djot-highlight',
-                WP_DJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
+                'wpdjot-highlight',
+                WPDJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
                 [],
-                WP_DJOT_VERSION,
+                WPDJOT_VERSION,
             );
         }
 
-        // Register the block - this auto-registers wp-djot-djot-editor-style from block.json
-        register_block_type(WP_DJOT_PLUGIN_DIR . 'assets/blocks/djot');
+        // Register the block - this auto-registers wpdjot-djot-editor-style from block.json
+        register_block_type(WPDJOT_PLUGIN_DIR . 'assets/blocks/djot');
 
         if ($highlightCode) {
             // Add highlight.js CSS as dependency of the block's editor style
             $styles = wp_styles();
-            if (isset($styles->registered['wp-djot-djot-editor-style'])) {
-                $styles->registered['wp-djot-djot-editor-style']->deps[] = 'wp-djot-highlight';
+            if (isset($styles->registered['wpdjot-djot-editor-style'])) {
+                $styles->registered['wpdjot-djot-editor-style']->deps[] = 'wpdjot-highlight';
             }
         }
     }
@@ -68,7 +68,7 @@ class DjotBlock
      */
     public function enqueueEditorAssets(): void
     {
-        $options = get_option('wp_djot_settings', []);
+        $options = get_option('wpdjot_settings', []);
         $highlightCode = $options['highlight_code'] ?? true;
 
         if (!$highlightCode) {
@@ -76,10 +76,10 @@ class DjotBlock
         }
 
         wp_enqueue_script(
-            'wp-djot-highlight-editor',
-            WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
+            'wpdjot-highlight-editor',
+            WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
             [],
-            WP_DJOT_VERSION,
+            WPDJOT_VERSION,
             false,
         );
     }
@@ -90,7 +90,7 @@ class DjotBlock
     public function registerRestRoute(): void
     {
         // Editor preview (requires edit_posts capability)
-        register_rest_route('wp-djot/v1', '/render', [
+        register_rest_route('wpdjot/v1', '/render', [
             'methods' => 'POST',
             'callback' => [$this, 'renderPreview'],
             'permission_callback' => [$this, 'canEdit'],
@@ -109,7 +109,7 @@ class DjotBlock
         ]);
 
         // Markdown to Djot conversion (requires edit_posts capability)
-        register_rest_route('wp-djot/v1', '/convert-markdown', [
+        register_rest_route('wpdjot/v1', '/convert-markdown', [
             'methods' => 'POST',
             'callback' => [$this, 'convertMarkdown'],
             'permission_callback' => [$this, 'canEdit'],
@@ -122,7 +122,7 @@ class DjotBlock
         ]);
 
         // HTML to Djot conversion (requires edit_posts capability)
-        register_rest_route('wp-djot/v1', '/convert-html', [
+        register_rest_route('wpdjot/v1', '/convert-html', [
             'methods' => 'POST',
             'callback' => [$this, 'convertHtml'],
             'permission_callback' => [$this, 'canEdit'],
@@ -135,7 +135,7 @@ class DjotBlock
         ]);
 
         // Comment preview (public, uses restricted comment profile)
-        register_rest_route('wp-djot/v1', '/preview-comment', [
+        register_rest_route('wpdjot/v1', '/preview-comment', [
             'methods' => 'POST',
             'callback' => [$this, 'renderCommentPreview'],
             'permission_callback' => '__return_true',

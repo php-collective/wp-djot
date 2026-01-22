@@ -12,12 +12,12 @@ class Settings
     /**
      * @var string
      */
-    private const OPTION_GROUP = 'wp_djot_settings';
+    private const OPTION_GROUP = 'wpdjot_settings';
 
     /**
      * @var string
      */
-    private const PAGE_SLUG = 'wp-djot-settings';
+    private const PAGE_SLUG = 'wpdjot-settings';
 
     /**
      * Initialize admin hooks.
@@ -26,7 +26,7 @@ class Settings
     {
         add_action('admin_menu', [$this, 'addMenuPage']);
         add_action('admin_init', [$this, 'registerSettings']);
-        add_filter('plugin_action_links_' . WP_DJOT_PLUGIN_BASENAME, [$this, 'addSettingsLink']);
+        add_filter('plugin_action_links_' . WPDJOT_PLUGIN_BASENAME, [$this, 'addSettingsLink']);
     }
 
     /**
@@ -79,7 +79,7 @@ class Settings
 
         // Content Settings Section
         add_settings_section(
-            'wp_djot_content',
+            'wpdjot_content',
             __('Content Settings', 'djot-markup-for-wp'),
             [$this, 'renderContentSectionDescription'],
             self::PAGE_SLUG,
@@ -90,7 +90,7 @@ class Settings
             __('Enable for Posts', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
-            'wp_djot_content',
+            'wpdjot_content',
             ['field' => 'enable_posts', 'description' => __('Process Djot markup in blog posts.', 'djot-markup-for-wp')],
         );
 
@@ -99,7 +99,7 @@ class Settings
             __('Enable for Pages', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
-            'wp_djot_content',
+            'wpdjot_content',
             ['field' => 'enable_pages', 'description' => __('Process Djot markup in pages.', 'djot-markup-for-wp')],
         );
 
@@ -108,7 +108,7 @@ class Settings
             __('Enable for Comments', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
-            'wp_djot_content',
+            'wpdjot_content',
             ['field' => 'enable_comments', 'description' => __('Process Djot markup in comments (always uses safe mode).', 'djot-markup-for-wp')],
         );
 
@@ -117,7 +117,7 @@ class Settings
             __('Process Full Content', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
-            'wp_djot_content',
+            'wpdjot_content',
             ['field' => 'process_full_content', 'description' => __('Process entire post/page content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'djot-markup-for-wp')],
         );
 
@@ -126,13 +126,13 @@ class Settings
             __('Process Full Comments', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
-            'wp_djot_content',
+            'wpdjot_content',
             ['field' => 'process_full_comments', 'description' => __('Process entire comment content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'djot-markup-for-wp')],
         );
 
         // Security Settings Section
         add_settings_section(
-            'wp_djot_security',
+            'wpdjot_security',
             __('Security Settings', 'djot-markup-for-wp'),
             [$this, 'renderSecuritySectionDescription'],
             self::PAGE_SLUG,
@@ -143,7 +143,7 @@ class Settings
             __('Safe Mode', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
-            'wp_djot_security',
+            'wpdjot_security',
             ['field' => 'safe_mode', 'description' => __('Block dangerous URL schemes and strip event handlers. Recommended for untrusted content.', 'djot-markup-for-wp')],
         );
 
@@ -152,7 +152,7 @@ class Settings
             __('Posts/Pages Profile', 'djot-markup-for-wp'),
             [$this, 'renderProfileSelect'],
             self::PAGE_SLUG,
-            'wp_djot_security',
+            'wpdjot_security',
             ['field' => 'post_profile', 'description' => __('Feature restrictions for posts and pages.', 'djot-markup-for-wp')],
         );
 
@@ -161,13 +161,13 @@ class Settings
             __('Comments Profile', 'djot-markup-for-wp'),
             [$this, 'renderProfileSelect'],
             self::PAGE_SLUG,
-            'wp_djot_security',
+            'wpdjot_security',
             ['field' => 'comment_profile', 'description' => __('Feature restrictions for user comments.', 'djot-markup-for-wp')],
         );
 
         // Rendering Settings Section
         add_settings_section(
-            'wp_djot_rendering',
+            'wpdjot_rendering',
             __('Rendering Settings', 'djot-markup-for-wp'),
             [$this, 'renderRenderingSectionDescription'],
             self::PAGE_SLUG,
@@ -178,7 +178,7 @@ class Settings
             __('Markdown Compatibility', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
-            'wp_djot_rendering',
+            'wpdjot_rendering',
             ['field' => 'markdown_mode', 'description' => __('Enable Markdown-like behavior: single line breaks become visible, and blocks can interrupt paragraphs without blank lines.', 'djot-markup-for-wp') . '<br>' . __('Recommended for users migrating from Markdown without having migrated their texts yet.', 'djot-markup-for-wp') . '<br><strong>' . __('Warning: This deviates from the Djot specification.', 'djot-markup-for-wp') . '</strong>'],
         );
 
@@ -187,7 +187,7 @@ class Settings
             __('Posts/Pages Line Breaks', 'djot-markup-for-wp'),
             [$this, 'renderSoftBreakSelect'],
             self::PAGE_SLUG,
-            'wp_djot_rendering',
+            'wpdjot_rendering',
             ['field' => 'post_soft_break', 'description' => __('How single line breaks are rendered in posts and pages. Overridden by Markdown Compatibility when enabled.', 'djot-markup-for-wp')],
         );
 
@@ -196,13 +196,13 @@ class Settings
             __('Comment Line Breaks', 'djot-markup-for-wp'),
             [$this, 'renderSoftBreakSelect'],
             self::PAGE_SLUG,
-            'wp_djot_rendering',
+            'wpdjot_rendering',
             ['field' => 'comment_soft_break', 'description' => __('How single line breaks are rendered in comments. Overridden by Markdown Compatibility when enabled.', 'djot-markup-for-wp')],
         );
 
         // Code Highlighting Section
         add_settings_section(
-            'wp_djot_highlighting',
+            'wpdjot_highlighting',
             __('Code Highlighting', 'djot-markup-for-wp'),
             [$this, 'renderHighlightingSectionDescription'],
             self::PAGE_SLUG,
@@ -213,7 +213,7 @@ class Settings
             __('Enable Highlighting', 'djot-markup-for-wp'),
             [$this, 'renderCheckboxField'],
             self::PAGE_SLUG,
-            'wp_djot_highlighting',
+            'wpdjot_highlighting',
             ['field' => 'highlight_code', 'description' => __('Enable syntax highlighting for code blocks using highlight.js.', 'djot-markup-for-wp')],
         );
 
@@ -222,13 +222,13 @@ class Settings
             __('Highlight Theme', 'djot-markup-for-wp'),
             [$this, 'renderThemeSelect'],
             self::PAGE_SLUG,
-            'wp_djot_highlighting',
+            'wpdjot_highlighting',
             ['field' => 'highlight_theme'],
         );
 
         // Advanced Settings Section
         add_settings_section(
-            'wp_djot_advanced',
+            'wpdjot_advanced',
             __('Advanced Settings', 'djot-markup-for-wp'),
             [$this, 'renderAdvancedSectionDescription'],
             self::PAGE_SLUG,
@@ -239,7 +239,7 @@ class Settings
             __('Shortcode Tag', 'djot-markup-for-wp'),
             [$this, 'renderTextField'],
             self::PAGE_SLUG,
-            'wp_djot_advanced',
+            'wpdjot_advanced',
             ['field' => 'shortcode_tag', 'description' => __('The shortcode tag to use (default: djot).', 'djot-markup-for-wp')],
         );
     }
@@ -293,7 +293,7 @@ class Settings
             return;
         }
 
-        require WP_DJOT_PLUGIN_DIR . 'templates/admin-settings.php';
+        require WPDJOT_PLUGIN_DIR . 'templates/admin-settings.php';
     }
 
     /**

@@ -110,7 +110,7 @@
         // Call the REST API to render Djot (uses comment profile for safety)
         previewPane.innerHTML = '<p class="djot-preview-loading">Loading preview...</p>';
 
-        fetch(wpDjotSettings.restUrl + 'wp-djot/v1/preview-comment', {
+        fetch(wpDjotSettings.restUrl + 'wpdjot/v1/preview-comment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

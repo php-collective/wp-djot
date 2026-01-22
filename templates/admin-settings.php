@@ -17,8 +17,8 @@ if (!defined('ABSPATH')) {
 
     <form method="post" action="options.php">
         <?php
-        settings_fields('wp_djot_settings');
-        do_settings_sections('wp-djot-settings');
+        settings_fields('wpdjot_settings');
+        do_settings_sections('wpdjot-settings');
         submit_button();
         ?>
     </form>
@@ -52,13 +52,13 @@ Your Djot content here...
     <p><?php esc_html_e('Use these functions in your theme templates:', 'djot-markup-for-wp'); ?></p>
     <pre><code>&lt;?php
 // Convert and return HTML
-$html = wp_djot_to_html('# Hello *World*!');
+$html = wpdjot_to_html('# Hello *World*!');
 
 // Convert and echo HTML
-wp_djot_the('# _Hello_ *World*!');
+wpdjot_the('# _Hello_ *World*!');
 
 // Check if content has Djot
-if (wp_djot_has($content)) {
+if (wpdjot_has($content)) {
     // ...
 }
 ?&gt;</code></pre>

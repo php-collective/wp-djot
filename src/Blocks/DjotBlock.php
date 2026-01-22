@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace WpDjot\Blocks;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 use WP_REST_Request;
 use WP_REST_Response;
 use WpDjot\Converter;

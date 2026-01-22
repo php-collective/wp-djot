@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace WpDjot\Migration;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 use WP_Query;
 use WpDjot\Converter\WpHtmlToDjot;
 use WpDjot\Converter\WpMarkdownToDjot;

@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace WpDjot;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 use Djot\DjotConverter;
 use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;

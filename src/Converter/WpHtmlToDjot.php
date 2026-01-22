@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace WpDjot\Converter;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 use Djot\Converter\HtmlToDjot;
 use DOMElement;
 use DOMNode;

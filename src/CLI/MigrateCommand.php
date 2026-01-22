@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace WpDjot\CLI;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 use WP_CLI;
 use WpDjot\Migration\Migrator;
 

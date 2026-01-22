@@ -30,8 +30,8 @@ define('WPDJOT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('WPDJOT_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Autoloader
-$autoloader = WPDJOT_PLUGIN_DIR . 'vendor/autoload.php';
-if (!file_exists($autoloader)) {
+$wpdjot_autoloader = WPDJOT_PLUGIN_DIR . 'vendor/autoload.php';
+if (!file_exists($wpdjot_autoloader)) {
     add_action('admin_notices', static function (): void {
         echo '<div class="notice notice-error"><p>';
         echo esc_html__('WP Djot: Please run "composer install" in the plugin directory.', 'djot-markup-for-wp');
@@ -41,7 +41,7 @@ if (!file_exists($autoloader)) {
     return;
 }
 
-require_once $autoloader;
+require_once $wpdjot_autoloader;
 
 // Migrate settings from old option name (wp_djot_settings -> wpdjot_settings)
 add_action('plugins_loaded', static function (): void {

@@ -10,6 +10,11 @@
     color: inherit;
 }
 
+/* Sections */
+.djot-content section {
+    margin-bottom: 30px;
+}
+
 /* Headings */
 .djot-content h1,
 .djot-content h2,

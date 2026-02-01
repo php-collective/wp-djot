@@ -41,10 +41,9 @@ $html = preg_replace_callback(
 
 $wrapper_attributes = get_block_wrapper_attributes(['class' => 'wpdjot-block-rendered djot-content']);
 
-// For 'none' or 'full' profile, use wp_kses_post (allows all standard post HTML)
-// Otherwise use wp_kses with Djot-specific allowed HTML for stricter sanitization
-if ($postProfile === 'none' || $postProfile === 'full') {
-    printf('<div %s>%s</div>', $wrapper_attributes, wp_kses_post($html));
-} else {
-    printf('<div %s>%s</div>', $wrapper_attributes, wp_kses($html, WpDjot\Converter::getAllowedHtml()));
+// Build output: wp_kses_post covers both $wrapper_attributes (pre-escaped by get_block_wrapper_attributes) and $html
+if ($postProfile !== 'none' && $postProfile !== 'full') {
+    $html = wp_kses($html, WpDjot\Converter::getAllowedHtml());
 }
+
+echo wp_kses_post(sprintf('<div %s>%s</div>', $wrapper_attributes, $html));

@@ -45,7 +45,6 @@ rsync -a \
     --exclude='/build.sh' \
     --exclude='/scripts' \
     --exclude='/docs' \
-    --exclude='/composer.json' \
     --exclude='/composer.lock' \
     --exclude='/phpcs.xml' \
     --exclude='/phpstan.neon' \

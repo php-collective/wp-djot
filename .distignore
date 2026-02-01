@@ -13,7 +13,6 @@
 /build
 
 # Build tools
-/build.sh
 /scripts
 /composer.json
 /composer.lock

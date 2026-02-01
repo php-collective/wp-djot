@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.2.1
+Stable tag: 1.3.1
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -89,6 +89,14 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 == Changelog ==
 
+= 1.3.1 =
+* Fixed text domain to match plugin slug (djot-markup)
+* Properly escape HTML output with wp_kses_post/wp_kses
+* Fixed block wrapper attributes escaping for Plugin Check compliance
+* Excluded non-permitted files from distribution
+* Added build script for distribution zip
+* Added markmarkmark to Contributors list
+
 = 1.2.1 =
 * Renamed plugin to "Djot Markup" for WordPress.org compliance
 * Added ABSPATH checks to all PHP files for security
@@ -118,6 +126,9 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Template tags for theme developers
 
 == Upgrade Notice ==
+
+= 1.3.1 =
+Text domain, escaping, and Plugin Check fixes for WordPress.org plugin review compliance.
 
 = 1.2.1 =
 Plugin renamed to "Djot Markup" for WordPress.org compliance.

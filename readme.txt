@@ -1,5 +1,5 @@
 === Djot Markup ===
-Contributors: dereuromark
+Contributors: markmarkmark
 Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
@@ -47,7 +47,7 @@ Djot Markup adds support for the [Djot](https://djot.net/) markup language in Wo
 
 = Links =
 
-* [WordPress.org Plugin Page](https://wordpress.org/plugins/djot-markup-for-wp/)
+* [WordPress.org Plugin Page](https://wordpress.org/plugins/djot-markup/)
 * [Djot Syntax Reference](https://djot.net/)
 * [GitHub Repository](https://github.com/php-collective/wp-djot)
 * [Report Issues](https://github.com/php-collective/wp-djot/issues)

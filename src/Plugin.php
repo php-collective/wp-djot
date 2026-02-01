@@ -452,7 +452,7 @@ class Plugin
     {
         // Plugin CSS
         wp_enqueue_style(
-            'djot-markup-for-wp',
+            'djot-markup',
             WPDJOT_PLUGIN_URL . 'assets/css/djot.css',
             [],
             WPDJOT_VERSION,

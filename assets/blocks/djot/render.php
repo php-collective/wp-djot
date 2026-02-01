@@ -14,7 +14,6 @@ if (!defined('ABSPATH')) {
 }
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Variables are local to block render context
-// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped by get_block_wrapper_attributes()
 
 $content = $attributes['content'] ?? '';
 
@@ -42,12 +41,10 @@ $html = preg_replace_callback(
 
 $wrapper_attributes = get_block_wrapper_attributes(['class' => 'wpdjot-block-rendered djot-content']);
 
-// For 'none' or 'full' profile, output directly (trusted content)
-// Otherwise use wp_kses for sanitization
+// For 'none' or 'full' profile, use wp_kses_post (allows all standard post HTML)
+// Otherwise use wp_kses with Djot-specific allowed HTML for stricter sanitization
 if ($postProfile === 'none' || $postProfile === 'full') {
-    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- None/Full profile means trusted content, HTML already processed by Djot converter
-    printf('<div %s>%s</div>', $wrapper_attributes, $html);
+    printf('<div %s>%s</div>', $wrapper_attributes, wp_kses_post($html));
 } else {
-    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped, $html is sanitized by wp_kses
     printf('<div %s>%s</div>', $wrapper_attributes, wp_kses($html, WpDjot\Converter::getAllowedHtml()));
 }

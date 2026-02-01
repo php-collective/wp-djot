@@ -1,14 +1,15 @@
 # Djot Markup for WordPress
 
 [![CI](https://github.com/php-collective/wp-djot/actions/workflows/ci.yml/badge.svg)](https://github.com/php-collective/wp-djot/actions/workflows/ci.yml)
-[![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
-[![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dt/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
-[![WordPress Plugin Rating](https://img.shields.io/wordpress/plugin/stars/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
+[![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/djot-markup)](https://wordpress.org/plugins/djot-markup/)
+[![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dt/djot-markup)](https://wordpress.org/plugins/djot-markup/)
+[![WordPress Plugin Rating](https://img.shields.io/wordpress/plugin/stars/djot-markup)](https://wordpress.org/plugins/djot-markup/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://php.net)
 [![WordPress 6.0+](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org)
 
-A WordPress plugin for [Djot](https://djot.net/) markup language support. Convert Djot syntax to HTML in posts, pages, and comments.
+A WordPress plugin for [Djot](https://djot.net/) markup language support. 
+Convert Djot syntax to HTML in posts, pages, and comments.
 
 ## What is Djot?
 
@@ -78,7 +79,7 @@ echo "Hello, World!";
 ### From WordPress.org
 
 Search for "Djot Markup" in the WordPress plugin directory, or visit:
-[wordpress.org/plugins/djot-markup-for-wp](https://wordpress.org/plugins/djot-markup-for-wp/)
+[wordpress.org/plugins/djot-markup](https://wordpress.org/plugins/djot-markup/)
 
 ### From GitHub
 

@@ -28,6 +28,12 @@ CHANGELOG.md
 CONTRIBUTING.md
 README.md
 
+# Vendor non-permitted files
+vendor/bin/djot
+vendor/php-collective/djot/bin
+vendor/php-collective/djot/fuzz
+vendor/php-collective/djot/tests
+
 # Temporary files
 /_*
 *.log

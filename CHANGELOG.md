@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-01
+
+### Fixed
+
+- Text domain changed from `djot-markup-for-wp` to `djot-markup` to match plugin slug
+- HTML output now properly escaped with `wp_kses_post()`/`wp_kses()` in block rendering and template tags
+- Non-permitted files (vendor binaries, fuzz dictionaries) excluded from distribution via `.distignore`
+- Added `markmarkmark` to Contributors list
+
 ## [1.1.5] - 2025-12-15
 
 ### Fixed

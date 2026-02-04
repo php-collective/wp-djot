@@ -247,6 +247,59 @@ class Settings
             'wpdjot_advanced',
             ['field' => 'shortcode_tag', 'description' => __('The shortcode tag to use (default: djot).', 'djot-markup')],
         );
+
+        // Table of Contents Section
+        add_settings_section(
+            'wpdjot_toc',
+            __('Table of Contents', 'djot-markup'),
+            [$this, 'renderTocSectionDescription'],
+            self::PAGE_SLUG,
+        );
+
+        add_settings_field(
+            'toc_enabled',
+            __('Enable TOC', 'djot-markup'),
+            [$this, 'renderCheckboxField'],
+            self::PAGE_SLUG,
+            'wpdjot_toc',
+            ['field' => 'toc_enabled', 'description' => __('Automatically generate a table of contents from headings in posts and pages.', 'djot-markup')],
+        );
+
+        add_settings_field(
+            'toc_position',
+            __('TOC Position', 'djot-markup'),
+            [$this, 'renderTocPositionSelect'],
+            self::PAGE_SLUG,
+            'wpdjot_toc',
+            ['field' => 'toc_position', 'description' => __('Where to insert the table of contents.', 'djot-markup')],
+        );
+
+        add_settings_field(
+            'toc_min_level',
+            __('Minimum Heading Level', 'djot-markup'),
+            [$this, 'renderHeadingLevelSelect'],
+            self::PAGE_SLUG,
+            'wpdjot_toc',
+            ['field' => 'toc_min_level', 'description' => __('Include headings starting from this level (default: 2 to skip page title).', 'djot-markup')],
+        );
+
+        add_settings_field(
+            'toc_max_level',
+            __('Maximum Heading Level', 'djot-markup'),
+            [$this, 'renderHeadingLevelSelect'],
+            self::PAGE_SLUG,
+            'wpdjot_toc',
+            ['field' => 'toc_max_level', 'description' => __('Include headings up to this level.', 'djot-markup')],
+        );
+
+        add_settings_field(
+            'toc_list_type',
+            __('TOC List Type', 'djot-markup'),
+            [$this, 'renderTocListTypeSelect'],
+            self::PAGE_SLUG,
+            'wpdjot_toc',
+            ['field' => 'toc_list_type', 'description' => __('Use ordered (numbered) or unordered (bulleted) list.', 'djot-markup')],
+        );
     }
 
     /**
@@ -286,6 +339,19 @@ class Settings
             'comment_soft_break' => in_array($input['comment_soft_break'] ?? '', ['newline', 'space', 'br'], true)
                 ? $input['comment_soft_break']
                 : 'newline',
+            'toc_enabled' => !empty($input['toc_enabled']),
+            'toc_position' => in_array($input['toc_position'] ?? '', ['top', 'bottom'], true)
+                ? $input['toc_position']
+                : 'top',
+            'toc_min_level' => in_array((int)($input['toc_min_level'] ?? 2), [1, 2, 3, 4, 5, 6], true)
+                ? (int)$input['toc_min_level']
+                : 2,
+            'toc_max_level' => in_array((int)($input['toc_max_level'] ?? 4), [1, 2, 3, 4, 5, 6], true)
+                ? (int)$input['toc_max_level']
+                : 4,
+            'toc_list_type' => in_array($input['toc_list_type'] ?? '', ['ul', 'ol'], true)
+                ? $input['toc_list_type']
+                : 'ul',
         ];
     }
 
@@ -556,5 +622,120 @@ class Settings
             );
         }
         echo '</ul>';
+    }
+
+    public function renderTocSectionDescription(): void
+    {
+        echo '<p>' . esc_html__('Configure automatic table of contents generation for posts and pages.', 'djot-markup') . '</p>';
+    }
+
+    /**
+     * Render TOC position select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
+    public function renderTocPositionSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $current = $options[$field] ?? 'top';
+
+        $positions = [
+            'top' => __('Top of content', 'djot-markup'),
+            'bottom' => __('Bottom of content', 'djot-markup'),
+        ];
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+
+        foreach ($positions as $value => $label) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr($value),
+                selected($current, $value, false),
+                esc_html($label),
+            );
+        }
+
+        echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
+    }
+
+    /**
+     * Render heading level select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
+    public function renderHeadingLevelSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $default = $field === 'toc_min_level' ? 2 : 4;
+        $current = $options[$field] ?? $default;
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+
+        for ($level = 1; $level <= 6; $level++) {
+            printf(
+                '<option value="%d" %s>H%d</option>',
+                $level,
+                selected((int)$current, $level, false),
+                $level,
+            );
+        }
+
+        echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
+    }
+
+    /**
+     * Render TOC list type select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
+    public function renderTocListTypeSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $current = $options[$field] ?? 'ul';
+
+        $listTypes = [
+            'ul' => __('Unordered (bullets)', 'djot-markup'),
+            'ol' => __('Ordered (numbers)', 'djot-markup'),
+        ];
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+
+        foreach ($listTypes as $value => $label) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr($value),
+                selected($current, $value, false),
+                esc_html($label),
+            );
+        }
+
+        echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
     }
 }

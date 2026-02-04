@@ -280,6 +280,66 @@ figure.wpdjot-embed figcaption {
     font-style: italic;
 }
 
+/* Table of Contents */
+.wpdjot-toc {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0;
+    margin-bottom: 1.5em;
+}
+
+.wpdjot-toc summary {
+    padding: 0.75em 1.5em;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.wpdjot-toc summary::before {
+    content: "▶";
+    font-size: 0.7em;
+    transition: transform 0.2s ease;
+}
+
+.wpdjot-toc[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.wpdjot-toc summary::-webkit-details-marker {
+    display: none;
+}
+
+.wpdjot-toc > ul,
+.wpdjot-toc > ol {
+    margin: 0;
+    padding: 0 1.5em 1em;
+}
+
+.wpdjot-toc ul,
+.wpdjot-toc ol {
+    margin: 0;
+    padding-left: 1.5em;
+}
+
+.wpdjot-toc li {
+    margin: 0.25em 0;
+    line-height: 1.4;
+}
+
+.wpdjot-toc a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.wpdjot-toc a:hover {
+    text-decoration: underline;
+    color: #0066cc;
+}
+
 /* Footnotes */
 .djot-content .footnote-ref {
     font-size: 0.75em;
@@ -688,5 +748,14 @@ figure.wpdjot-embed figcaption {
 
     figure.wpdjot-embed figcaption {
         color: #8b949e;
+    }
+
+    .wpdjot-toc {
+        background: #161b22;
+        border-color: #30363d;
+    }
+
+    .wpdjot-toc a:hover {
+        color: #58a6ff;
     }
 }

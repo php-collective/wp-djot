@@ -532,6 +532,11 @@ class Plugin
             'highlight_code' => true,
             'highlight_theme' => 'github',
             'shortcode_tag' => 'djot',
+            'toc_enabled' => false,
+            'toc_position' => 'top',
+            'toc_min_level' => 2,
+            'toc_max_level' => 4,
+            'toc_list_type' => 'ul',
         ];
 
         $options = get_option('wpdjot_settings', []);

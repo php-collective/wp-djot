@@ -10,6 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 use Djot\DjotConverter;
+use Djot\Extension\TableOfContentsExtension;
 use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
@@ -38,6 +39,16 @@ class Converter
 
     private bool $markdownMode;
 
+    private bool $tocEnabled;
+
+    private string $tocPosition;
+
+    private int $tocMinLevel;
+
+    private int $tocMaxLevel;
+
+    private string $tocListType;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
@@ -50,6 +61,11 @@ class Converter
         string $postSoftBreak = 'newline',
         string $commentSoftBreak = 'newline',
         bool $markdownMode = false,
+        bool $tocEnabled = false,
+        string $tocPosition = 'top',
+        int $tocMinLevel = 2,
+        int $tocMaxLevel = 4,
+        string $tocListType = 'ul',
     ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
@@ -57,6 +73,11 @@ class Converter
         $this->postSoftBreak = $postSoftBreak;
         $this->commentSoftBreak = $commentSoftBreak;
         $this->markdownMode = $markdownMode;
+        $this->tocEnabled = $tocEnabled;
+        $this->tocPosition = $tocPosition;
+        $this->tocMinLevel = $tocMinLevel;
+        $this->tocMaxLevel = $tocMaxLevel;
+        $this->tocListType = $tocListType;
         $this->converter = new DjotConverter(safeMode: false);
         $this->converter->getRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
@@ -79,6 +100,11 @@ class Converter
             postSoftBreak: $options['post_soft_break'] ?? 'newline',
             commentSoftBreak: $options['comment_soft_break'] ?? 'newline',
             markdownMode: !empty($options['markdown_mode']),
+            tocEnabled: !empty($options['toc_enabled']),
+            tocPosition: $options['toc_position'] ?? 'top',
+            tocMinLevel: (int)($options['toc_min_level'] ?? 2),
+            tocMaxLevel: (int)($options['toc_max_level'] ?? 4),
+            tocListType: $options['toc_list_type'] ?? 'ul',
         );
     }
 
@@ -92,7 +118,10 @@ class Converter
     private function getProfileConverter(string $profileName, bool $safeMode, string $context = 'article'): DjotConverter
     {
         $softBreakSetting = $context === 'comment' ? $this->commentSoftBreak : $this->postSoftBreak;
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '');
+        $tocKey = ($this->tocEnabled && $context === 'article')
+            ? '_toc_' . $this->tocPosition . '_' . $this->tocMinLevel . '_' . $this->tocMaxLevel . '_' . $this->tocListType
+            : '';
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey;
 
         if (!isset($this->profileConverters[$key])) {
             // 'none' means no profile restrictions at all
@@ -122,6 +151,18 @@ class Converter
 
             // Convert tabs to 4 spaces in code blocks for consistent display
             $converter->getRenderer()->setCodeBlockTabWidth(4);
+
+            // Add Table of Contents extension for articles when enabled
+            if ($this->tocEnabled && $context === 'article') {
+                $tocExtension = new TableOfContentsExtension(
+                    minLevel: $this->tocMinLevel,
+                    maxLevel: $this->tocMaxLevel,
+                    listType: $this->tocListType,
+                    cssClass: 'wpdjot-toc',
+                    position: $this->tocPosition,
+                );
+                $converter->addExtension($tocExtension);
+            }
 
             // Allow customization via WordPress filters
             if (function_exists('apply_filters')) {

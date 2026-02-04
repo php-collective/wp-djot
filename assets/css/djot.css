@@ -285,8 +285,38 @@ figure.wpdjot-embed figcaption {
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     border-radius: 6px;
-    padding: 1em 1.5em;
+    padding: 0;
     margin-bottom: 1.5em;
+}
+
+.wpdjot-toc summary {
+    padding: 0.75em 1.5em;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.wpdjot-toc summary::before {
+    content: "▶";
+    font-size: 0.7em;
+    transition: transform 0.2s ease;
+}
+
+.wpdjot-toc[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.wpdjot-toc summary::-webkit-details-marker {
+    display: none;
+}
+
+.wpdjot-toc > ul,
+.wpdjot-toc > ol {
+    margin: 0;
+    padding: 0 1.5em 1em;
 }
 
 .wpdjot-toc ul,

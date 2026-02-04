@@ -162,6 +162,19 @@ class Converter
                     position: $this->tocPosition,
                 );
                 $converter->addExtension($tocExtension);
+
+                // Wrap TOC in collapsible <details>/<summary>
+                $converter->addOutputTransformer(function (string $html): string {
+                    $label = __('Table of Contents', 'djot-markup');
+
+                    return (string)preg_replace(
+                        '#<nav class="wpdjot-toc">\n(.*?)</nav>\n#s',
+                        '<details class="wpdjot-toc">' . "\n"
+                            . '<summary>' . esc_html($label) . '</summary>' . "\n"
+                            . '$1</details>' . "\n",
+                        $html,
+                    );
+                });
             }
 
             // Allow customization via WordPress filters

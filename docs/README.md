@@ -90,7 +90,7 @@ The plugin can automatically generate a table of contents from headings in your 
 | Max heading level | H1–H6 | H4 | Stop collecting headings at this level |
 | List type | ul / ol | ul | Bulleted or numbered list |
 
-The TOC is rendered as a `<nav class="wpdjot-toc">` element with linked headings. It includes light and dark mode styling out of the box.
+The TOC is rendered as a collapsible `<details class="wpdjot-toc">` element (collapsed by default). Click the "Table of Contents" header to expand it. It includes light and dark mode styling out of the box.
 
 The TOC is only generated for posts and pages (article context), not for comments.
 

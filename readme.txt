@@ -19,6 +19,7 @@ Djot Markup adds support for the [Djot](https://djot.net/) markup language in Wo
 * **Full Djot Support**: Headings, emphasis, links, images, code blocks, tables, footnotes, and more
 * **Shortcode Support**: Use `[djot]...[/djot]` in your content
 * **Content Filtering**: Automatically process `{djot}...{/djot}` blocks
+* **Table of Contents**: Automatic TOC generation from headings with configurable levels and position
 * **Safe Mode**: XSS protection for untrusted content
 * **Syntax Highlighting**: Built-in highlight.js integration with 12+ themes
 * **Admin Settings**: Easy configuration through WordPress admin
@@ -88,6 +89,11 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 3. Rendered output with syntax highlighting
 
 == Changelog ==
+
+= 1.4.0 =
+* Added automatic Table of Contents generation from headings
+* Configurable TOC position (top/bottom), heading levels, and list type
+* Light and dark mode styling for TOC
 
 = 1.3.1 =
 * Fixed text domain to match plugin slug (djot-markup)

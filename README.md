@@ -22,6 +22,7 @@ Djot is a light markup syntax created by John MacFarlane (creator of CommonMark 
 - **Full Djot Support**: Headings, emphasis, links, images, code blocks, tables, footnotes, and more
 - **Block Editor Support**: Native Gutenberg block for writing Djot with live preview
 - **Shortcode Support**: Use `[djot]...[/djot]` in your content
+- **Table of Contents**: Automatic TOC generation from headings with configurable levels and position
 - **Content Profiles**: Configurable feature restrictions (full, article, comment, minimal)
 - **Safe Mode**: XSS protection for untrusted content
 - **Syntax Highlighting**: Built-in highlight.js integration with multiple themes

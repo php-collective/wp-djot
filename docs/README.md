@@ -75,7 +75,24 @@ Go to **Settings → Djot Markup** to configure:
 - **Security Settings**: Safe mode for XSS protection, content profiles
 - **Rendering Settings**: Line break handling and Markdown compatibility mode
 - **Code Highlighting**: Enable/disable and choose theme
+- **Table of Contents**: Automatic TOC generation from headings
 - **Advanced**: Custom shortcode tag, filter priority
+
+### Table of Contents
+
+The plugin can automatically generate a table of contents from headings in your posts and pages.
+
+| Setting | Options | Default | Description |
+|---------|---------|---------|-------------|
+| Enable TOC | on/off | off | Enable automatic TOC generation |
+| Position | top / bottom | top | Where to insert the TOC in the content |
+| Min heading level | H1–H6 | H2 | Start collecting headings from this level (H2 skips the page title) |
+| Max heading level | H1–H6 | H4 | Stop collecting headings at this level |
+| List type | ul / ol | ul | Bulleted or numbered list |
+
+The TOC is rendered as a `<nav class="wpdjot-toc">` element with linked headings. It includes light and dark mode styling out of the box.
+
+The TOC is only generated for posts and pages (article context), not for comments.
 
 ### Rendering Settings
 

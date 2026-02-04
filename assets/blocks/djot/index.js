@@ -1,8 +1,10 @@
 ( function( wp ) {
     const { registerBlockType } = wp.blocks;
     const { useState, useEffect, useCallback, useRef } = wp.element;
-    const { TextareaControl, PanelBody, ToggleControl, Placeholder, Spinner, ToolbarGroup, ToolbarButton, ToolbarDropdownMenu, Modal, TextControl, Button } = wp.components;
+    const { TextareaControl, PanelBody, ToggleControl, Placeholder, Spinner, ToolbarGroup, ToolbarButton, ToolbarDropdownMenu, Modal, TextControl, Button, RangeControl } = wp.components;
+    const { PlainText } = wp.blockEditor;
     const { InspectorControls, BlockControls, useBlockProps } = wp.blockEditor;
+    const { useDispatch } = wp.data;
     const { __ } = wp.i18n;
     const apiFetch = wp.apiFetch;
 
@@ -59,7 +61,9 @@
             wp.element.createElement( 'path', { d: 'M10 19h4v-3h-4v3zM5 4v3h5v3h4V7h5V4H5zM3 14h18v-2H3v2z' } )
         ),
         horizontalRule: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
-            wp.element.createElement( 'path', { d: 'M4 11h16v2H4z' } )
+            wp.element.createElement( 'line', { x1: 4, y1: 12, x2: 8, y2: 12, stroke: 'currentColor', strokeWidth: 2 } ),
+            wp.element.createElement( 'circle', { cx: 12, cy: 12, r: 1.5, fill: 'currentColor' } ),
+            wp.element.createElement( 'line', { x1: 16, y1: 12, x2: 20, y2: 12, stroke: 'currentColor', strokeWidth: 2 } )
         ),
         footnote: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
             wp.element.createElement( 'text', { x: 6, y: 16, fontSize: 12, fontWeight: 'bold' }, 'F' ),
@@ -74,66 +78,164 @@
         table: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
             wp.element.createElement( 'path', { d: 'M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z' } )
         ),
+        formatTable: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
+            wp.element.createElement( 'path', { d: 'M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z' } ),
+            wp.element.createElement( 'path', { d: 'M17 17l4 4m0-4l-4 4', stroke: 'currentColor', strokeWidth: 2, fill: 'none' } )
+        ),
+        taskList: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
+            wp.element.createElement( 'rect', { x: 3, y: 4, width: 4, height: 4, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'path', { d: 'M4 6l1 1 2-2', stroke: 'currentColor', strokeWidth: 1.5, fill: 'none' } ),
+            wp.element.createElement( 'line', { x1: 9, y1: 6, x2: 21, y2: 6, stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'rect', { x: 3, y: 10, width: 4, height: 4, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'line', { x1: 9, y1: 12, x2: 21, y2: 12, stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'rect', { x: 3, y: 16, width: 4, height: 4, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 } ),
+            wp.element.createElement( 'line', { x1: 9, y1: 18, x2: 21, y2: 18, stroke: 'currentColor', strokeWidth: 1.5 } )
+        ),
+        video: wp.element.createElement( 'svg', { width: 24, height: 24, viewBox: '0 0 24 24' },
+            wp.element.createElement( 'path', { d: 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z' } )
+        ),
     };
 
-    registerBlockType( 'wp-djot/djot', {
+    registerBlockType( 'wpdjot/djot', {
         edit: function( props ) {
             const { attributes, setAttributes } = props;
             const { content } = attributes;
+            const { __unstableMarkLastChangeAsPersistent: markUndoBoundary } = useDispatch( 'core/block-editor' );
             const [ preview, setPreview ] = useState( '' );
             const [ isPreviewMode, setIsPreviewMode ] = useState( false );
             const [ isLoading, setIsLoading ] = useState( false );
             const [ showLinkModal, setShowLinkModal ] = useState( false );
             const [ showImageModal, setShowImageModal ] = useState( false );
+            const [ showTableModal, setShowTableModal ] = useState( false );
             const [ linkUrl, setLinkUrl ] = useState( '' );
             const [ linkText, setLinkText ] = useState( '' );
             const [ imageUrl, setImageUrl ] = useState( '' );
             const [ imageAlt, setImageAlt ] = useState( '' );
+            const [ tableCols, setTableCols ] = useState( 3 );
+            const [ tableRows, setTableRows ] = useState( 2 );
+            const [ cursorInTable, setCursorInTable ] = useState( false );
+            const [ showImportModal, setShowImportModal ] = useState( false );
+            const [ importType, setImportType ] = useState( 'markdown' );
+            const [ importInput, setImportInput ] = useState( '' );
+            const [ djotPreview, setDjotPreview ] = useState( '' );
+            const [ isConverting, setIsConverting ] = useState( false );
+            const [ showTaskListModal, setShowTaskListModal ] = useState( false );
+            const [ taskListItems, setTaskListItems ] = useState( [ { text: '', checked: false } ] );
+            const [ showDefListModal, setShowDefListModal ] = useState( false );
+            const [ defListTerms, setDefListTerms ] = useState( [ '' ] );
+            const [ defListDefinitions, setDefListDefinitions ] = useState( [ '' ] );
+            const [ showVideoModal, setShowVideoModal ] = useState( false );
+            const [ videoUrl, setVideoUrl ] = useState( '' );
+            const [ videoCaption, setVideoCaption ] = useState( '' );
+            const [ videoWidth, setVideoWidth ] = useState( '' );
             const textareaRef = useRef( null );
+            const previewRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
             const [ selectionEnd, setSelectionEnd ] = useState( 0 );
 
             const blockProps = useBlockProps( {
-                className: 'wp-djot-block',
+                className: 'wpdjot-block',
             } );
 
-            // Track selection in textarea
+            // Track selection in textarea and check if in table
             function updateSelection() {
                 if ( textareaRef.current ) {
                     const textarea = textareaRef.current.querySelector( 'textarea' );
                     if ( textarea ) {
                         setSelectionStart( textarea.selectionStart );
                         setSelectionEnd( textarea.selectionEnd );
+
+                        // Check if cursor is in a table
+                        var text = content || '';
+                        var cursorPos = textarea.selectionStart;
+                        var lineStart = cursorPos;
+                        while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
+                            lineStart--;
+                        }
+                        var lineEnd = cursorPos;
+                        while ( lineEnd < text.length && text[ lineEnd ] !== '\n' ) {
+                            lineEnd++;
+                        }
+                        var currentLine = text.substring( lineStart, lineEnd ).trim();
+                        setCursorInTable( currentLine.startsWith( '|' ) && currentLine.endsWith( '|' ) );
                     }
                 }
             }
 
-            // Auto-grow textarea
-            function autoGrow( textarea ) {
-                if ( textarea ) {
-                    textarea.style.height = 'auto';
-                    textarea.style.height = textarea.scrollHeight + 'px';
+            // Track previous content for undo/redo cursor positioning
+            const previousContent = useRef( content || '' );
+            const isInternalChange = useRef( false );
+
+            // Find position where two strings first differ
+            function findDiffPosition( oldStr, newStr ) {
+                oldStr = oldStr || '';
+                newStr = newStr || '';
+                var minLen = Math.min( oldStr.length, newStr.length );
+                for ( var i = 0; i < minLen; i++ ) {
+                    if ( oldStr[ i ] !== newStr[ i ] ) {
+                        return i;
+                    }
                 }
+                // Strings are identical up to minLen, diff is at the end of shorter string
+                return minLen;
             }
 
-            // Auto-grow on content change or when returning from preview
+            // Handle external content changes (undo/redo) - position cursor at change location
             useEffect( function() {
-                if ( ! isPreviewMode && textareaRef.current ) {
-                    // Small delay to ensure textarea is rendered
-                    setTimeout( function() {
-                        const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
-                        autoGrow( textarea );
-                    }, 10 );
+                if ( isInternalChange.current ) {
+                    isInternalChange.current = false;
+                    previousContent.current = content || '';
+                    return;
                 }
-            }, [ content, isPreviewMode ] );
+
+                // External content change (undo/redo)
+                if ( ! isPreviewMode ) {
+                    var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                    if ( textarea ) {
+                        var oldContent = previousContent.current;
+                        var newContent = content || '';
+                        var diffPos = findDiffPosition( oldContent, newContent );
+
+                        // Position cursor at the change location
+                        requestAnimationFrame( function() {
+                            textarea.focus( { preventScroll: true } );
+                            textarea.setSelectionRange( diffPos, diffPos );
+                            // Scroll textarea to make cursor visible
+                            textarea.blur();
+                            textarea.focus();
+                        } );
+                    }
+                }
+
+                previousContent.current = content || '';
+            }, [ content ] );
+
+            // Restore focus and scroll position after React re-render
+            function restoreFocus( textarea, cursorPos ) {
+                const scrollY = window.scrollY;
+                const scrollX = window.scrollX;
+                isInternalChange.current = true;
+
+                requestAnimationFrame( function() {
+                    if ( textarea ) {
+                        textarea.focus( { preventScroll: true } );
+                        textarea.setSelectionRange( cursorPos, cursorPos );
+                    }
+                    window.scrollTo( scrollX, scrollY );
+                } );
+            }
 
             // Insert text at cursor or wrap selection
-            function insertMarkup( before, after, placeholder ) {
+            function insertMarkup( before, after ) {
                 after = after || '';
-                placeholder = placeholder || '';
 
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
 
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
@@ -144,51 +246,66 @@
                 let newCursorPos;
 
                 if ( selectedText ) {
-                    // Wrap selection
+                    // Wrap selection, cursor at end
                     newText = text.substring( 0, start ) + before + selectedText + after + text.substring( end );
                     newCursorPos = start + before.length + selectedText.length + after.length;
                 } else {
-                    // Insert placeholder
-                    newText = text.substring( 0, start ) + before + placeholder + after + text.substring( end );
-                    newCursorPos = start + before.length + placeholder.length;
+                    // Insert markers only, cursor between them
+                    newText = text.substring( 0, start ) + before + after + text.substring( end );
+                    newCursorPos = start + before.length;
                 }
 
                 setAttributes( { content: newText } );
-
-                // Restore focus and cursor position
-                setTimeout( function() {
-                    textarea.focus();
-                    textarea.setSelectionRange( newCursorPos, newCursorPos );
-                }, 10 );
+                restoreFocus( textarea, newCursorPos );
             }
 
-            // Insert block-level markup (on new line)
+            // Insert block-level markup at cursor position
             function insertBlockMarkup( markup, placeholder ) {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
-                const start = textarea.selectionStart;
-                const text = content || '';
-
-                // Find start of current line
-                let lineStart = start;
-                while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
-                    lineStart--;
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
                 }
 
-                // Check if we need a newline before
-                const needsNewlineBefore = lineStart > 0 && text[ lineStart - 1 ] !== '\n';
-                const prefix = needsNewlineBefore ? '\n' : '';
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = content || '';
+                const selectedText = text.substring( start, end );
 
-                const newText = text.substring( 0, lineStart ) + prefix + markup + placeholder + text.substring( start );
-                const newCursorPos = lineStart + prefix.length + markup.length + placeholder.length;
+                // Use selected text or placeholder
+                const blockText = selectedText || placeholder;
+
+                // Check how many newlines needed before
+                let prefix = '';
+                if ( start === 0 ) {
+                    // At beginning, no newlines needed
+                } else if ( start >= 2 && text[ start - 1 ] === '\n' && text[ start - 2 ] === '\n' ) {
+                    // Already have blank line, no extra needed
+                } else if ( text[ start - 1 ] === '\n' ) {
+                    // On a newline, need one more for blank line
+                    prefix = '\n';
+                } else {
+                    // In middle of line, need two newlines for blank line
+                    prefix = '\n\n';
+                }
+
+                // Always add two newlines after for blank line separation
+                let suffix = '\n\n';
+                if ( end < text.length - 1 && text[ end ] === '\n' && text[ end + 1 ] === '\n' ) {
+                    // Already have blank line after
+                    suffix = '';
+                } else if ( end < text.length && text[ end ] === '\n' ) {
+                    // Have one newline, add one more
+                    suffix = '\n';
+                }
+
+                const newText = text.substring( 0, start ) + prefix + markup + blockText + suffix + text.substring( end );
+                const newCursorPos = start + prefix.length + markup.length + blockText.length + suffix.length;
 
                 setAttributes( { content: newText } );
-
-                setTimeout( function() {
-                    textarea.focus();
-                    textarea.setSelectionRange( newCursorPos, newCursorPos );
-                }, 10 );
+                restoreFocus( textarea, newCursorPos );
             }
 
             // Insert multi-line block (like code blocks, divs)
@@ -196,34 +313,72 @@
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
                 const text = content || '';
                 const selectedText = text.substring( start, end );
 
+                // Check newlines before cursor
+                let prefixNewlines = '';
+                if ( start === 0 ) {
+                    // At beginning, no newlines needed
+                } else if ( start >= 2 && text[ start - 1 ] === '\n' && text[ start - 2 ] === '\n' ) {
+                    // Already have blank line, no extra needed
+                } else if ( text[ start - 1 ] === '\n' ) {
+                    // On a newline, need one more for blank line
+                    prefixNewlines = '\n';
+                } else {
+                    // In middle of line, need two newlines
+                    prefixNewlines = '\n\n';
+                }
+
+                // Check newlines after cursor - always want blank line after block
+                let suffixNewlines = '\n\n';
+                if ( end < text.length - 1 && text[ end ] === '\n' && text[ end + 1 ] === '\n' ) {
+                    // Already have blank line after
+                    suffixNewlines = '';
+                } else if ( end < text.length && text[ end ] === '\n' ) {
+                    // Have one newline, add one more
+                    suffixNewlines = '\n';
+                }
+
                 const contentToWrap = selectedText || placeholder;
-                const newText = text.substring( 0, start ) + startTag + '\n' + contentToWrap + '\n' + endTag + text.substring( end );
-                const newCursorPos = start + startTag.length + 1 + contentToWrap.length;
+                let blockContent;
+                let newCursorPos;
+
+                if ( ! contentToWrap && ! endTag ) {
+                    // Simple block like horizontal rule - cursor goes to blank line after
+                    blockContent = prefixNewlines + startTag + suffixNewlines;
+                    // Position cursor after first newline (on the blank line)
+                    newCursorPos = start + prefixNewlines.length + startTag.length + 1;
+                } else {
+                    // Multi-line block with content
+                    blockContent = prefixNewlines + startTag + '\n' + contentToWrap + '\n' + endTag + suffixNewlines;
+                    newCursorPos = start + prefixNewlines.length + startTag.length + 1 + contentToWrap.length;
+                }
+
+                const newText = text.substring( 0, start ) + blockContent + text.substring( end );
 
                 setAttributes( { content: newText } );
-
-                setTimeout( function() {
-                    textarea.focus();
-                    textarea.setSelectionRange( newCursorPos, newCursorPos );
-                }, 10 );
+                restoreFocus( textarea, newCursorPos );
             }
 
             // Toolbar button handlers
-            function onBold() { insertMarkup( '*', '*', 'bold text' ); }
-            function onItalic() { insertMarkup( '_', '_', 'italic text' ); }
-            function onCode() { insertMarkup( '`', '`', 'code' ); }
-            function onSuperscript() { insertMarkup( '^', '^', 'superscript' ); }
-            function onSubscript() { insertMarkup( '~', '~', 'subscript' ); }
-            function onHighlight() { insertMarkup( '{=', '=}', 'highlighted' ); }
-            function onInsert() { insertMarkup( '{+', '+}', 'inserted' ); }
-            function onDelete() { insertMarkup( '{-', '-}', 'deleted' ); }
-            function onStrikethrough() { insertMarkup( '{~', '~}', 'strikethrough' ); }
-            function onSpan() { insertMarkup( '[', ']{.class}', 'text' ); }
+            function onBold() { insertMarkup( '*', '*' ); }
+            function onItalic() { insertMarkup( '_', '_' ); }
+            function onCode() { insertMarkup( '`', '`' ); }
+            function onSuperscript() { insertMarkup( '^', '^' ); }
+            function onSubscript() { insertMarkup( '~', '~' ); }
+            function onHighlight() { insertMarkup( '{=', '=}' ); }
+            function onInsert() { insertMarkup( '{+', '+}' ); }
+            function onDelete() { insertMarkup( '{-', '-}' ); }
+            function onStrikethrough() { insertMarkup( '{~', '~}' ); }
+            function onSpan() { insertMarkup( '[', ']{.class}' ); }
 
             function onLink() {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
@@ -236,12 +391,33 @@
             }
 
             function onInsertLink() {
+                const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = content || '';
+
+                let linkMarkup;
                 if ( linkText.trim() ) {
-                    insertMarkup( '[' + linkText + '](', ')', linkUrl );
+                    linkMarkup = '[' + linkText + '](' + linkUrl + ')';
                 } else {
                     // Use autolink syntax when no text provided
-                    insertMarkup( '<', '>', linkUrl );
+                    linkMarkup = '<' + linkUrl + '>';
                 }
+
+                // Replace selection (or insert at cursor) with the complete link
+                const newText = text.substring( 0, start ) + linkMarkup + text.substring( end );
+                const newCursorPos = start + linkMarkup.length;
+
+                setAttributes( { content: newText } );
+                restoreFocus( textarea, newCursorPos );
+
                 setShowLinkModal( false );
                 setLinkUrl( '' );
                 setLinkText( '' );
@@ -254,28 +430,705 @@
             }
 
             function onInsertImage() {
-                insertMarkup( '![' + imageAlt + '](', ')', imageUrl );
+                const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = content || '';
+
+                const imageMarkup = '![' + imageAlt + '](' + imageUrl + ')';
+
+                // Replace selection (or insert at cursor) with the complete image
+                const newText = text.substring( 0, start ) + imageMarkup + text.substring( end );
+                const newCursorPos = start + imageMarkup.length;
+
+                setAttributes( { content: newText } );
+                restoreFocus( textarea, newCursorPos );
+
                 setShowImageModal( false );
                 setImageUrl( '' );
                 setImageAlt( '' );
             }
 
             function onHeading( level ) {
-                const hashes = '#'.repeat( level ) + ' ';
-                insertBlockMarkup( hashes, 'Heading ' + level );
+                const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
+                const text = content || '';
+                const cursorPos = textarea.selectionStart;
+
+                // Find the start of the current line
+                let lineStart = cursorPos;
+                while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
+                    lineStart--;
+                }
+
+                // Find the end of the current line
+                let lineEnd = cursorPos;
+                while ( lineEnd < text.length && text[ lineEnd ] !== '\n' ) {
+                    lineEnd++;
+                }
+
+                const currentLine = text.substring( lineStart, lineEnd );
+
+                // Check if current line has heading markup
+                const headingMatch = currentLine.match( /^(#{1,6})\s+(.*)$/ );
+
+                if ( headingMatch ) {
+                    // Replace existing heading with new level
+                    const headingContent = headingMatch[ 2 ];
+                    const newHashes = '#'.repeat( level ) + ' ';
+                    const newLine = newHashes + headingContent;
+                    const newText = text.substring( 0, lineStart ) + newLine + text.substring( lineEnd );
+                    const newCursorPos = lineStart + newLine.length;
+
+                    setAttributes( { content: newText } );
+                    restoreFocus( textarea, newCursorPos );
+                } else {
+                    // No existing heading on line, insert heading prefix
+                    const hashes = '#'.repeat( level ) + ' ';
+                    insertBlockMarkup( hashes, '' );
+                }
             }
 
-            function onBlockquote() { insertBlockMarkup( '> ', 'quote' ); }
-            function onListUl() { insertBlockMarkup( '- ', 'list item' ); }
-            function onListOl() { insertBlockMarkup( '1. ', 'list item' ); }
-            function onHorizontalRule() { insertBlockMarkup( '\n---\n', '' ); }
-            function onCodeBlock() { insertMultiLineBlock( '```', '```', 'code here' ); }
-            function onDiv() { insertMultiLineBlock( '::: note', ':::', 'content' ); }
-            function onFootnote() { insertMarkup( '[^', ']', 'note' ); }
+            function onBlockquote() { insertBlockMarkup( '> ', '' ); }
+            function onListUl() { insertBlockMarkup( '- ', '' ); }
+            function onListOl() { insertBlockMarkup( '1. ', '' ); }
+            function onHorizontalRule() { insertMultiLineBlock( '---', '', '' ); }
+            function onCodeBlock() { insertMultiLineBlock( '```', '```', '' ); }
+            function onDiv() { insertMultiLineBlock( '::: note', ':::', '' ); }
+            function onFootnote() { insertMarkup( '[^', ']' ); }
 
             function onTable() {
-                const tableTemplate = '| Column 1 | Column 2 | Column 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |';
+                setTableCols( 3 );
+                setTableRows( 2 );
+                setShowTableModal( true );
+            }
+
+            function onInsertTable() {
+                var cols = Math.max( 1, Math.min( 10, tableCols ) );
+                var rows = Math.max( 1, Math.min( 20, tableRows ) );
+
+                // Build header row
+                var headerCells = [];
+                var separatorCells = [];
+                for ( var c = 1; c <= cols; c++ ) {
+                    headerCells.push( ' Column ' );
+                    separatorCells.push( '--------' );
+                }
+                var header = '|' + headerCells.join( '|' ) + '|';
+                var separator = '|' + separatorCells.join( '|' ) + '|';
+
+                // Build data rows
+                var dataRows = [];
+                for ( var r = 1; r <= rows; r++ ) {
+                    var rowCells = [];
+                    for ( var c = 1; c <= cols; c++ ) {
+                        rowCells.push( '     ' );
+                    }
+                    dataRows.push( '|' + rowCells.join( '|' ) + '|' );
+                }
+
+                var tableTemplate = header + '\n' + separator + '\n' + dataRows.join( '\n' ) + '\n';
                 insertMultiLineBlock( '', '', tableTemplate );
+                setShowTableModal( false );
+            }
+
+            function onTaskList() {
+                setTaskListItems( [ { text: '', checked: false } ] );
+                setShowTaskListModal( true );
+            }
+
+            function onInsertTaskList() {
+                var items = taskListItems.filter( function( item ) { return item.text.trim() !== ''; } );
+                if ( items.length === 0 ) {
+                    setShowTaskListModal( false );
+                    return;
+                }
+
+                var taskListText = items.map( function( item ) {
+                    return ( item.checked ? '- [x] ' : '- [ ] ' ) + item.text;
+                } ).join( '\n' ) + '\n';
+
+                insertMultiLineBlock( '', '', taskListText );
+                setShowTaskListModal( false );
+            }
+
+            function updateTaskItem( index, field, value ) {
+                var newItems = taskListItems.slice();
+                newItems[ index ] = Object.assign( {}, newItems[ index ], ( function() { var o = {}; o[ field ] = value; return o; } )() );
+                setTaskListItems( newItems );
+            }
+
+            function addTaskItem() {
+                setTaskListItems( taskListItems.concat( [ { text: '', checked: false } ] ) );
+            }
+
+            function removeTaskItem( index ) {
+                if ( taskListItems.length <= 1 ) return;
+                var newItems = taskListItems.slice();
+                newItems.splice( index, 1 );
+                setTaskListItems( newItems );
+            }
+
+            function onDefList() {
+                setDefListTerms( [ '' ] );
+                setDefListDefinitions( [ '' ] );
+                setShowDefListModal( true );
+            }
+
+            function onInsertDefList() {
+                var terms = defListTerms.filter( function( t ) { return t.trim() !== ''; } );
+                var definitions = defListDefinitions.filter( function( d ) { return d.trim() !== ''; } );
+                if ( terms.length === 0 && definitions.length === 0 ) {
+                    setShowDefListModal( false );
+                    return;
+                }
+
+                // Djot spec syntax: `: term` lines, then blank line, then indented definition
+                // Multiple dd elements use `: +` continuation marker
+                var termsText = terms.map( function( t ) { return ': ' + t; } ).join( '\n' );
+
+                var defsText = definitions.map( function( def, index ) {
+                    var defLines = def.split( '\n' );
+                    var indentedDef = defLines.map( function( line ) {
+                        return '  ' + line;
+                    } ).join( '\n' );
+
+                    // First definition follows terms, subsequent ones use `: +` marker
+                    if ( index === 0 ) {
+                        return indentedDef;
+                    }
+                    return ': +\n\n' + indentedDef;
+                } ).join( '\n\n' );
+
+                var defListText = termsText + '\n\n' + defsText + '\n';
+
+                insertMultiLineBlock( '', '', defListText );
+                setShowDefListModal( false );
+            }
+
+            function updateDefTerm( index, value ) {
+                var newTerms = defListTerms.slice();
+                newTerms[ index ] = value;
+                setDefListTerms( newTerms );
+            }
+
+            function addDefTerm() {
+                setDefListTerms( defListTerms.concat( [ '' ] ) );
+            }
+
+            function removeDefTerm( index ) {
+                if ( defListTerms.length <= 1 ) return;
+                var newTerms = defListTerms.slice();
+                newTerms.splice( index, 1 );
+                setDefListTerms( newTerms );
+            }
+
+            function updateDefDefinition( index, value ) {
+                var newDefs = defListDefinitions.slice();
+                newDefs[ index ] = value;
+                setDefListDefinitions( newDefs );
+            }
+
+            function addDefDefinition() {
+                setDefListDefinitions( defListDefinitions.concat( [ '' ] ) );
+            }
+
+            function removeDefDefinition( index ) {
+                if ( defListDefinitions.length <= 1 ) return;
+                var newDefs = defListDefinitions.slice();
+                newDefs.splice( index, 1 );
+                setDefListDefinitions( newDefs );
+            }
+
+            function onVideo() {
+                setVideoUrl( '' );
+                setVideoCaption( '' );
+                setVideoWidth( '' );
+                setShowVideoModal( true );
+            }
+
+            function onInsertVideo() {
+                if ( ! videoUrl.trim() ) {
+                    setShowVideoModal( false );
+                    return;
+                }
+
+                // Build the Djot syntax: ![caption](url){video width=X}
+                var attrs = 'video';
+                if ( videoWidth.trim() ) {
+                    attrs += ' width=' + videoWidth.trim();
+                }
+                var videoText = '![' + videoCaption + '](' + videoUrl.trim() + '){' + attrs + '}\n';
+
+                insertMultiLineBlock( '', '', videoText );
+                setShowVideoModal( false );
+            }
+
+            // Format table at cursor position
+            function onFormatTable() {
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
+                var text = content || '';
+                var cursorPos = textarea.selectionStart;
+
+                // Find table boundaries
+                var lines = text.split( '\n' );
+                var lineIndex = 0;
+                var charCount = 0;
+                for ( var i = 0; i < lines.length; i++ ) {
+                    if ( charCount + lines[ i ].length >= cursorPos ) {
+                        lineIndex = i;
+                        break;
+                    }
+                    charCount += lines[ i ].length + 1; // +1 for newline
+                }
+
+                // Find table start (go up until non-table line)
+                var tableStart = lineIndex;
+                while ( tableStart > 0 && lines[ tableStart - 1 ].trim().startsWith( '|' ) ) {
+                    tableStart--;
+                }
+
+                // Find table end (go down until non-table line)
+                var tableEnd = lineIndex;
+                while ( tableEnd < lines.length - 1 && lines[ tableEnd + 1 ].trim().startsWith( '|' ) ) {
+                    tableEnd++;
+                }
+
+                // Extract table lines
+                var tableLines = lines.slice( tableStart, tableEnd + 1 );
+                if ( tableLines.length < 2 ) return; // Need at least header + separator
+
+                // Parse cells
+                var parsedRows = tableLines.map( function( line ) {
+                    // Remove leading/trailing pipes and split
+                    var trimmed = line.trim();
+                    if ( trimmed.startsWith( '|' ) ) trimmed = trimmed.substring( 1 );
+                    if ( trimmed.endsWith( '|' ) ) trimmed = trimmed.substring( 0, trimmed.length - 1 );
+                    return trimmed.split( '|' ).map( function( cell ) {
+                        return cell.trim();
+                    } );
+                } );
+
+                // Find max width per column
+                var colWidths = [];
+                parsedRows.forEach( function( row, rowIdx ) {
+                    row.forEach( function( cell, colIdx ) {
+                        // Skip separator row for width calculation (use dashes count)
+                        var width = cell.length;
+                        if ( rowIdx === 1 && /^[-:]+$/.test( cell ) ) {
+                            width = 3; // minimum for separator
+                        }
+                        if ( ! colWidths[ colIdx ] || width > colWidths[ colIdx ] ) {
+                            colWidths[ colIdx ] = Math.max( width, 3 );
+                        }
+                    } );
+                } );
+
+                // Rebuild table with padding
+                var formattedLines = parsedRows.map( function( row, rowIdx ) {
+                    var cells = row.map( function( cell, colIdx ) {
+                        var width = colWidths[ colIdx ] || 3;
+                        if ( rowIdx === 1 && /^[-:]+$/.test( cell ) ) {
+                            // Separator row - preserve alignment markers
+                            var leftAlign = cell.startsWith( ':' );
+                            var rightAlign = cell.endsWith( ':' );
+                            var dashes = '-'.repeat( width );
+                            if ( leftAlign && rightAlign ) {
+                                return ':' + '-'.repeat( width - 2 ) + ':';
+                            } else if ( leftAlign ) {
+                                return ':' + '-'.repeat( width - 1 );
+                            } else if ( rightAlign ) {
+                                return '-'.repeat( width - 1 ) + ':';
+                            }
+                            return dashes;
+                        }
+                        // Pad cell with spaces
+                        return cell + ' '.repeat( width - cell.length );
+                    } );
+                    return '| ' + cells.join( ' | ' ) + ' |';
+                } );
+
+                // Replace table in content
+                var newLines = lines.slice( 0, tableStart ).concat( formattedLines ).concat( lines.slice( tableEnd + 1 ) );
+                var newText = newLines.join( '\n' );
+
+                // Calculate new cursor position (keep it roughly in same place)
+                var newCursorPos = 0;
+                for ( var i = 0; i < tableStart; i++ ) {
+                    newCursorPos += newLines[ i ].length + 1;
+                }
+                newCursorPos += formattedLines[ 0 ].length; // Put cursor at end of first table line
+
+                setAttributes( { content: newText } );
+                restoreFocus( textarea, newCursorPos );
+            }
+
+            // Convert Markdown to Djot
+            function convertMarkdownToDjot( md ) {
+                var result = md;
+
+                // Protect code blocks first (store and replace with placeholders)
+                var codeBlocks = [];
+                result = result.replace( /```[\s\S]*?```/g, function( match ) {
+                    codeBlocks.push( match );
+                    return '%%CODEBLOCK' + ( codeBlocks.length - 1 ) + '%%';
+                } );
+
+                // Protect inline code
+                var inlineCode = [];
+                result = result.replace( /`[^`]+`/g, function( match ) {
+                    inlineCode.push( match );
+                    return '%%INLINECODE' + ( inlineCode.length - 1 ) + '%%';
+                } );
+
+                // Convert indented code blocks to fenced (4 spaces or 1 tab)
+                result = result.replace( /^((?:(?:    |\t).+\n?)+)/gm, function( match ) {
+                    var code = match.replace( /^(    |\t)/gm, '' ).trimEnd();
+                    return '```\n' + code + '\n```\n';
+                } );
+
+                // Bold: **text** or __text__ → *text*
+                // Use placeholder to prevent italic conversion from affecting these
+                result = result.replace( /\*\*([^*]+)\*\*/g, '%%DJOTBOLD%%$1%%DJOTBOLDEND%%' );
+                result = result.replace( /__([^_]+)__/g, '%%DJOTBOLD%%$1%%DJOTBOLDEND%%' );
+
+                // Italic: *text* or _text_ → _text_ (but not inside words)
+                // Only convert *text* that's not already bold
+                result = result.replace( /(?<!\*)\*([^*]+)\*(?!\*)/g, '_$1_' );
+
+                // Restore bold markers
+                result = result.replace( /%%DJOTBOLD%%/g, '*' );
+                result = result.replace( /%%DJOTBOLDEND%%/g, '*' );
+
+                // Strikethrough: ~~text~~ → {~text~}
+                result = result.replace( /~~([^~]+)~~/g, '{~$1~}' );
+
+                // Highlight: ==text== → {=text=}
+                result = result.replace( /==([^=]+)==/g, '{=$1=}' );
+
+                // Headers: ensure space after # (Djot requires it)
+                result = result.replace( /^(#{1,6})([^ #\n])/gm, '$1 $2' );
+
+                // Remove trailing # from headers (Djot treats them as content)
+                result = result.replace( /^(#{1,6} .+?)\s*#+\s*$/gm, '$1' );
+
+                // Setext-style headers: convert to ATX style
+                // H1: text followed by line of ===
+                result = result.replace( /^(.+)\n=+$/gm, '# $1' );
+                // H2: text followed by line of ---
+                result = result.replace( /^(.+)\n-+$/gm, '## $1' );
+
+                // Ensure blank line after headers (Djot requires it)
+                result = result.replace( /^(#{1,6} .+)$(\n?)(?!\n)/gm, '$1\n\n' );
+
+                // Link titles: [text](url "title") → [text](url){title="title"}
+                result = result.replace( /\[([^\]]+)\]\(([^)"]+)\s+"([^"]+)"\)/g, '[$1]($2){title="$3"}' );
+                result = result.replace( /\[([^\]]+)\]\(([^)']+)\s+'([^']+)'\)/g, "[$1]($2){title='$3'}" );
+
+                // Hard line breaks: trailing two spaces → backslash
+                result = result.replace( /  $/gm, '\\' );
+
+                // Blockquotes: ensure space after > (unless followed by newline)
+                result = result.replace( /^>([^ \n>])/gm, '> $1' );
+
+                // Ensure blank line before blockquotes
+                result = result.replace( /([^\n])\n(>)/gm, '$1\n\n$2' );
+
+                // Ensure blank line before lists
+                result = result.replace( /([^\n])\n([-*+] |\d+\. )/gm, '$1\n\n$2' );
+
+                // Raw HTML: wrap in djot raw syntax
+                result = result.replace( /<([a-z][a-z0-9]*)([ >])/gi, function( match, tag, after ) {
+                    // Skip common safe tags that might be intentional
+                    var safeTags = [ 'http', 'https' ];
+                    if ( safeTags.indexOf( tag.toLowerCase() ) >= 0 ) {
+                        return match;
+                    }
+                    return '`<' + tag + after.trimEnd() + '`{=html}';
+                } );
+
+                // Restore inline code
+                inlineCode.forEach( function( code, idx ) {
+                    result = result.replace( '%%INLINECODE' + idx + '%%', code );
+                } );
+
+                // Restore code blocks
+                codeBlocks.forEach( function( block, idx ) {
+                    result = result.replace( '%%CODEBLOCK' + idx + '%%', block );
+                } );
+
+                // Clean up excessive blank lines (more than 2 consecutive)
+                result = result.replace( /\n{3,}/g, '\n\n' );
+
+                return result;
+            }
+
+            // Open import modal
+            function onImport( type ) {
+                setImportType( type );
+                setImportInput( '' );
+                setDjotPreview( '' );
+                setShowImportModal( true );
+            }
+
+            // Update preview when import input changes (using server-side converter)
+            const debouncedConvert = useCallback(
+                debounce( function( input, type ) {
+                    if ( ! input.trim() ) {
+                        setDjotPreview( '' );
+                        setIsConverting( false );
+                        return;
+                    }
+
+                    var endpoint = type === 'html' ? '/wpdjot/v1/convert-html' : '/wpdjot/v1/convert-markdown';
+
+                    apiFetch( {
+                        path: endpoint,
+                        method: 'POST',
+                        data: { content: input },
+                    } )
+                        .then( function( response ) {
+                            setDjotPreview( response.djot || '' );
+                            setIsConverting( false );
+                        } )
+                        .catch( function() {
+                            // Fall back to client-side conversion on error (markdown only)
+                            if ( type === 'markdown' ) {
+                                setDjotPreview( convertMarkdownToDjot( input ) );
+                            }
+                            setIsConverting( false );
+                        } );
+                }, 300 ),
+                []
+            );
+
+            function onImportInputChange( value ) {
+                setImportInput( value );
+                setIsConverting( true );
+                debouncedConvert( value, importType );
+            }
+
+            // Insert converted djot at cursor position
+            function onInsertImported() {
+                if ( ! djotPreview.trim() ) {
+                    setShowImportModal( false );
+                    return;
+                }
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                var text = content || '';
+                var start = textarea ? textarea.selectionStart : text.length;
+
+                // Add newlines if needed
+                var prefix = '';
+                if ( start > 0 && text[ start - 1 ] !== '\n' ) {
+                    prefix = '\n\n';
+                } else if ( start > 1 && text[ start - 2 ] !== '\n' ) {
+                    prefix = '\n';
+                }
+
+                var suffix = '\n\n';
+                if ( start < text.length - 1 && text[ start ] === '\n' && text[ start + 1 ] === '\n' ) {
+                    suffix = '';
+                } else if ( start < text.length && text[ start ] === '\n' ) {
+                    suffix = '\n';
+                }
+
+                var newText = text.substring( 0, start ) + prefix + djotPreview + suffix + text.substring( start );
+                var newCursorPos = start + prefix.length + djotPreview.length;
+
+                setAttributes( { content: newText } );
+                setShowImportModal( false );
+                setMarkdownInput( '' );
+                setDjotPreview( '' );
+
+                if ( textarea ) {
+                    restoreFocus( textarea, newCursorPos );
+                }
+            }
+
+            // Indent/outdent handlers
+            function indentLines() {
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
+                var text = content || '';
+                var start = textarea.selectionStart;
+                var end = textarea.selectionEnd;
+
+                // Find line boundaries
+                var lineStart = start;
+                while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
+                    lineStart--;
+                }
+                var lineEnd = end;
+                while ( lineEnd < text.length && text[ lineEnd ] !== '\n' ) {
+                    lineEnd++;
+                }
+
+                // Get selected lines and indent each
+                var selectedText = text.substring( lineStart, lineEnd );
+                var indentedText = selectedText.split( '\n' ).map( function( line ) {
+                    return '    ' + line;
+                } ).join( '\n' );
+
+                var newText = text.substring( 0, lineStart ) + indentedText + text.substring( lineEnd );
+                var lineCount = selectedText.split( '\n' ).length;
+                var newStart = start + 4;
+                var newEnd = end + ( lineCount * 4 );
+
+                setAttributes( { content: newText } );
+                requestAnimationFrame( function() {
+                    textarea.focus( { preventScroll: true } );
+                    textarea.setSelectionRange( newStart, newEnd );
+                } );
+            }
+
+            function outdentLines() {
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                if ( ! textarea ) return;
+
+                // Create undo boundary so this change is a separate undo step
+                if ( markUndoBoundary ) {
+                    markUndoBoundary();
+                }
+
+                var text = content || '';
+                var start = textarea.selectionStart;
+                var end = textarea.selectionEnd;
+
+                // Find line boundaries
+                var lineStart = start;
+                while ( lineStart > 0 && text[ lineStart - 1 ] !== '\n' ) {
+                    lineStart--;
+                }
+                var lineEnd = end;
+                while ( lineEnd < text.length && text[ lineEnd ] !== '\n' ) {
+                    lineEnd++;
+                }
+
+                // Get selected lines and outdent each
+                var selectedText = text.substring( lineStart, lineEnd );
+                var removedTotal = 0;
+                var removedFirst = 0;
+                var isFirst = true;
+                var outdentedText = selectedText.split( '\n' ).map( function( line ) {
+                    var removed = 0;
+                    // Remove up to 4 spaces or 1 tab
+                    if ( line.startsWith( '    ' ) ) {
+                        line = line.substring( 4 );
+                        removed = 4;
+                    } else if ( line.startsWith( '\t' ) ) {
+                        line = line.substring( 1 );
+                        removed = 1;
+                    } else if ( line.startsWith( '   ' ) ) {
+                        line = line.substring( 3 );
+                        removed = 3;
+                    } else if ( line.startsWith( '  ' ) ) {
+                        line = line.substring( 2 );
+                        removed = 2;
+                    } else if ( line.startsWith( ' ' ) ) {
+                        line = line.substring( 1 );
+                        removed = 1;
+                    }
+                    if ( isFirst ) {
+                        removedFirst = removed;
+                        isFirst = false;
+                    }
+                    removedTotal += removed;
+                    return line;
+                } ).join( '\n' );
+
+                var newText = text.substring( 0, lineStart ) + outdentedText + text.substring( lineEnd );
+                var newStart = Math.max( lineStart, start - removedFirst );
+                var newEnd = Math.max( newStart, end - removedTotal );
+
+                setAttributes( { content: newText } );
+                requestAnimationFrame( function() {
+                    textarea.focus( { preventScroll: true } );
+                    textarea.setSelectionRange( newStart, newEnd );
+                } );
+            }
+
+            // Keyboard shortcut handler for textarea
+            function handleTextareaKeyDown( e ) {
+                // Handle Tab/Shift+Tab for indent/outdent
+                if ( e.key === 'Tab' ) {
+                    e.preventDefault();
+                    if ( e.shiftKey ) {
+                        outdentLines();
+                    } else {
+                        indentLines();
+                    }
+                    return;
+                }
+
+                const isMod = e.ctrlKey || e.metaKey;
+                if ( ! isMod ) return;
+
+                var handled = false;
+
+                if ( e.shiftKey ) {
+                    switch ( e.key.toLowerCase() ) {
+                        case 'x': onStrikethrough(); handled = true; break;
+                        case 'e': onCodeBlock(); handled = true; break;
+                        case 'h': onHighlight(); handled = true; break;
+                        case 'i': onImage(); handled = true; break;
+                        case '.': onBlockquote(); handled = true; break;
+                        case '8': onListUl(); handled = true; break;
+                        case '7': onListOl(); handled = true; break;
+                    }
+                } else {
+                    switch ( e.key.toLowerCase() ) {
+                        case 'b': onBold(); handled = true; break;
+                        case 'i': onItalic(); handled = true; break;
+                        case 'e': onCode(); handled = true; break;
+                        case 'k': onLink(); handled = true; break;
+                        case '.': onSuperscript(); handled = true; break;
+                        case ',': onSubscript(); handled = true; break;
+                        case '1': onHeading( 1 ); handled = true; break;
+                        case '2': onHeading( 2 ); handled = true; break;
+                        case '3': onHeading( 3 ); handled = true; break;
+                        case '4': onHeading( 4 ); handled = true; break;
+                        case '5': onHeading( 5 ); handled = true; break;
+                        case '6': onHeading( 6 ); handled = true; break;
+                    }
+                }
+
+                if ( handled ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }
 
             // Debounced preview fetch
@@ -288,7 +1141,7 @@
 
                     setIsLoading( true );
                     apiFetch( {
-                        path: '/wp-djot/v1/render',
+                        path: '/wpdjot/v1/render',
                         method: 'POST',
                         data: { content: djotContent },
                     } )
@@ -310,18 +1163,102 @@
                 }
             }, [ content, isPreviewMode ] );
 
+            // Apply syntax highlighting after preview renders
+            useEffect( function() {
+                if ( ! isPreviewMode || ! preview || isLoading ) {
+                    return;
+                }
+
+                function applyHighlighting() {
+                    // Use querySelector as fallback since ref may not be ready
+                    var previewEl = previewRef.current || document.querySelector( '.wpdjot-preview.djot-content' );
+                    if ( previewEl && window.hljs ) {
+                        var codeBlocks = previewEl.querySelectorAll( 'pre code' );
+                        codeBlocks.forEach( function( block ) {
+                            if ( ! block.classList.contains( 'hljs' ) ) {
+                                window.hljs.highlightElement( block );
+                            }
+                        } );
+                    }
+                }
+
+                // Poll for both hljs and DOM element availability
+                var attempts = 0;
+                var maxAttempts = 50; // 5 seconds max
+                var pollInterval = setInterval( function() {
+                    attempts++;
+                    var hasHljs = typeof window.hljs !== 'undefined';
+                    var hasPreview = previewRef.current || document.querySelector( '.wpdjot-preview.djot-content' );
+
+                    if ( hasHljs && hasPreview ) {
+                        clearInterval( pollInterval );
+                        setTimeout( applyHighlighting, 10 );
+                    } else if ( attempts >= maxAttempts ) {
+                        clearInterval( pollInterval );
+                    }
+                }, 100 );
+
+                return function() { clearInterval( pollInterval ); };
+            }, [ preview, isLoading, isPreviewMode ] );
+
+            // ESC key exits preview mode
+            useEffect( function() {
+                if ( ! isPreviewMode ) return;
+
+                function handleKeyDown( e ) {
+                    if ( e.key === 'Escape' ) {
+                        e.preventDefault();
+                        setIsPreviewMode( false );
+                    }
+                }
+
+                document.addEventListener( 'keydown', handleKeyDown );
+                return function() {
+                    document.removeEventListener( 'keydown', handleKeyDown );
+                };
+            }, [ isPreviewMode ] );
+
             function onChangeContent( newContent ) {
+                isInternalChange.current = true;
                 setAttributes( { content: newContent } );
             }
 
+            // Scroll preview to match cursor position in editor
+            function syncPreviewScroll() {
+                var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
+                var previewEl = previewRef.current;
+                if ( ! textarea || ! previewEl ) return;
+
+                var text = content || '';
+                var cursorPos = textarea.selectionStart;
+
+                // Calculate percentage through the document based on cursor position
+                var percentage = text.length > 0 ? cursorPos / text.length : 0;
+
+                // Apply to preview scroll with a small delay to ensure preview is rendered
+                setTimeout( function() {
+                    var scrollHeight = previewEl.scrollHeight - previewEl.clientHeight;
+                    if ( scrollHeight > 0 ) {
+                        previewEl.scrollTop = scrollHeight * percentage;
+                    }
+                }, 100 );
+            }
+
+            // Sync scroll when entering preview mode
+            useEffect( function() {
+                if ( isPreviewMode && preview && ! isLoading ) {
+                    syncPreviewScroll();
+                }
+            }, [ isPreviewMode, preview, isLoading ] );
+
             // Heading dropdown controls
             const headingControls = [
-                { title: __( 'Heading 1', 'wp-djot' ), onClick: function() { onHeading( 1 ); } },
-                { title: __( 'Heading 2', 'wp-djot' ), onClick: function() { onHeading( 2 ); } },
-                { title: __( 'Heading 3', 'wp-djot' ), onClick: function() { onHeading( 3 ); } },
-                { title: __( 'Heading 4', 'wp-djot' ), onClick: function() { onHeading( 4 ); } },
-                { title: __( 'Heading 5', 'wp-djot' ), onClick: function() { onHeading( 5 ); } },
-                { title: __( 'Heading 6', 'wp-djot' ), onClick: function() { onHeading( 6 ); } },
+                { title: __( 'Heading 1', 'djot-markup' ), onClick: function() { onHeading( 1 ); } },
+                { title: __( 'Heading 2', 'djot-markup' ), onClick: function() { onHeading( 2 ); } },
+                { title: __( 'Heading 3', 'djot-markup' ), onClick: function() { onHeading( 3 ); } },
+                { title: __( 'Heading 4', 'djot-markup' ), onClick: function() { onHeading( 4 ); } },
+                { title: __( 'Heading 5', 'djot-markup' ), onClick: function() { onHeading( 5 ); } },
+                { title: __( 'Heading 6', 'djot-markup' ), onClick: function() { onHeading( 6 ); } },
             ];
 
             return wp.element.createElement(
@@ -337,22 +1274,22 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.bold,
-                            label: __( 'Bold (*text*)', 'wp-djot' ),
+                            label: __( 'Bold (*text*)', 'djot-markup' ),
                             onClick: onBold,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.italic,
-                            label: __( 'Italic (_text_)', 'wp-djot' ),
+                            label: __( 'Italic (_text_)', 'djot-markup' ),
                             onClick: onItalic,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.code,
-                            label: __( 'Inline Code (`code`)', 'wp-djot' ),
+                            label: __( 'Inline Code (`code`)', 'djot-markup' ),
                             onClick: onCode,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.strikethrough,
-                            label: __( 'Strikethrough ({~text~})', 'wp-djot' ),
+                            label: __( 'Strikethrough ({~text~})', 'djot-markup' ),
                             onClick: onStrikethrough,
                         } )
                     ),
@@ -362,12 +1299,12 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.link,
-                            label: __( 'Link ([text](url))', 'wp-djot' ),
+                            label: __( 'Link ([text](url))', 'djot-markup' ),
                             onClick: onLink,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.image,
-                            label: __( 'Image (![alt](url))', 'wp-djot' ),
+                            label: __( 'Image (![alt](url))', 'djot-markup' ),
                             onClick: onImage,
                         } )
                     ),
@@ -377,7 +1314,7 @@
                         null,
                         wp.element.createElement( ToolbarDropdownMenu, {
                             icon: icons.heading,
-                            label: __( 'Headings', 'wp-djot' ),
+                            label: __( 'Headings', 'djot-markup' ),
                             controls: headingControls,
                         } )
                     ),
@@ -387,22 +1324,22 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.quote,
-                            label: __( 'Blockquote (> quote)', 'wp-djot' ),
+                            label: __( 'Blockquote (> quote)', 'djot-markup' ),
                             onClick: onBlockquote,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.listUl,
-                            label: __( 'Unordered List (- item)', 'wp-djot' ),
+                            label: __( 'Unordered List (- item)', 'djot-markup' ),
                             onClick: onListUl,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.listOl,
-                            label: __( 'Ordered List (1. item)', 'wp-djot' ),
+                            label: __( 'Ordered List (1. item)', 'djot-markup' ),
                             onClick: onListOl,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.codeBlock,
-                            label: __( 'Code Block (```)', 'wp-djot' ),
+                            label: __( 'Code Block (```)', 'djot-markup' ),
                             onClick: onCodeBlock,
                         } )
                     ),
@@ -412,17 +1349,17 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.superscript,
-                            label: __( 'Superscript (^text^)', 'wp-djot' ),
+                            label: __( 'Superscript (^text^)', 'djot-markup' ),
                             onClick: onSuperscript,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.subscript,
-                            label: __( 'Subscript (~text~)', 'wp-djot' ),
+                            label: __( 'Subscript (~text~)', 'djot-markup' ),
                             onClick: onSubscript,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.highlight,
-                            label: __( 'Highlight ({=text=})', 'wp-djot' ),
+                            label: __( 'Highlight ({=text=})', 'djot-markup' ),
                             onClick: onHighlight,
                         } )
                     ),
@@ -432,17 +1369,17 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.insert,
-                            label: __( 'Insert ({+text+})', 'wp-djot' ),
+                            label: __( 'Insert ({+text+})', 'djot-markup' ),
                             onClick: onInsert,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.delete,
-                            label: __( 'Delete ({-text-})', 'wp-djot' ),
+                            label: __( 'Delete ({-text-})', 'djot-markup' ),
                             onClick: onDelete,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.horizontalRule,
-                            label: __( 'Horizontal Rule (---)', 'wp-djot' ),
+                            label: __( 'Horizontal Rule (---)', 'djot-markup' ),
                             onClick: onHorizontalRule,
                         } )
                     ),
@@ -452,22 +1389,27 @@
                         null,
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.table,
-                            label: __( 'Table', 'wp-djot' ),
+                            label: __( 'Table', 'djot-markup' ),
                             onClick: onTable,
+                        } ),
+                        cursorInTable && wp.element.createElement( ToolbarButton, {
+                            icon: icons.formatTable,
+                            label: __( 'Format Table', 'djot-markup' ),
+                            onClick: onFormatTable,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.div,
-                            label: __( 'Div Block (::: class)', 'wp-djot' ),
+                            label: __( 'Div Block (::: class)', 'djot-markup' ),
                             onClick: onDiv,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.span,
-                            label: __( 'Span with Class ([text]{.class})', 'wp-djot' ),
+                            label: __( 'Span with Class ([text]{.class})', 'djot-markup' ),
                             onClick: onSpan,
                         } ),
                         wp.element.createElement( ToolbarButton, {
                             icon: icons.footnote,
-                            label: __( 'Footnote ([^note])', 'wp-djot' ),
+                            label: __( 'Footnote ([^note])', 'djot-markup' ),
                             onClick: onFootnote,
                         } )
                     )
@@ -478,30 +1420,111 @@
                     null,
                     wp.element.createElement(
                         PanelBody,
-                        { title: __( 'Djot Settings', 'wp-djot' ) },
+                        { title: __( 'Djot Settings', 'djot-markup' ) },
                         wp.element.createElement( ToggleControl, {
-                            label: __( 'Show Preview', 'wp-djot' ),
+                            label: __( 'Show Preview', 'djot-markup' ),
                             checked: isPreviewMode,
                             onChange: setIsPreviewMode,
+                            __nextHasNoMarginBottom: true,
                         } )
                     ),
                     wp.element.createElement(
                         PanelBody,
-                        { title: __( 'Syntax Help', 'wp-djot' ), initialOpen: false },
-                        wp.element.createElement( 'div', { className: 'wp-djot-syntax-help' },
-                            wp.element.createElement( 'p', null, wp.element.createElement( 'strong', null, 'Inline:' ) ),
-                            wp.element.createElement( 'code', null, '*bold*' ), ' ',
-                            wp.element.createElement( 'code', null, '_italic_' ), ' ',
-                            wp.element.createElement( 'code', null, '`code`' ),
-                            wp.element.createElement( 'p', null, wp.element.createElement( 'strong', null, 'Links:' ) ),
-                            wp.element.createElement( 'code', null, '[text](url)' ),
-                            wp.element.createElement( 'p', null, wp.element.createElement( 'strong', null, 'Djot-specific:' ) ),
-                            wp.element.createElement( 'code', null, '^super^' ), ' ',
-                            wp.element.createElement( 'code', null, '~sub~' ), ' ',
-                            wp.element.createElement( 'code', null, '{=highlight=}' ),
-                            wp.element.createElement( 'p', null,
-                                wp.element.createElement( 'a', { href: 'https://djot.net/', target: '_blank' }, __( 'Full Djot Documentation →', 'wp-djot' ) )
+                        { title: __( 'Syntax Help', 'djot-markup' ), initialOpen: false },
+                        wp.element.createElement( 'div', { className: 'wpdjot-syntax-help' },
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Inline:' ) ),
+                            wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
+                                wp.element.createElement( 'code', null, '*bold*' ), ' ',
+                                wp.element.createElement( 'code', null, '_italic_' ), ' ',
+                                wp.element.createElement( 'code', null, '`code`' )
+                            ),
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Links/Images:' ) ),
+                            wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
+                                wp.element.createElement( 'code', null, '[text](url)' ), wp.element.createElement( 'br' ),
+                                wp.element.createElement( 'code', null, '![alt](src)' )
+                            ),
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Djot-specific:' ) ),
+                            wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
+                                wp.element.createElement( 'code', null, '^super^' ), ' ',
+                                wp.element.createElement( 'code', null, '~sub~' ), ' ',
+                                wp.element.createElement( 'code', null, '{=highlight=}' )
+                            ),
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: '2px' } }, wp.element.createElement( 'strong', null, 'Semantic:' ) ),
+                            wp.element.createElement( 'div', { style: { marginBottom: '12px' } },
+                                wp.element.createElement( 'code', null, '[CSS]{abbr="title"}' ), wp.element.createElement( 'br' ),
+                                wp.element.createElement( 'code', null, '[Ctrl+C]{kbd}' ), wp.element.createElement( 'br' ),
+                                wp.element.createElement( 'code', null, '[term]{dfn}' )
+                            ),
+                            wp.element.createElement( 'p', { style: { marginTop: 0, marginBottom: 0 } },
+                                wp.element.createElement( 'a', { href: 'https://djot.net/', target: '_blank' }, __( 'Full Djot Documentation →', 'djot-markup' ) )
                             )
+                        )
+                    ),
+                    wp.element.createElement(
+                        PanelBody,
+                        { title: __( 'Keyboard Shortcuts', 'djot-markup' ), initialOpen: false },
+                        wp.element.createElement( 'div', { className: 'wpdjot-shortcuts-help', style: { fontSize: '12px' } },
+                            wp.element.createElement( 'p', { style: { marginBottom: '8px' } },
+                                wp.element.createElement( 'strong', null, 'Formatting:' )
+                            ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+B' ), ' Bold' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+I' ), ' Italic' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+E' ), ' Inline code' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+K' ), ' Link' ),
+                            wp.element.createElement( 'p', { style: { marginTop: '12px', marginBottom: '8px' } },
+                                wp.element.createElement( 'strong', null, 'Headings:' )
+                            ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+[1-6]' ), ' H1-H6' ),
+                            wp.element.createElement( 'p', { style: { marginTop: '12px', marginBottom: '8px' } },
+                                wp.element.createElement( 'strong', null, 'Blocks (Ctrl+Shift):' )
+                            ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+E' ), ' Code block' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+.' ), ' Blockquote' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+8' ), ' Bullet list' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+7' ), ' Numbered list' ),
+                            wp.element.createElement( 'p', { style: { marginTop: '12px', marginBottom: '8px' } },
+                                wp.element.createElement( 'strong', null, 'Other:' )
+                            ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+.' ), ' Superscript' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+,' ), ' Subscript' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+H' ), ' Highlight' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Ctrl+Shift+X' ), ' Strikethrough' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Tab' ), ' Indent' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'Shift+Tab' ), ' Outdent' ),
+                            wp.element.createElement( 'div', null, wp.element.createElement( 'kbd', null, 'ESC' ), ' Exit preview' )
+                        )
+                    ),
+                    wp.element.createElement(
+                        PanelBody,
+                        { title: __( 'Tools', 'djot-markup' ), initialOpen: false },
+                        wp.element.createElement( 'div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                icon: icons.taskList,
+                                onClick: onTaskList,
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Insert Task List', 'djot-markup' ) ),
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                onClick: onDefList,
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Insert Definition List', 'djot-markup' ) ),
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                onClick: function() { onImport( 'markdown' ); },
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Import Markdown', 'djot-markup' ) ),
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                onClick: function() { onImport( 'html' ); },
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Import HTML', 'djot-markup' ) ),
+                            wp.element.createElement( Button, {
+                                variant: 'secondary',
+                                icon: icons.video,
+                                onClick: onVideo,
+                                style: { width: '100%', justifyContent: 'center' },
+                            }, __( 'Insert Video', 'djot-markup' ) )
                         )
                     )
                 ),
@@ -509,17 +1532,17 @@
                 showLinkModal && wp.element.createElement(
                     Modal,
                     {
-                        title: __( 'Insert Link', 'wp-djot' ),
+                        title: __( 'Insert Link', 'djot-markup' ),
                         onRequestClose: function() { setShowLinkModal( false ); },
                     },
                     wp.element.createElement( TextControl, {
-                        label: __( 'URL', 'wp-djot' ),
+                        label: __( 'URL', 'djot-markup' ),
                         value: linkUrl,
                         onChange: setLinkUrl,
                         type: 'url',
                     } ),
                     wp.element.createElement( TextControl, {
-                        label: __( 'Link Text (optional, leave empty for autolink)', 'wp-djot' ),
+                        label: __( 'Link Text (optional, leave empty for autolink)', 'djot-markup' ),
                         value: linkText,
                         onChange: setLinkText,
                     } ),
@@ -529,29 +1552,29 @@
                         wp.element.createElement( Button, {
                             variant: 'primary',
                             onClick: onInsertLink,
-                        }, __( 'Insert Link', 'wp-djot' ) ),
+                        }, __( 'Insert Link', 'djot-markup' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowLinkModal( false ); },
                             style: { marginLeft: '8px' },
-                        }, __( 'Cancel', 'wp-djot' ) )
+                        }, __( 'Cancel', 'djot-markup' ) )
                     )
                 ),
                 // Image Modal
                 showImageModal && wp.element.createElement(
                     Modal,
                     {
-                        title: __( 'Insert Image', 'wp-djot' ),
+                        title: __( 'Insert Image', 'djot-markup' ),
                         onRequestClose: function() { setShowImageModal( false ); },
                     },
                     wp.element.createElement( TextControl, {
-                        label: __( 'Image URL', 'wp-djot' ),
+                        label: __( 'Image URL', 'djot-markup' ),
                         value: imageUrl,
                         onChange: setImageUrl,
                         type: 'url',
                     } ),
                     wp.element.createElement( TextControl, {
-                        label: __( 'Alt Text (optional)', 'wp-djot' ),
+                        label: __( 'Alt Text (optional)', 'djot-markup' ),
                         value: imageAlt,
                         onChange: setImageAlt,
                     } ),
@@ -561,52 +1584,336 @@
                         wp.element.createElement( Button, {
                             variant: 'primary',
                             onClick: onInsertImage,
-                        }, __( 'Insert Image', 'wp-djot' ) ),
+                        }, __( 'Insert Image', 'djot-markup' ) ),
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowImageModal( false ); },
                             style: { marginLeft: '8px' },
-                        }, __( 'Cancel', 'wp-djot' ) )
+                        }, __( 'Cancel', 'djot-markup' ) )
+                    )
+                ),
+                // Table Modal
+                showTableModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Table', 'djot-markup' ),
+                        onRequestClose: function() { setShowTableModal( false ); },
+                    },
+                    wp.element.createElement( RangeControl, {
+                        label: __( 'Columns', 'djot-markup' ),
+                        value: tableCols,
+                        onChange: setTableCols,
+                        min: 1,
+                        max: 10,
+                    } ),
+                    wp.element.createElement( RangeControl, {
+                        label: __( 'Rows (excluding header)', 'djot-markup' ),
+                        value: tableRows,
+                        onChange: setTableRows,
+                        min: 1,
+                        max: 20,
+                    } ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertTable,
+                        }, __( 'Insert Table', 'djot-markup' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowTableModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup' ) )
+                    )
+                ),
+                // Import Modal (Markdown/HTML)
+                showImportModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: importType === 'html' ? __( 'Import HTML', 'djot-markup' ) : __( 'Import Markdown', 'djot-markup' ),
+                        onRequestClose: function() { setShowImportModal( false ); },
+                        style: { width: '600px', maxWidth: '90vw' },
+                    },
+                    wp.element.createElement( 'div', { style: { display: 'flex', gap: '16px' } },
+                        wp.element.createElement( 'div', { style: { flex: 1 } },
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } },
+                                importType === 'html' ? __( 'HTML Input', 'djot-markup' ) : __( 'Markdown Input', 'djot-markup' )
+                            ),
+                            wp.element.createElement( 'textarea', {
+                                value: importInput,
+                                onChange: function( e ) { onImportInputChange( e.target.value ); },
+                                style: { width: '100%', height: '200px', fontFamily: 'monospace', fontSize: '13px', padding: '8px' },
+                                placeholder: importType === 'html' ? __( 'Paste your HTML here...', 'djot-markup' ) : __( 'Paste your Markdown here...', 'djot-markup' ),
+                            } )
+                        ),
+                        wp.element.createElement( 'div', { style: { flex: 1, position: 'relative' } },
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 600 } },
+                                __( 'Djot Preview', 'djot-markup' ),
+                                isConverting && wp.element.createElement( 'span', { style: { marginLeft: '8px', fontSize: '11px', color: '#999' } }, __( 'Converting...', 'djot-markup' ) )
+                            ),
+                            wp.element.createElement( 'textarea', {
+                                value: djotPreview,
+                                readOnly: true,
+                                style: { width: '100%', height: '200px', fontFamily: 'monospace', fontSize: '13px', padding: '8px', background: '#f9f9f9' },
+                                placeholder: __( 'Converted Djot will appear here...', 'djot-markup' ),
+                            } )
+                        )
+                    ),
+                    importType === 'markdown' && wp.element.createElement( 'p', { style: { marginTop: '12px', fontSize: '12px', color: '#666' } },
+                        __( 'Converts: **bold** → *bold*, *italic* → _italic_, ~~strike~~ → {~strike~}, ==highlight== → {=highlight=}', 'djot-markup' )
+                    ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertImported,
+                            disabled: isConverting || ! djotPreview.trim(),
+                        }, __( 'Insert', 'djot-markup' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowImportModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup' ) )
+                    )
+                ),
+                // Task List Modal
+                showTaskListModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Task List', 'djot-markup' ),
+                        onRequestClose: function() { setShowTaskListModal( false ); },
+                        style: { width: '400px', maxWidth: '90vw' },
+                    },
+                    wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
+                        taskListItems.map( function( item, index ) {
+                            return wp.element.createElement( 'div', {
+                                key: index,
+                                style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' },
+                            },
+                                wp.element.createElement( 'input', {
+                                    type: 'checkbox',
+                                    checked: item.checked,
+                                    onChange: function( e ) { updateTaskItem( index, 'checked', e.target.checked ); },
+                                    style: { width: '18px', height: '18px', cursor: 'pointer' },
+                                } ),
+                                wp.element.createElement( 'input', {
+                                    type: 'text',
+                                    value: item.text,
+                                    onChange: function( e ) { updateTaskItem( index, 'text', e.target.value ); },
+                                    placeholder: __( 'Task item...', 'djot-markup' ),
+                                    style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px' },
+                                    onKeyDown: function( e ) {
+                                        if ( e.key === 'Enter' ) {
+                                            e.preventDefault();
+                                            addTaskItem();
+                                        }
+                                    },
+                                } ),
+                                taskListItems.length > 1 && wp.element.createElement( Button, {
+                                    variant: 'tertiary',
+                                    isDestructive: true,
+                                    onClick: function() { removeTaskItem( index ); },
+                                    style: { padding: '4px' },
+                                }, '✕' )
+                            );
+                        } )
+                    ),
+                    wp.element.createElement( Button, {
+                        variant: 'secondary',
+                        onClick: addTaskItem,
+                        style: { marginBottom: '16px' },
+                    }, __( '+ Add Item', 'djot-markup' ) ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px', borderTop: '1px solid #ddd', paddingTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertTaskList,
+                        }, __( 'Insert Task List', 'djot-markup' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowTaskListModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup' ) )
+                    )
+                ),
+                // Definition List Modal
+                showDefListModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Definition List', 'djot-markup' ),
+                        onRequestClose: function() { setShowDefListModal( false ); },
+                        style: { width: '500px', maxWidth: '90vw' },
+                    },
+                    // Terms section
+                    wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
+                        wp.element.createElement( 'label', { style: { display: 'block', fontWeight: 600, marginBottom: '8px' } },
+                            __( 'Terms (dt):', 'djot-markup' )
+                        ),
+                        defListTerms.map( function( term, index ) {
+                            return wp.element.createElement( 'div', {
+                                key: index,
+                                style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' },
+                            },
+                                wp.element.createElement( 'input', {
+                                    type: 'text',
+                                    value: term,
+                                    onChange: function( e ) { updateDefTerm( index, e.target.value ); },
+                                    placeholder: __( 'Term...', 'djot-markup' ),
+                                    style: { flex: 1, padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px' },
+                                    onKeyDown: function( e ) {
+                                        if ( e.key === 'Enter' ) {
+                                            e.preventDefault();
+                                            addDefTerm();
+                                        }
+                                    },
+                                } ),
+                                defListTerms.length > 1 && wp.element.createElement( Button, {
+                                    variant: 'tertiary',
+                                    isDestructive: true,
+                                    onClick: function() { removeDefTerm( index ); },
+                                    style: { padding: '4px' },
+                                }, '✕' )
+                            );
+                        } ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: addDefTerm,
+                            style: { marginTop: '4px' },
+                            isSmall: true,
+                        }, __( '+ Add Term', 'djot-markup' ) )
+                    ),
+                    // Definitions section
+                    wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
+                        wp.element.createElement( 'label', { style: { display: 'block', fontWeight: 600, marginBottom: '8px' } },
+                            __( 'Definitions (dd):', 'djot-markup' )
+                        ),
+                        defListDefinitions.map( function( definition, index ) {
+                            return wp.element.createElement( 'div', {
+                                key: index,
+                                style: { display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' },
+                            },
+                                wp.element.createElement( 'textarea', {
+                                    value: definition,
+                                    onChange: function( e ) { updateDefDefinition( index, e.target.value ); },
+                                    placeholder: __( 'Definition... (use blank lines for multiple paragraphs)', 'djot-markup' ),
+                                    style: { flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '60px', resize: 'vertical', boxSizing: 'border-box' },
+                                } ),
+                                defListDefinitions.length > 1 && wp.element.createElement( Button, {
+                                    variant: 'tertiary',
+                                    isDestructive: true,
+                                    onClick: function() { removeDefDefinition( index ); },
+                                    style: { padding: '4px', marginTop: '4px' },
+                                }, '✕' )
+                            );
+                        } ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: addDefDefinition,
+                            style: { marginTop: '4px' },
+                            isSmall: true,
+                        }, __( '+ Add Definition', 'djot-markup' ) )
+                    ),
+                    wp.element.createElement( 'p', { style: { fontSize: '12px', color: '#666', marginTop: '0' } },
+                        __( 'Tip: Press Enter in term field to add another term', 'djot-markup' )
+                    ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px', borderTop: '1px solid #ddd', paddingTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertDefList,
+                        }, __( 'Insert', 'djot-markup' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowDefListModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup' ) )
+                    )
+                ),
+                // Video Modal
+                showVideoModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Video', 'djot-markup' ),
+                        onRequestClose: function() { setShowVideoModal( false ); },
+                    },
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Video URL', 'djot-markup' ),
+                        value: videoUrl,
+                        onChange: setVideoUrl,
+                        type: 'url',
+                        placeholder: 'https://www.youtube.com/watch?v=...',
+                        help: __( 'YouTube, Vimeo, TikTok, Twitter, and other oEmbed-supported URLs', 'djot-markup' ),
+                    } ),
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Caption (optional)', 'djot-markup' ),
+                        value: videoCaption,
+                        onChange: setVideoCaption,
+                    } ),
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Width (optional)', 'djot-markup' ),
+                        value: videoWidth,
+                        onChange: setVideoWidth,
+                        type: 'number',
+                        placeholder: '650',
+                        help: __( 'Width in pixels', 'djot-markup' ),
+                    } ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertVideo,
+                        }, __( 'Insert Video', 'djot-markup' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowVideoModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup' ) )
                     )
                 ),
                 // Main content area
                 content || isPreviewMode
                     ? wp.element.createElement(
                           'div',
-                          { className: 'wp-djot-block-wrapper', ref: textareaRef },
+                          { className: 'wpdjot-block-wrapper', ref: textareaRef },
                           ! isPreviewMode &&
-                              wp.element.createElement( TextareaControl, {
-                                  label: __( 'Djot Content', 'wp-djot' ),
+                              wp.element.createElement( PlainText, {
                                   value: content,
                                   onChange: onChangeContent,
                                   onSelect: updateSelection,
                                   onClick: updateSelection,
                                   onKeyUp: updateSelection,
-                                  rows: 12,
-                                  className: 'wp-djot-editor',
-                                  placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'wp-djot' ),
+                                  onKeyDown: handleTextareaKeyDown,
+                                  className: 'wpdjot-editor',
+                                  placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'djot-markup' ),
                               } ),
                           isPreviewMode &&
                               wp.element.createElement(
                                   'div',
-                                  { className: 'wp-djot-preview-wrapper' },
+                                  { className: 'wpdjot-preview-wrapper' },
                                   wp.element.createElement(
                                       'div',
-                                      { className: 'wp-djot-preview-header' },
-                                      wp.element.createElement( 'span', null, __( 'Preview', 'wp-djot' ) ),
+                                      { className: 'wpdjot-preview-header' },
+                                      wp.element.createElement( 'span', null, __( 'Preview', 'djot-markup' ) ),
                                       wp.element.createElement(
                                           'button',
                                           {
-                                              className: 'wp-djot-edit-button',
+                                              className: 'wpdjot-edit-button',
                                               onClick: function() { setIsPreviewMode( false ); },
+                                              title: __( 'Press ESC to exit preview', 'djot-markup' ),
                                           },
-                                          __( 'Edit', 'wp-djot' )
+                                          __( 'Edit (ESC)', 'djot-markup' )
                                       )
                                   ),
                                   isLoading
                                       ? wp.element.createElement( Spinner, null )
                                       : wp.element.createElement( 'div', {
-                                            className: 'wp-djot-preview djot-content',
+                                            ref: previewRef,
+                                            className: 'wpdjot-preview djot-content',
                                             dangerouslySetInnerHTML: { __html: preview },
                                         } )
                               )
@@ -615,21 +1922,21 @@
                           Placeholder,
                           {
                               icon: 'editor-code',
-                              label: __( 'Djot', 'wp-djot' ),
-                              instructions: __( 'Write content using Djot markup language. Use the toolbar above for formatting.', 'wp-djot' ),
+                              label: __( 'Djot', 'djot-markup' ),
+                              instructions: __( 'Write content using Djot markup language. Use the toolbar above for formatting.', 'djot-markup' ),
                           },
                           wp.element.createElement(
                               'div',
                               { ref: textareaRef, style: { width: '100%' } },
-                              wp.element.createElement( TextareaControl, {
+                              wp.element.createElement( PlainText, {
                                   value: content,
                                   onChange: onChangeContent,
                                   onSelect: updateSelection,
                                   onClick: updateSelection,
                                   onKeyUp: updateSelection,
-                                  rows: 8,
-                                  className: 'wp-djot-editor',
-                                  placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'wp-djot' ),
+                                  onKeyDown: handleTextareaKeyDown,
+                                  className: 'wpdjot-editor',
+                                  placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'djot-markup' ),
                               } )
                           )
                       )

@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace WpDjot;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+use Djot\DjotConverter;
+use Djot\Event\RenderEvent;
+use Djot\Node\Inline\Text;
 use WP_CLI;
 use WpDjot\Admin\Settings;
 use WpDjot\Blocks\DjotBlock;
@@ -34,11 +42,7 @@ class Plugin
     public function init(): void
     {
         $this->options = $this->getOptions();
-        $this->converter = new Converter(
-            $this->options['safe_mode'],
-            $this->options['post_profile'],
-            $this->options['comment_profile'],
-        );
+        $this->converter = Converter::fromSettings();
         $this->shortcode = new DjotShortcode($this->converter);
 
         // Register shortcode
@@ -46,6 +50,9 @@ class Plugin
 
         // Register content filters
         $this->registerFilters();
+
+        // Register converter customizations
+        $this->registerConverterFilters();
 
         // Admin settings
         if (is_admin()) {
@@ -77,6 +84,157 @@ class Plugin
     }
 
     /**
+     * Register converter customizations via WordPress filters.
+     *
+     * Adds support for special attribute handling like abbreviations.
+     */
+    private function registerConverterFilters(): void
+    {
+        add_filter('wpdjot_converter', [$this, 'customizeConverter'], 10, 2);
+    }
+
+    /**
+     * Customize the Djot converter with additional rendering rules.
+     *
+     * @param \Djot\DjotConverter $converter
+     * @param string $context
+     */
+    public function customizeConverter(DjotConverter $converter, string $context): DjotConverter
+    {
+        // Video embed support - convert image syntax with video URLs to oEmbed
+        $converter->getRenderer()->on('render.image', function (RenderEvent $event): void {
+            $this->handleVideoEmbed($event);
+        });
+
+        $converter->getRenderer()->on('render.span', function (RenderEvent $event): void {
+            /** @var \Djot\Node\Inline\Span $node */
+            $node = $event->getNode();
+
+            // Get semantic attributes
+            $abbr = $node->getAttribute('abbr');
+            $kbd = $node->getAttribute('kbd');
+            $dfn = $node->getAttribute('dfn');
+
+            // Track which attributes to exclude from passthrough
+            $excludeAttrs = [];
+
+            // Render children first
+            $children = '';
+            foreach ($node->getChildren() as $child) {
+                if ($child instanceof Text) {
+                    $children .= htmlspecialchars($child->getContent(), ENT_NOQUOTES, 'UTF-8');
+                }
+            }
+
+            $content = $children;
+
+            // Build inner element (abbr or kbd) - these are mutually exclusive
+            if ($abbr !== null) {
+                $abbrTitle = ' title="' . htmlspecialchars((string)$abbr, ENT_QUOTES, 'UTF-8') . '"';
+                $content = '<abbr' . $abbrTitle . '>' . $children . '</abbr>';
+                $excludeAttrs[] = 'abbr';
+            } elseif ($kbd !== null) {
+                $content = '<kbd>' . $children . '</kbd>';
+                $excludeAttrs[] = 'kbd';
+            }
+
+            // Wrap in dfn if present (can combine with abbr/kbd)
+            if ($dfn !== null) {
+                $dfnAttr = '';
+                if ($dfn !== '') {
+                    $dfnAttr = ' title="' . htmlspecialchars((string)$dfn, ENT_QUOTES, 'UTF-8') . '"';
+                }
+                $content = '<dfn' . $dfnAttr . '>' . $content . '</dfn>';
+                $excludeAttrs[] = 'dfn';
+            }
+
+            // If no semantic attributes found, use default rendering
+            if (!$excludeAttrs) {
+                return;
+            }
+
+            // Add remaining attributes (class, id, etc.) to outermost element if any
+            $remainingAttrs = [];
+            foreach ($node->getAttributes() as $key => $value) {
+                if (in_array($key, $excludeAttrs, true)) {
+                    continue;
+                }
+                $remainingAttrs[$key] = $value;
+            }
+
+            // If there are extra attributes, wrap in span
+            if ($remainingAttrs) {
+                $attrStr = '';
+                foreach ($remainingAttrs as $key => $value) {
+                    $attrStr .= ' ' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8')
+                        . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
+                }
+                $content = '<span' . $attrStr . '>' . $content . '</span>';
+            }
+
+            $event->setHtml($content);
+            $event->preventDefault();
+        });
+
+        return $converter;
+    }
+
+    /**
+     * Handle video embeds using WordPress oEmbed.
+     *
+     * Converts image syntax with video attribute to embedded players:
+     * ![Optional caption](https://www.youtube.com/watch?v=VIDEO_ID){video}
+     * ![Optional caption](https://www.youtube.com/watch?v=VIDEO_ID){video width=650 height=400}
+     */
+    public function handleVideoEmbed(RenderEvent $event): void
+    {
+        /** @var \Djot\Node\Inline\Image $node */
+        $node = $event->getNode();
+
+        // Only process images with video attribute
+        if ($node->getAttribute('video') === null) {
+            return;
+        }
+
+        $url = $node->getSource();
+
+        // Get width/height from attributes
+        $width = $node->getAttribute('width');
+        $height = $node->getAttribute('height');
+
+        // Build oEmbed args
+        $args = [];
+        if ($width) {
+            $args['width'] = (int)$width;
+        }
+        if ($height) {
+            $args['height'] = (int)$height;
+        }
+
+        // Try to get oEmbed HTML from WordPress
+        $embedHtml = wp_oembed_get($url, $args);
+        if (!$embedHtml) {
+            return;
+        }
+
+        // Get alt text for optional caption
+        $alt = $node->getAlt();
+
+        // Wrap in figure if there's a caption (alt text)
+        if ($alt) {
+            $embedHtml = '<figure class="wpdjot-embed">'
+                . $embedHtml
+                . '<figcaption>' . esc_html($alt) . '</figcaption>'
+                . '</figure>';
+        } else {
+            $embedHtml = '<div class="wpdjot-embed">' . $embedHtml . '</div>';
+        }
+
+        $event->setHtml($embedHtml);
+        $event->preventDefault();
+    }
+
+    /**
      * Register content filters based on settings.
      *
      * We run at priority 5 (before wptexturize/wpautop at 10) to get clean content.
@@ -104,9 +262,14 @@ class Plugin
         }
 
         // Skip if content contains rendered Djot blocks (already processed by Gutenberg)
-        if (str_contains($content, 'wp-djot-block-rendered')) {
+        if (str_contains($content, 'wpdjot-block-rendered')) {
             // Only process {djot}...{/djot} blocks outside of rendered blocks
             return $this->processContent($content, false);
+        }
+
+        // Skip if content contains Gutenberg blocks - let do_blocks() handle them at priority 9
+        if (str_contains($content, '<!-- wp:')) {
+            return $content;
         }
 
         // Process full content as Djot using configured post profile
@@ -157,7 +320,9 @@ class Plugin
         $text = wp_strip_all_tags($html);
 
         // Trim to excerpt length (default 55 words)
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WP filter
         $excerptLength = (int)apply_filters('excerpt_length', 55);
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WP filter
         $excerptMore = apply_filters('excerpt_more', ' [&hellip;]');
 
         $words = explode(' ', $text, $excerptLength + 1);
@@ -174,8 +339,8 @@ class Plugin
      */
     private function extractDjotContent(string $content): string
     {
-        // Check for wp-djot/djot Gutenberg blocks
-        if (preg_match_all('/<!-- wp:wp-djot\/djot \{["\']content["\']:["\'](.+?)["\']\} \/-->/s', $content, $matches)) {
+        // Check for wpdjot/djot Gutenberg blocks (supports both old wp-djot/djot and new wpdjot/djot)
+        if (preg_match_all('/<!-- wp:(?:wp-djot|wpdjot)\/djot \{["\']content["\']:["\'](.+?)["\']\} \/-->/s', $content, $matches)) {
             $djotParts = [];
             foreach ($matches[1] as $match) {
                 // Decode JSON-encoded content
@@ -190,7 +355,7 @@ class Plugin
         }
 
         // Check for JSON attribute format (content may have complex escaping)
-        if (preg_match_all('/<!-- wp:wp-djot\/djot (\{.+?\}) \/-->/s', $content, $matches)) {
+        if (preg_match_all('/<!-- wp:(?:wp-djot|wpdjot)\/djot (\{.+?\}) \/-->/s', $content, $matches)) {
             $djotParts = [];
             foreach ($matches[1] as $jsonStr) {
                 $data = json_decode($jsonStr, true);
@@ -287,10 +452,10 @@ class Plugin
     {
         // Plugin CSS
         wp_enqueue_style(
-            'djot-markup-for-wp',
-            WP_DJOT_PLUGIN_URL . 'assets/css/djot.css',
+            'djot-markup',
+            WPDJOT_PLUGIN_URL . 'assets/css/djot.css',
             [],
-            WP_DJOT_VERSION,
+            WPDJOT_VERSION,
         );
 
         // Code highlighting
@@ -298,22 +463,31 @@ class Plugin
             $theme = $this->options['highlight_theme'];
 
             wp_enqueue_style(
-                'wp-djot-highlight',
-                WP_DJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
+                'wpdjot-highlight',
+                WPDJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
                 [],
-                WP_DJOT_VERSION,
+                WPDJOT_VERSION,
             );
 
             wp_enqueue_script(
-                'wp-djot-highlight',
-                WP_DJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
+                'wpdjot-highlight',
+                WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
                 [],
-                WP_DJOT_VERSION,
-                true,
+                WPDJOT_VERSION,
+                ['in_footer' => true, 'strategy' => 'defer'],
+            );
+
+            // Djot language definition for highlight.js
+            wp_enqueue_script(
+                'wpdjot-highlight-djot',
+                WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/languages/hljs-djot.js',
+                ['wpdjot-highlight'],
+                WPDJOT_VERSION,
+                ['in_footer' => true, 'strategy' => 'defer'],
             );
 
             wp_add_inline_script(
-                'wp-djot-highlight',
+                'wpdjot-highlight-djot',
                 'document.addEventListener("DOMContentLoaded", function() { hljs.highlightAll(); });',
             );
         }
@@ -321,15 +495,15 @@ class Plugin
         // Comment toolbar (when comments are enabled in settings)
         if ($this->options['enable_comments']) {
             wp_enqueue_script(
-                'wp-djot-comment-toolbar',
-                WP_DJOT_PLUGIN_URL . 'assets/js/comment-toolbar.js',
+                'wpdjot-comment-toolbar',
+                WPDJOT_PLUGIN_URL . 'assets/js/comment-toolbar.js',
                 [],
-                WP_DJOT_VERSION,
-                true,
+                WPDJOT_VERSION,
+                ['in_footer' => true, 'strategy' => 'defer'],
             );
 
             // Pass REST API settings to JavaScript for preview
-            wp_localize_script('wp-djot-comment-toolbar', 'wpDjotSettings', [
+            wp_localize_script('wpdjot-comment-toolbar', 'wpDjotSettings', [
                 'restUrl' => rest_url(),
                 'nonce' => wp_create_nonce('wp_rest'),
             ]);
@@ -346,18 +520,26 @@ class Plugin
         $defaults = [
             'enable_posts' => true,
             'enable_pages' => true,
-            'enable_comments' => false,
+            'enable_comments' => true,
             'process_full_content' => true,
             'process_full_comments' => true,
             'safe_mode' => true,
             'post_profile' => 'article',
             'comment_profile' => 'comment',
+            'markdown_mode' => false,
+            'post_soft_break' => 'newline',
+            'comment_soft_break' => 'newline',
             'highlight_code' => true,
             'highlight_theme' => 'github',
             'shortcode_tag' => 'djot',
+            'toc_enabled' => false,
+            'toc_position' => 'top',
+            'toc_min_level' => 2,
+            'toc_max_level' => 4,
+            'toc_list_type' => 'ul',
         ];
 
-        $options = get_option('wp_djot_settings', []);
+        $options = get_option('wpdjot_settings', []);
 
         return array_merge($defaults, (array)$options);
     }

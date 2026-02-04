@@ -90,6 +90,39 @@ Here is a footnote reference[^1].
 ```
 ````
 
+## Custom Attributes
+
+Djot supports adding custom attributes to spans:
+
+| Djot Syntax | HTML Output |
+|-------------|-------------|
+| `[text]{.class}` | `<span class="class">text</span>` |
+| `[text]{#id}` | `<span id="id">text</span>` |
+| `[text]{key="value"}` | `<span key="value">text</span>` |
+
+## Semantic Elements (WP Djot)
+
+WP Djot adds support for semantic HTML elements via special attributes:
+
+| Djot Syntax | HTML Output | Use Case |
+|-------------|-------------|----------|
+| `[CSS]{abbr="Cascading Style Sheets"}` | `<abbr title="...">CSS</abbr>` | Abbreviation |
+| `[Ctrl+C]{kbd}` | `<kbd>Ctrl+C</kbd>` | Keyboard input |
+| `[term]{dfn}` | `<dfn>term</dfn>` | Definition term |
+| `[term]{dfn="explanation"}` | `<dfn title="...">term</dfn>` | Definition with title |
+
+These can be combined: `[CSS]{abbr="Cascading Style Sheets" dfn}` renders as `<dfn><abbr title="...">CSS</abbr></dfn>`.
+
+## Keyboard Shortcuts (Editor)
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+B` | Bold |
+| `Ctrl+I` | Italic |
+| `Ctrl+K` | Insert link |
+| `Ctrl+Shift+C` | Inline code |
+| `Escape` | Exit preview mode |
+
 ## More Information
 
 For complete syntax documentation, visit [djot.net](https://djot.net/).

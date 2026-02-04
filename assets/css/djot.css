@@ -10,6 +10,11 @@
     color: inherit;
 }
 
+/* Sections */
+.djot-content section {
+    margin-bottom: 30px;
+}
+
 /* Headings */
 .djot-content h1,
 .djot-content h2,
@@ -109,6 +114,42 @@
     margin: 0;
 }
 
+/* Task Lists */
+.djot-content ul.task-list,
+.djot-content .task-list {
+    list-style: none !important;
+    padding-left: 0 !important;
+}
+
+.djot-content .task-list li,
+.djot-content ul.task-list li,
+article .djot-content .task-list li,
+article .entry-content .djot-content .task-list li {
+    list-style: none !important;
+    position: relative;
+    padding-left: 1.5em;
+}
+
+.djot-content .task-list li input[type="checkbox"] {
+    position: absolute;
+    left: 0;
+    top: 0.3em;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #1a7f37;
+    pointer-events: none;
+}
+
+.djot-content .task-list li input[type="checkbox"]:checked {
+    accent-color: #1a7f37;
+}
+
+.djot-content .task-list li:has(input[type="checkbox"]:checked) {
+    color: #57606a;
+    text-decoration: line-through;
+}
+
 /* Definition Lists */
 .djot-content dl {
     margin: 1em 0;
@@ -119,9 +160,21 @@
     margin-top: 1em;
 }
 
+.djot-content dt:first-child {
+    margin-top: 0;
+}
+
 .djot-content dd {
     margin-left: 2em;
     margin-bottom: 0.5em;
+}
+
+.djot-content dd p {
+    margin: 0.5em 0;
+}
+
+.djot-content dd p:first-child {
+    margin-top: 0;
 }
 
 /* Tables */
@@ -161,6 +214,130 @@
     max-width: 100%;
     height: auto;
     border-radius: 4px;
+}
+
+/* Figures and Captions */
+.djot-content figure {
+    margin: 1.5em 0;
+    padding: 0;
+}
+
+.djot-content figure img {
+    display: block;
+    margin: 0 auto;
+}
+
+.djot-content figure blockquote {
+    margin: 0;
+    border-left-width: 4px;
+}
+
+.djot-content figcaption {
+    margin-top: 0.75em;
+    padding: 0 0.5em;
+    font-size: 0.875em;
+    color: #57606a;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Blockquote with attribution (figcaption after blockquote) */
+.djot-content figure > blockquote + figcaption {
+    text-align: right;
+    font-style: normal;
+    margin-top: 0.5em;
+}
+
+.djot-content figure > blockquote + figcaption::before {
+    content: "— ";
+}
+
+/* Table captions */
+.djot-content table caption {
+    caption-side: bottom;
+    padding: 0.75em 0.5em;
+    font-size: 0.875em;
+    color: #57606a;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Video/Media Embeds */
+.wpdjot-embed {
+    margin: 1.5em 0;
+}
+
+.wpdjot-embed iframe {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+figure.wpdjot-embed figcaption {
+    margin-top: 0.75em;
+    font-size: 0.875em;
+    color: #57606a;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Table of Contents */
+.wpdjot-toc {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0;
+    margin-bottom: 1.5em;
+}
+
+.wpdjot-toc summary {
+    padding: 0.75em 1.5em;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.wpdjot-toc summary::before {
+    content: "▶";
+    font-size: 0.7em;
+    transition: transform 0.2s ease;
+}
+
+.wpdjot-toc[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.wpdjot-toc summary::-webkit-details-marker {
+    display: none;
+}
+
+.wpdjot-toc > ul,
+.wpdjot-toc > ol {
+    margin: 0;
+    padding: 0 1.5em 1em;
+}
+
+.wpdjot-toc ul,
+.wpdjot-toc ol {
+    margin: 0;
+    padding-left: 1.5em;
+}
+
+.wpdjot-toc li {
+    margin: 0.25em 0;
+    line-height: 1.4;
+}
+
+.wpdjot-toc a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.wpdjot-toc a:hover {
+    text-decoration: underline;
+    color: #0066cc;
 }
 
 /* Footnotes */
@@ -219,10 +396,25 @@
     font-weight: 600;
 }
 
-/* Strikethrough */
+/* Strikethrough / Deleted - GitHub style red */
 .djot-content del,
 .djot-content s {
     text-decoration: line-through;
+    background-color: #ffebe9;
+    color: #82071e;
+}
+
+/* Inserted - GitHub style green */
+.djot-content ins {
+    text-decoration: none;
+    background-color: #dafbe1;
+    color: #116329;
+}
+
+/* Highlighted / Mark - GitHub style yellow */
+.djot-content mark {
+    background-color: #fff8c5;
+    color: inherit;
 }
 
 /* Superscript and Subscript */
@@ -234,6 +426,36 @@
 .djot-content sub {
     font-size: 0.75em;
     vertical-align: sub;
+}
+
+/* Abbreviations */
+.djot-content abbr[title] {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+
+/* Keyboard Input */
+.djot-content kbd {
+    display: inline-block;
+    padding: 0.2em 0.4em;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.85em;
+    line-height: 1;
+    color: #24292f;
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 0 #d0d7de;
+}
+
+/* Definitions */
+.djot-content dfn {
+    font-style: italic;
+}
+
+.djot-content dfn[title] {
+    text-decoration: underline dotted;
+    cursor: help;
 }
 
 /* Comment Container */
@@ -316,7 +538,9 @@
     transition: background-color 0.15s, border-color 0.15s;
 }
 
-.djot-toolbar-btn:hover {
+.djot-toolbar-btn:hover,
+.djot-comment-toolbar .djot-toolbar-btn:hover {
+    color: #24292f;
     background: #f3f4f6;
     border-color: #1f2328;
 }
@@ -448,17 +672,19 @@
         color: #8b949e;
     }
 
+    .djot-content th,
+    .djot-content td {
+        border-color: #30363d;
+        color: #c9d1d9;
+        background-color: #0d1117;
+    }
+
     .djot-content th {
         background-color: #161b22;
     }
 
-    .djot-content tr:nth-child(even) {
+    .djot-content tr:nth-child(even) td {
         background-color: #161b22;
-    }
-
-    .djot-content th,
-    .djot-content td {
-        border-color: #30363d;
     }
 
     .djot-content hr {
@@ -475,5 +701,61 @@
 
     .djot-content .tip {
         background-color: rgba(46, 160, 67, 0.15);
+    }
+
+    .djot-content del,
+    .djot-content s {
+        background-color: rgba(248, 81, 73, 0.2);
+        color: #ff7b72;
+    }
+
+    .djot-content ins {
+        background-color: rgba(63, 185, 80, 0.2);
+        color: #7ee787;
+    }
+
+    .djot-content mark {
+        background-color: rgba(187, 128, 9, 0.3);
+        color: inherit;
+    }
+
+    .djot-content kbd {
+        color: #c9d1d9;
+        background-color: #21262d;
+        border-color: #30363d;
+        box-shadow: inset 0 -1px 0 #30363d;
+    }
+
+    .djot-content .task-list li input[type="checkbox"] {
+        accent-color: #3fb950;
+    }
+
+    .djot-content .task-list li input[type="checkbox"]:checked {
+        accent-color: #3fb950;
+    }
+
+    .djot-content .task-list li:has(input[type="checkbox"]:checked) {
+        color: #8b949e;
+    }
+
+    .djot-content figcaption {
+        color: #8b949e;
+    }
+
+    .djot-content table caption {
+        color: #8b949e;
+    }
+
+    figure.wpdjot-embed figcaption {
+        color: #8b949e;
+    }
+
+    .wpdjot-toc {
+        background: #161b22;
+        border-color: #30363d;
+    }
+
+    .wpdjot-toc a:hover {
+        color: #58a6ff;
     }
 }

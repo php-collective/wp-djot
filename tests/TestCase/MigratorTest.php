@@ -143,7 +143,7 @@ class MigratorTest extends TestCase
 
         // Verify backup was created
         global $wp_test_meta;
-        $this->assertEquals($original, $wp_test_meta[21]['_wp_djot_original_content']);
+        $this->assertEquals($original, $wp_test_meta[21]['_wpdjot_original_content']);
 
         // Verify content was changed
         global $wp_test_posts;
@@ -196,7 +196,7 @@ class MigratorTest extends TestCase
 
         // Verify backup was removed
         global $wp_test_meta;
-        $this->assertArrayNotHasKey('_wp_djot_original_content', $wp_test_meta[30] ?? []);
+        $this->assertArrayNotHasKey('_wpdjot_original_content', $wp_test_meta[30] ?? []);
     }
 
     public function testRollbackNoBackup(): void
@@ -441,7 +441,7 @@ class MigratorTest extends TestCase
 
         // Verify backup was created
         global $wp_test_comment_meta;
-        $this->assertEquals($original, $wp_test_comment_meta[11]['_wp_djot_original_comment']);
+        $this->assertEquals($original, $wp_test_comment_meta[11]['_wpdjot_original_comment']);
 
         // Verify content was changed
         global $wp_test_comments;
@@ -467,7 +467,7 @@ class MigratorTest extends TestCase
 
         // Verify backup was removed
         global $wp_test_comment_meta;
-        $this->assertArrayNotHasKey('_wp_djot_original_comment', $wp_test_comment_meta[20] ?? []);
+        $this->assertArrayNotHasKey('_wpdjot_original_comment', $wp_test_comment_meta[20] ?? []);
     }
 
     public function testRollbackCommentNoBackup(): void

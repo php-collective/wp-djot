@@ -1,10 +1,10 @@
-=== Djot Markup for WP ===
-Contributors: dereuromark
+=== Djot Markup ===
+Contributors: markmarkmark
 Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.0
+Stable tag: 1.3.1
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -12,13 +12,14 @@ Djot markup language support for WordPress. A modern, cleaner alternative to Mar
 
 == Description ==
 
-Djot Markup for WP adds support for the [Djot](https://djot.net/) markup language in WordPress. Djot is created by John MacFarlane (creator of CommonMark and Pandoc) and offers cleaner syntax with more consistent parsing rules than Markdown.
+Djot Markup adds support for the [Djot](https://djot.net/) markup language in WordPress. Djot is created by John MacFarlane (creator of CommonMark and Pandoc) and offers cleaner syntax with more consistent parsing rules than Markdown.
 
 = Features =
 
 * **Full Djot Support**: Headings, emphasis, links, images, code blocks, tables, footnotes, and more
 * **Shortcode Support**: Use `[djot]...[/djot]` in your content
 * **Content Filtering**: Automatically process `{djot}...{/djot}` blocks
+* **Table of Contents**: Automatic TOC generation from headings with configurable levels and position
 * **Safe Mode**: XSS protection for untrusted content
 * **Syntax Highlighting**: Built-in highlight.js integration with 12+ themes
 * **Admin Settings**: Easy configuration through WordPress admin
@@ -41,13 +42,13 @@ Djot Markup for WP adds support for the [Djot](https://djot.net/) markup languag
 **Template Tags:**
 
     <?php
-    $html = wp_djot_to_html('# Hello *World*!');
-    wp_djot_the('# _Hello_ *World*!');
+    $html = wpdjot_to_html('# Hello *World*!');
+    wpdjot_the('# _Hello_ *World*!');
     ?>
 
 = Links =
 
-* [WordPress.org Plugin Page](https://wordpress.org/plugins/djot-markup-for-wp/)
+* [WordPress.org Plugin Page](https://wordpress.org/plugins/djot-markup/)
 * [Djot Syntax Reference](https://djot.net/)
 * [GitHub Repository](https://github.com/php-collective/wp-djot)
 * [Report Issues](https://github.com/php-collective/wp-djot/issues)
@@ -89,6 +90,38 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 == Changelog ==
 
+= 1.4.0 =
+* Added automatic Table of Contents generation from headings
+* Configurable TOC position (top/bottom), heading levels, and list type
+* Light and dark mode styling for TOC
+
+= 1.3.1 =
+* Fixed text domain to match plugin slug (djot-markup)
+* Properly escape HTML output with wp_kses_post/wp_kses
+* Fixed block wrapper attributes escaping for Plugin Check compliance
+* Excluded non-permitted files from distribution
+* Added build script for distribution zip
+* Added markmarkmark to Contributors list
+
+= 1.2.1 =
+* Renamed plugin to "Djot Markup" for WordPress.org compliance
+* Added ABSPATH checks to all PHP files for security
+* Prefixed global variables for WordPress coding standards compliance
+
+= 1.2.0 =
+* Changed code prefix from wp_djot/wp-djot to wpdjot for WordPress.org compliance
+* Updated highlight.js from v11.9.0 to v11.11.1
+* Added backward compatibility for existing blocks and settings
+* Added settings migration from old option name
+
+= 1.1.0 =
+* Comment formatting toolbar with buttons for Bold, Italic, Code, Link, Quote, and Code Block
+* Write/Preview tabs for comment toolbar with live Djot preview
+* Syntax highlighting in comment preview
+* Excerpt filter to render Djot content on archive pages
+* Support for extracting Djot content from Gutenberg blocks for excerpts
+* Fixed archive pages to properly show excerpts with "Read more" links
+
 = 1.0.0 =
 * Initial release
 * Full Djot syntax support
@@ -99,6 +132,18 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Template tags for theme developers
 
 == Upgrade Notice ==
+
+= 1.3.1 =
+Text domain, escaping, and Plugin Check fixes for WordPress.org plugin review compliance.
+
+= 1.2.1 =
+Plugin renamed to "Djot Markup" for WordPress.org compliance.
+
+= 1.2.0 =
+Code prefix changes for WordPress.org compliance. Fully backward compatible.
+
+= 1.1.0 =
+Adds comment formatting toolbar with preview, and fixes archive page excerpts.
 
 = 1.0.0 =
 Initial release.

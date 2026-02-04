@@ -1,14 +1,15 @@
-.wp-djot-block {
+.wpdjot-block {
     border: 1px solid #ddd;
     border-radius: 4px;
     background: #fff;
 }
 
-.wp-djot-block-wrapper {
+.wpdjot-block-wrapper {
     padding: 0;
 }
 
-.wp-djot-block .wp-djot-editor textarea {
+.wpdjot-block .wpdjot-editor,
+.wpdjot-block .wpdjot-editor textarea {
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
     font-size: 13px;
     line-height: 1.6;
@@ -18,25 +19,27 @@
     border: none;
     border-radius: 4px;
     resize: none;
-    overflow: hidden;
+    overflow-y: auto;
     background: #f9f9f9;
+    field-sizing: content;
 }
 
-.wp-djot-block .wp-djot-editor textarea:focus {
+.wpdjot-block .wpdjot-editor:focus,
+.wpdjot-block .wpdjot-editor textarea:focus {
     outline: none;
     box-shadow: none;
     background: #fff;
 }
 
-.wp-djot-block .components-base-control__label {
+.wpdjot-block .components-base-control__label {
     display: none;
 }
 
-.wp-djot-preview-wrapper {
+.wpdjot-preview-wrapper {
     background: #fff;
 }
 
-.wp-djot-preview-header {
+.wpdjot-preview-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -49,7 +52,7 @@
     color: #666;
 }
 
-.wp-djot-edit-button {
+.wpdjot-edit-button {
     background: #007cba;
     color: #fff;
     border: none;
@@ -60,69 +63,313 @@
     text-transform: none;
 }
 
-.wp-djot-edit-button:hover {
+.wpdjot-edit-button:hover {
     background: #005a87;
 }
 
-.wp-djot-preview {
+.wpdjot-preview {
     padding: 16px;
     min-height: 100px;
 }
 
-.wp-djot-preview:empty::before {
+.wpdjot-preview:empty::before {
     content: "Preview will appear here...";
     color: #999;
     font-style: italic;
 }
 
 /* Djot content styles in editor */
-.wp-djot-preview.djot-content h1,
-.wp-djot-preview.djot-content h2,
-.wp-djot-preview.djot-content h3,
-.wp-djot-preview.djot-content h4,
-.wp-djot-preview.djot-content h5,
-.wp-djot-preview.djot-content h6 {
+.wpdjot-preview.djot-content h1,
+.wpdjot-preview.djot-content h2,
+.wpdjot-preview.djot-content h3,
+.wpdjot-preview.djot-content h4,
+.wpdjot-preview.djot-content h5,
+.wpdjot-preview.djot-content h6 {
     margin-top: 0;
 }
 
-.wp-djot-preview.djot-content pre {
+.wpdjot-preview.djot-content pre {
     background: #f4f4f4;
     padding: 12px;
     border-radius: 4px;
     overflow-x: auto;
 }
 
-.wp-djot-preview.djot-content code {
+.wpdjot-preview.djot-content code {
     background: #f4f4f4;
     padding: 2px 6px;
     border-radius: 3px;
     font-size: 0.9em;
 }
 
-.wp-djot-preview.djot-content pre code {
+.wpdjot-preview.djot-content pre code {
     background: none;
     padding: 0;
 }
 
-.wp-djot-preview.djot-content blockquote {
+.wpdjot-preview.djot-content blockquote {
     border-left: 4px solid #ddd;
     margin-left: 0;
     padding-left: 16px;
     color: #666;
 }
 
+/* Inserted - GitHub style green */
+.wpdjot-preview.djot-content ins {
+    text-decoration: none;
+    background-color: #dafbe1;
+    color: #116329;
+}
+
+/* Deleted - GitHub style red */
+.wpdjot-preview.djot-content del,
+.wpdjot-preview.djot-content s {
+    text-decoration: line-through;
+    background-color: #ffebe9;
+    color: #82071e;
+}
+
+/* Highlighted / Mark */
+.wpdjot-preview.djot-content mark {
+    background-color: #fff8c5;
+    color: inherit;
+}
+
+/* Tables */
+.wpdjot-preview.djot-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.wpdjot-preview.djot-content th,
+.wpdjot-preview.djot-content td {
+    border: 1px solid #d0d7de;
+    padding: 0.5em 1em;
+    text-align: left;
+}
+
+.wpdjot-preview.djot-content th {
+    background-color: #f6f8fa;
+    font-weight: 600;
+}
+
+.wpdjot-preview.djot-content tr:nth-child(even) {
+    background-color: #f6f8fa;
+}
+
+/* Horizontal Rules */
+.wpdjot-preview.djot-content hr {
+    height: 0.25em;
+    padding: 0;
+    margin: 1.5em 0;
+    background-color: #d0d7de;
+    border: 0;
+}
+
+/* Images */
+.wpdjot-preview.djot-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* Figures and Captions */
+.wpdjot-preview.djot-content figure {
+    margin: 1.5em 0;
+    padding: 0;
+}
+
+.wpdjot-preview.djot-content figure img {
+    display: block;
+    margin: 0 auto;
+}
+
+.wpdjot-preview.djot-content figure blockquote {
+    margin: 0;
+    border-left-width: 4px;
+}
+
+.wpdjot-preview.djot-content figcaption {
+    margin-top: 0.75em;
+    padding: 0 0.5em;
+    font-size: 0.875em;
+    color: #57606a;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Blockquote with attribution (figcaption after blockquote) */
+.wpdjot-preview.djot-content figure > blockquote + figcaption {
+    text-align: right;
+    font-style: normal;
+    margin-top: 0.5em;
+}
+
+.wpdjot-preview.djot-content figure > blockquote + figcaption::before {
+    content: "— ";
+}
+
+/* Table captions */
+.wpdjot-preview.djot-content table caption {
+    caption-side: bottom;
+    padding: 0.75em 0.5em;
+    font-size: 0.875em;
+    color: #57606a;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Footnotes */
+.wpdjot-preview.djot-content .footnote-ref {
+    font-size: 0.75em;
+    vertical-align: super;
+    text-decoration: none;
+}
+
+.wpdjot-preview.djot-content .footnotes {
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid #d0d7de;
+    font-size: 0.875em;
+}
+
+/* Div containers */
+.wpdjot-preview.djot-content .note,
+.wpdjot-preview.djot-content .warning,
+.wpdjot-preview.djot-content .tip {
+    padding: 1em;
+    border-radius: 6px;
+    margin: 1em 0;
+}
+
+.wpdjot-preview.djot-content .note {
+    background-color: #ddf4ff;
+    border-left: 4px solid #0969da;
+}
+
+.wpdjot-preview.djot-content .warning {
+    background-color: #fff8c5;
+    border-left: 4px solid #bf8700;
+}
+
+.wpdjot-preview.djot-content .tip {
+    background-color: #dafbe1;
+    border-left: 4px solid #1a7f37;
+}
+
+/* Superscript and Subscript */
+.wpdjot-preview.djot-content sup {
+    font-size: 0.75em;
+    vertical-align: super;
+}
+
+.wpdjot-preview.djot-content sub {
+    font-size: 0.75em;
+    vertical-align: sub;
+}
+
+/* Task Lists */
+.wpdjot-preview.djot-content ul.task-list,
+.wpdjot-preview.djot-content .task-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.wpdjot-preview.djot-content .task-list li {
+    position: relative;
+    padding-left: 1.5em;
+}
+
+.wpdjot-preview.djot-content .task-list li input[type="checkbox"] {
+    position: absolute;
+    left: 0;
+    top: 0.3em;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #1a7f37;
+    pointer-events: none;
+}
+
+.wpdjot-preview.djot-content .task-list li input[type="checkbox"]:checked {
+    accent-color: #1a7f37;
+}
+
+.wpdjot-preview.djot-content .task-list li:has(input[type="checkbox"]:checked) {
+    color: #57606a;
+    text-decoration: line-through;
+}
+
+/* Abbreviations */
+.wpdjot-preview.djot-content abbr[title] {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+
+/* Keyboard Input */
+.wpdjot-preview.djot-content kbd {
+    display: inline-block;
+    padding: 0.2em 0.4em;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.85em;
+    line-height: 1;
+    color: #24292f;
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 0 #d0d7de;
+}
+
+/* Definition Lists */
+.wpdjot-preview.djot-content dl {
+    margin: 1em 0;
+}
+
+.wpdjot-preview.djot-content dt {
+    font-weight: 600;
+    margin-top: 1em;
+}
+
+.wpdjot-preview.djot-content dt:first-child {
+    margin-top: 0;
+}
+
+.wpdjot-preview.djot-content dd {
+    margin-left: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.wpdjot-preview.djot-content dd p {
+    margin: 0.5em 0;
+}
+
+.wpdjot-preview.djot-content dd p:first-child {
+    margin-top: 0;
+}
+
+/* Definitions (dfn element) */
+.wpdjot-preview.djot-content dfn {
+    font-style: italic;
+}
+
+.wpdjot-preview.djot-content dfn[title] {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+
 /* Placeholder styles */
-.wp-djot-block .components-placeholder {
+.wpdjot-block .components-placeholder {
     min-height: auto;
     padding: 24px;
 }
 
-.wp-djot-block .components-placeholder .wp-djot-editor textarea {
+.wpdjot-block .components-placeholder .wpdjot-editor textarea {
     margin-top: 16px;
 }
 
 /* Loading spinner */
-.wp-djot-preview-wrapper .components-spinner {
+.wpdjot-preview-wrapper .components-spinner {
     margin: 40px auto;
     display: block;
 }

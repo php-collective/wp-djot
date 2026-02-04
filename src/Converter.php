@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace WpDjot;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 use Djot\DjotConverter;
+use Djot\Extension\TableOfContentsExtension;
 use Djot\Profile;
+use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
 use HTMLPurifier_Config;
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- wp_djot_ is our plugin prefix
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- wpdjot_ is our plugin prefix
 
 /**
  * Wrapper around the Djot converter with WordPress-specific features.
@@ -26,18 +33,79 @@ class Converter
 
     private string $commentProfile;
 
+    private string $postSoftBreak;
+
+    private string $commentSoftBreak;
+
+    private bool $markdownMode;
+
+    private bool $tocEnabled;
+
+    private string $tocPosition;
+
+    private int $tocMinLevel;
+
+    private int $tocMaxLevel;
+
+    private string $tocListType;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
     private array $profileConverters = [];
 
-    public function __construct(bool $safeMode = true, string $postProfile = 'article', string $commentProfile = 'comment')
-    {
+    public function __construct(
+        bool $safeMode = true,
+        string $postProfile = 'article',
+        string $commentProfile = 'comment',
+        string $postSoftBreak = 'newline',
+        string $commentSoftBreak = 'newline',
+        bool $markdownMode = false,
+        bool $tocEnabled = false,
+        string $tocPosition = 'top',
+        int $tocMinLevel = 2,
+        int $tocMaxLevel = 4,
+        string $tocListType = 'ul',
+    ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
         $this->commentProfile = $commentProfile;
+        $this->postSoftBreak = $postSoftBreak;
+        $this->commentSoftBreak = $commentSoftBreak;
+        $this->markdownMode = $markdownMode;
+        $this->tocEnabled = $tocEnabled;
+        $this->tocPosition = $tocPosition;
+        $this->tocMinLevel = $tocMinLevel;
+        $this->tocMaxLevel = $tocMaxLevel;
+        $this->tocListType = $tocListType;
         $this->converter = new DjotConverter(safeMode: false);
+        $this->converter->getRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
+        $this->safeConverter->getRenderer()->setCodeBlockTabWidth(4);
+    }
+
+    /**
+     * Create a Converter instance from WordPress settings.
+     *
+     * This is the preferred way to create a Converter to ensure all settings are applied.
+     */
+    public static function fromSettings(): self
+    {
+        $options = get_option('wpdjot_settings', []);
+
+        return new self(
+            safeMode: !empty($options['safe_mode']),
+            postProfile: $options['post_profile'] ?? 'article',
+            commentProfile: $options['comment_profile'] ?? 'comment',
+            postSoftBreak: $options['post_soft_break'] ?? 'newline',
+            commentSoftBreak: $options['comment_soft_break'] ?? 'newline',
+            markdownMode: !empty($options['markdown_mode']),
+            tocEnabled: !empty($options['toc_enabled']),
+            tocPosition: $options['toc_position'] ?? 'top',
+            tocMinLevel: (int)($options['toc_min_level'] ?? 2),
+            tocMaxLevel: (int)($options['toc_max_level'] ?? 4),
+            tocListType: $options['toc_list_type'] ?? 'ul',
+        );
     }
 
     /**
@@ -49,10 +117,16 @@ class Converter
      */
     private function getProfileConverter(string $profileName, bool $safeMode, string $context = 'article'): DjotConverter
     {
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe');
+        $softBreakSetting = $context === 'comment' ? $this->commentSoftBreak : $this->postSoftBreak;
+        $tocKey = ($this->tocEnabled && $context === 'article')
+            ? '_toc_' . $this->tocPosition . '_' . $this->tocMinLevel . '_' . $this->tocMaxLevel . '_' . $this->tocListType
+            : '';
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey;
 
         if (!isset($this->profileConverters[$key])) {
+            // 'none' means no profile restrictions at all
             $profile = match ($profileName) {
+                'none' => null,
                 'full' => Profile::full(),
                 'article' => Profile::article(),
                 'comment' => Profile::comment(),
@@ -60,18 +134,59 @@ class Converter
                 default => Profile::article(),
             };
 
-            $converter = new DjotConverter(safeMode: $safeMode, profile: $profile);
+            // Use significantNewlines mode for markdown compatibility
+            if ($this->markdownMode) {
+                $converter = DjotConverter::withSignificantNewlines(safeMode: $safeMode, profile: $profile);
+            } else {
+                $converter = new DjotConverter(safeMode: $safeMode, profile: $profile);
+
+                // Apply soft break mode (only when not in markdown mode, which handles it automatically)
+                $softBreakMode = match ($softBreakSetting) {
+                    'space' => SoftBreakMode::Space,
+                    'br' => SoftBreakMode::Break,
+                    default => SoftBreakMode::Newline,
+                };
+                $converter->getRenderer()->setSoftBreakMode($softBreakMode);
+            }
+
+            // Convert tabs to 4 spaces in code blocks for consistent display
+            $converter->getRenderer()->setCodeBlockTabWidth(4);
+
+            // Add Table of Contents extension for articles when enabled
+            if ($this->tocEnabled && $context === 'article') {
+                $tocExtension = new TableOfContentsExtension(
+                    minLevel: $this->tocMinLevel,
+                    maxLevel: $this->tocMaxLevel,
+                    listType: $this->tocListType,
+                    cssClass: 'wpdjot-toc',
+                    position: $this->tocPosition,
+                );
+                $converter->addExtension($tocExtension);
+
+                // Wrap TOC in collapsible <details>/<summary>
+                $converter->addOutputTransformer(function (string $html): string {
+                    $label = __('Table of Contents', 'djot-markup');
+
+                    return (string)preg_replace(
+                        '#<nav class="wpdjot-toc">\n(.*?)</nav>\n#s',
+                        '<details class="wpdjot-toc">' . "\n"
+                            . '<summary>' . esc_html($label) . '</summary>' . "\n"
+                            . '$1</details>' . "\n",
+                        $html,
+                    );
+                });
+            }
 
             // Allow customization via WordPress filters
             if (function_exists('apply_filters')) {
                 /** @var \Djot\DjotConverter $converter */
-                $converter = apply_filters('wp_djot_converter', $converter, $context);
+                $converter = apply_filters('wpdjot_converter', $converter, $context);
 
                 // Post-type specific filter
                 $postType = function_exists('get_post_type') ? get_post_type() : null;
                 if ($postType) {
                     /** @var \Djot\DjotConverter $converter */
-                    $converter = apply_filters("wp_djot_converter_{$postType}", $converter, $context);
+                    $converter = apply_filters("wpdjot_converter_{$postType}", $converter, $context);
                 }
             }
 
@@ -185,7 +300,7 @@ class Converter
          * @param string $djot The Djot markup.
          */
         if (function_exists('apply_filters')) {
-            $djot = (string)apply_filters('wp_djot_pre_convert', $djot);
+            $djot = (string)apply_filters('wpdjot_pre_convert', $djot);
         }
 
         return $djot;
@@ -212,7 +327,7 @@ class Converter
          * @param string $html The converted HTML.
          */
         if (function_exists('apply_filters')) {
-            $html = (string)apply_filters('wp_djot_post_convert', $html);
+            $html = (string)apply_filters('wpdjot_post_convert', $html);
         }
 
         return $html;
@@ -222,6 +337,12 @@ class Converter
      * Purify HTML using HTMLPurifier if available.
      *
      * Falls back to WordPress wp_kses_post() if HTMLPurifier is not installed.
+     *
+     * Customization via filter:
+     * add_filter('wpdjot_htmlpurifier_config', function($config) {
+     *     $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title|rel],...');
+     *     return $config;
+     * });
      */
     private function purifyHtml(string $html): string
     {
@@ -231,7 +352,17 @@ class Converter
             if ($purifier === null) {
                 $config = HTMLPurifier_Config::createDefault();
                 $config->set('Cache.DefinitionImpl', null);
-                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title],ul,ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr');
+                $config->set('HTML.Allowed', 'p,br,strong,em,a[href|title|rel],ul[class],ol,li,code,pre,blockquote,h1,h2,h3,h4,h5,h6,table,caption,thead,tbody,tr,th,td,img[src|alt|title],span[class],div[class],sup,sub,mark,ins,del,hr,input[type|checked|disabled],figure,figcaption');
+
+                /**
+                 * Filter HTMLPurifier configuration.
+                 *
+                 * @param \HTMLPurifier_Config $config The HTMLPurifier configuration object.
+                 */
+                if (function_exists('apply_filters')) {
+                    $config = apply_filters('wpdjot_htmlpurifier_config', $config);
+                }
+
                 $purifier = new HTMLPurifier($config);
             }
 
@@ -239,33 +370,54 @@ class Converter
         }
 
         // Fallback to WordPress sanitization
-        if (function_exists('wp_kses_post')) {
-            return wp_kses_post($html);
+        if (function_exists('wp_kses')) {
+            return wp_kses($html, self::getAllowedHtml());
         }
 
         return $html;
     }
 
     /**
-     * Check if a string contains Djot-specific syntax.
+     * Get the allowed HTML tags and attributes for wp_kses sanitization.
+     *
+     * This is used by both the Converter and block rendering to ensure consistency.
+     *
+     * @return array<string, array<string, bool>>
      */
-    public function containsDjot(string $content): bool
+    public static function getAllowedHtml(): array
     {
-        // Check for Djot-specific patterns
-        $patterns = [
-            '/\{[a-z]+\}/', // Attributes like {.class}
-            '/\^\[/', // Footnotes
-            '/\$.*\$/', // Math
-            '/:.*:/', // Symbols
-            '/\{djot\}/', // Our shortcode
-        ];
+        $allowedHtml = function_exists('wp_kses_allowed_html')
+            ? wp_kses_allowed_html('post')
+            : [];
 
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $content)) {
-                return true;
-            }
+        // Djot-specific elements not in WordPress default allowlist
+        $allowedHtml = array_merge($allowedHtml, [
+            'input' => [
+                'type' => true,
+                'checked' => true,
+                'disabled' => true,
+                'class' => true,
+            ],
+            'ul' => [
+                'class' => true,
+            ],
+            'figure' => [
+                'class' => true,
+            ],
+            'figcaption' => [
+                'class' => true,
+            ],
+        ]);
+
+        /**
+         * Filter allowed HTML tags for wp_kses sanitization.
+         *
+         * @param array<string, array<string, bool>> $allowedHtml Allowed HTML tags and attributes.
+         */
+        if (function_exists('apply_filters')) {
+            $allowedHtml = apply_filters('wpdjot_allowed_html', $allowedHtml);
         }
 
-        return false;
+        return $allowedHtml;
     }
 }

@@ -9,20 +9,24 @@
 
 declare(strict_types=1);
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Variables are local to block render context
-// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped by get_block_wrapper_attributes()
 
 $content = $attributes['content'] ?? '';
 
-if (empty($content)) {
+if (!$content) {
     return;
 }
 
-// Get settings to use configured post profile
-$options = get_option('wp_djot_settings', []);
+// Get settings
+$options = get_option('wpdjot_settings', []);
 $postProfile = $options['post_profile'] ?? 'article';
 
-$converter = new WpDjot\Converter(false, $postProfile, 'comment');
+// Use factory method to ensure all settings are applied
+$converter = WpDjot\Converter::fromSettings();
 $html = $converter->convertArticle($content);
 
 // Escape shortcode brackets inside <code> and <pre> tags to prevent WordPress processing
@@ -35,11 +39,11 @@ $html = preg_replace_callback(
     $html
 ) ?? $html;
 
-$wrapper_attributes = get_block_wrapper_attributes(['class' => 'wp-djot-block-rendered']);
+$wrapper_attributes = get_block_wrapper_attributes(['class' => 'wpdjot-block-rendered djot-content']);
 
-// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_attributes is pre-escaped by get_block_wrapper_attributes()
-printf(
-    '<div %s>%s</div>',
-    $wrapper_attributes,
-    wp_kses_post($html)
-);
+// Build output: wp_kses_post covers both $wrapper_attributes (pre-escaped by get_block_wrapper_attributes) and $html
+if ($postProfile !== 'none' && $postProfile !== 'full') {
+    $html = wp_kses($html, WpDjot\Converter::getAllowedHtml());
+}
+
+echo wp_kses_post(sprintf('<div %s>%s</div>', $wrapper_attributes, $html));

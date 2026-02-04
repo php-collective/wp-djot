@@ -1,24 +1,28 @@
-# Djot Markup for WP
+# Djot Markup for WordPress
 
 [![CI](https://github.com/php-collective/wp-djot/actions/workflows/ci.yml/badge.svg)](https://github.com/php-collective/wp-djot/actions/workflows/ci.yml)
-[![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
-[![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dt/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
-[![WordPress Plugin Rating](https://img.shields.io/wordpress/plugin/stars/djot-markup-for-wp)](https://wordpress.org/plugins/djot-markup-for-wp/)
+[![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/djot-markup)](https://wordpress.org/plugins/djot-markup/)
+[![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dt/djot-markup)](https://wordpress.org/plugins/djot-markup/)
+[![WordPress Plugin Rating](https://img.shields.io/wordpress/plugin/stars/djot-markup)](https://wordpress.org/plugins/djot-markup/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://php.net)
 [![WordPress 6.0+](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org)
 
-A WordPress plugin for [Djot](https://djot.net/) markup language support. Convert Djot syntax to HTML in posts, pages, and comments.
+A WordPress plugin for [Djot](https://djot.net/) markup language support. 
+Convert Djot syntax to HTML in posts, pages, and comments.
 
 ## What is Djot?
 
 Djot is a light markup syntax created by John MacFarlane (creator of CommonMark and Pandoc). It aims to be a successor to Markdown with cleaner syntax and more consistent parsing rules.
+
+[![Watch the demo video](https://img.youtube.com/vi/z0Nsjzp0gnw/mqdefault.jpg)](https://www.youtube.com/watch?v=z0Nsjzp0gnw)
 
 ## Features
 
 - **Full Djot Support**: Headings, emphasis, links, images, code blocks, tables, footnotes, and more
 - **Block Editor Support**: Native Gutenberg block for writing Djot with live preview
 - **Shortcode Support**: Use `[djot]...[/djot]` in your content
+- **Table of Contents**: Automatic TOC generation from headings with configurable levels and position
 - **Content Profiles**: Configurable feature restrictions (full, article, comment, minimal)
 - **Safe Mode**: XSS protection for untrusted content
 - **Syntax Highlighting**: Built-in highlight.js integration with multiple themes
@@ -76,7 +80,7 @@ echo "Hello, World!";
 ### From WordPress.org
 
 Search for "Djot Markup" in the WordPress plugin directory, or visit:
-[wordpress.org/plugins/djot-markup-for-wp](https://wordpress.org/plugins/djot-markup-for-wp/)
+[wordpress.org/plugins/djot-markup](https://wordpress.org/plugins/djot-markup/)
 
 ### From GitHub
 
@@ -103,6 +107,7 @@ For complete Djot syntax documentation, visit [djot.net](https://djot.net/).
 - [Djot](https://djot.net/) - Official Djot website with syntax reference and playground
 - [jgm/djot](https://github.com/jgm/djot) - Reference implementation in JavaScript by John MacFarlane
 - [JetBrains IDE support](https://github.com/php-collective/djot-intellij) - Plugin for PhpStorm, IntelliJ IDEA, WebStorm, etc.
+- [Djot playground](https://sandbox.dereuromark.de/sandbox/djot) - Live demo to check out how this markup language works.
  
 ## Credits
 

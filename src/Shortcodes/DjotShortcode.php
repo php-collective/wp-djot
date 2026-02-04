@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace WpDjot\Shortcodes;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 use WpDjot\Converter;
 
 /**

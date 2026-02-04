@@ -18,14 +18,14 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 }
 
 // Delete plugin options
-delete_option('wp_djot_settings');
+delete_option('wpdjot_settings');
 
 // For multisite, delete options from all sites
 if (is_multisite()) {
     $sites = get_sites(['fields' => 'ids']);
     foreach ($sites as $siteId) {
         switch_to_blog($siteId);
-        delete_option('wp_djot_settings');
+        delete_option('wpdjot_settings');
         restore_current_blog();
     }
 }

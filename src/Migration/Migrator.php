@@ -4,27 +4,39 @@ declare(strict_types=1);
 
 namespace WpDjot\Migration;
 
-use Djot\Converter\HtmlToDjot;
-use Djot\Converter\MarkdownToDjot;
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 use WP_Query;
+use WpDjot\Converter\WpHtmlToDjot;
+use WpDjot\Converter\WpMarkdownToDjot;
 
 /**
  * Handles migration of WordPress content to Djot format.
  */
 class Migrator
 {
-    private HtmlToDjot $htmlConverter;
+    private WpHtmlToDjot $htmlConverter;
 
-    private MarkdownToDjot $markdownConverter;
+    private WpMarkdownToDjot $markdownConverter;
 
-    private string $backupMetaKey = '_wp_djot_original_content';
+    private string $backupMetaKey = '_wpdjot_original_content';
 
-    private string $commentBackupMetaKey = '_wp_djot_original_comment';
+    private string $commentBackupMetaKey = '_wpdjot_original_comment';
+
+    /**
+     * Legacy meta keys for backward compatibility.
+     */
+    private string $legacyBackupMetaKey = '_wp_djot_original_content';
+
+    private string $legacyCommentBackupMetaKey = '_wp_djot_original_comment';
 
     public function __construct()
     {
-        $this->htmlConverter = new HtmlToDjot();
-        $this->markdownConverter = new MarkdownToDjot();
+        $this->htmlConverter = new WpHtmlToDjot();
+        $this->markdownConverter = new WpMarkdownToDjot();
     }
 
     /**
@@ -167,7 +179,14 @@ class Migrator
      */
     public function rollback(int $postId): array
     {
+        // Check new meta key first, then fall back to legacy key
         $original = get_post_meta($postId, $this->backupMetaKey, true);
+        $metaKeyUsed = $this->backupMetaKey;
+
+        if (!$original) {
+            $original = get_post_meta($postId, $this->legacyBackupMetaKey, true);
+            $metaKeyUsed = $this->legacyBackupMetaKey;
+        }
 
         if (!$original) {
             return [
@@ -189,7 +208,7 @@ class Migrator
         }
 
         // Remove backup after successful rollback
-        delete_post_meta($postId, $this->backupMetaKey);
+        delete_post_meta($postId, $metaKeyUsed);
 
         return [
             'success' => true,
@@ -486,7 +505,14 @@ class Migrator
      */
     public function rollbackComment(int $commentId): array
     {
+        // Check new meta key first, then fall back to legacy key
         $original = get_comment_meta($commentId, $this->commentBackupMetaKey, true);
+        $metaKeyUsed = $this->commentBackupMetaKey;
+
+        if (!$original) {
+            $original = get_comment_meta($commentId, $this->legacyCommentBackupMetaKey, true);
+            $metaKeyUsed = $this->legacyCommentBackupMetaKey;
+        }
 
         if (!$original) {
             return [
@@ -508,7 +534,7 @@ class Migrator
         }
 
         // Remove backup after successful rollback
-        delete_comment_meta($commentId, $this->commentBackupMetaKey);
+        delete_comment_meta($commentId, $metaKeyUsed);
 
         return [
             'success' => true,

@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.3.1
+Stable tag: 1.4.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -95,6 +95,8 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Configurable TOC position (top/bottom), heading levels, and list type
 * Light and dark mode styling for TOC
 * Added heading permalinks with show-on-hover and copy-to-clipboard
+* Added locale-aware smart quotes (20 locales + Auto from site language)
+* Bumped php-collective/djot to ^0.1.13
 
 = 1.3.1 =
 * Fixed text domain to match plugin slug (djot-markup)
@@ -133,6 +135,9 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Template tags for theme developers
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Adds Table of Contents, heading permalinks, and locale-aware smart quotes.
 
 = 1.3.1 =
 Text domain, escaping, and Plugin Check fixes for WordPress.org plugin review compliance.

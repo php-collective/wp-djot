@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-02-05
+
 ### Added
 
 - Automatic Table of Contents generation from headings using djot-php's `TableOfContentsExtension`
@@ -14,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TOC styling with light and dark mode support
 - Heading permalinks: clickable `#` symbols on headings, shown on hover, click copies URL to clipboard
 - Permalink setting in the Table of Contents section of admin settings
+- Locale-aware smart quotes via `SmartQuotesExtension` (20 locales + Auto from site language)
+- Smart Quotes setting in Rendering section of admin settings
+
+### Changed
+
+- Bumped `php-collective/djot` dependency to `^0.1.13`
 
 ## [1.3.1] - 2026-02-01
 
@@ -171,7 +179,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.1.5...HEAD
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.4.0...HEAD
+[1.4.0]: https://github.com/php-collective/wp-djot/compare/1.3.1...1.4.0
+[1.3.1]: https://github.com/php-collective/wp-djot/compare/1.1.5...1.3.1
 [1.1.5]: https://github.com/php-collective/wp-djot/compare/1.1.4...1.1.5
 [1.1.4]: https://github.com/php-collective/wp-djot/compare/1.1.3...1.1.4
 [1.1.3]: https://github.com/php-collective/wp-djot/compare/1.1.2...1.1.3

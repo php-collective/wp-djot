@@ -15,7 +15,7 @@ jobs:
 
       - name: Validate version consistency
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
+          TAG="${{ github.event.release.tag_name }}"
           HEADER_VERSION=$(grep -oP '^\s*\*\s*Version:\s*\K[0-9]+\.[0-9]+\.[0-9]+' wp-djot.php)
           CONSTANT_VERSION=$(grep -oP "define\('WPDJOT_VERSION',\s*'\K[0-9]+\.[0-9]+\.[0-9]+" wp-djot.php)
           STABLE_TAG=$(grep -oP '^Stable tag:\s*\K[0-9]+\.[0-9]+\.[0-9]+' readme.txt)

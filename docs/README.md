@@ -94,6 +94,16 @@ The TOC is rendered as a collapsible `<details class="wpdjot-toc">` element (col
 
 The TOC is only generated for posts and pages (article context), not for comments.
 
+### Heading Permalinks
+
+Enable heading permalinks to add clickable `#` symbols to headings. The symbols appear on hover and clicking copies the heading's URL to the clipboard, making it easy to share links to specific sections.
+
+| Setting | Options | Default | Description |
+|---------|---------|---------|-------------|
+| Heading Permalinks | on/off | off | Add `#` permalink symbols to headings |
+
+Permalinks are only added to posts and pages (article context), not comments. The setting is located in the Table of Contents section of the admin settings.
+
 ### Rendering Settings
 
 #### Markdown Compatibility Mode

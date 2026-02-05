@@ -10,6 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 use Djot\DjotConverter;
+use Djot\Extension\HeadingPermalinksExtension;
 use Djot\Extension\TableOfContentsExtension;
 use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
@@ -49,6 +50,8 @@ class Converter
 
     private string $tocListType;
 
+    private bool $permalinksEnabled;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
@@ -66,6 +69,7 @@ class Converter
         int $tocMinLevel = 2,
         int $tocMaxLevel = 4,
         string $tocListType = 'ul',
+        bool $permalinksEnabled = false,
     ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
@@ -78,6 +82,7 @@ class Converter
         $this->tocMinLevel = $tocMinLevel;
         $this->tocMaxLevel = $tocMaxLevel;
         $this->tocListType = $tocListType;
+        $this->permalinksEnabled = $permalinksEnabled;
         $this->converter = new DjotConverter(safeMode: false);
         $this->converter->getRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
@@ -105,6 +110,7 @@ class Converter
             tocMinLevel: (int)($options['toc_min_level'] ?? 2),
             tocMaxLevel: (int)($options['toc_max_level'] ?? 4),
             tocListType: $options['toc_list_type'] ?? 'ul',
+            permalinksEnabled: !empty($options['permalinks_enabled']),
         );
     }
 
@@ -121,7 +127,8 @@ class Converter
         $tocKey = ($this->tocEnabled && $context === 'article')
             ? '_toc_' . $this->tocPosition . '_' . $this->tocMinLevel . '_' . $this->tocMaxLevel . '_' . $this->tocListType
             : '';
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey;
+        $permalinksKey = ($this->permalinksEnabled && $context === 'article') ? '_permalinks' : '';
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey;
 
         if (!isset($this->profileConverters[$key])) {
             // 'none' means no profile restrictions at all
@@ -175,6 +182,14 @@ class Converter
                         $html,
                     );
                 });
+            }
+
+            // Add heading permalinks for articles when enabled
+            if ($this->permalinksEnabled && $context === 'article') {
+                $converter->addExtension(new HeadingPermalinksExtension(
+                    symbol: '#',
+                    cssClass: 'wpdjot-permalink',
+                ));
             }
 
             // Allow customization via WordPress filters

@@ -340,6 +340,34 @@ figure.wpdjot-embed figcaption {
     color: #0066cc;
 }
 
+/* Heading Permalinks */
+.djot-content .permalink-wrapper {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    margin-left: 0.3em;
+}
+
+.djot-content section:hover > h1 .permalink-wrapper,
+.djot-content section:hover > h2 .permalink-wrapper,
+.djot-content section:hover > h3 .permalink-wrapper,
+.djot-content section:hover > h4 .permalink-wrapper,
+.djot-content section:hover > h5 .permalink-wrapper,
+.djot-content section:hover > h6 .permalink-wrapper {
+    opacity: 1;
+}
+
+.djot-content .wpdjot-permalink {
+    color: #57606a;
+    text-decoration: none;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.djot-content .wpdjot-permalink:hover {
+    color: #0969da;
+    text-decoration: none;
+}
+
 /* Footnotes */
 .djot-content .footnote-ref {
     font-size: 0.75em;
@@ -756,6 +784,14 @@ figure.wpdjot-embed figcaption {
     }
 
     .wpdjot-toc a:hover {
+        color: #58a6ff;
+    }
+
+    .djot-content .wpdjot-permalink {
+        color: #8b949e;
+    }
+
+    .djot-content .wpdjot-permalink:hover {
         color: #58a6ff;
     }
 }

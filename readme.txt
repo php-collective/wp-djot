@@ -94,6 +94,7 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Added automatic Table of Contents generation from headings
 * Configurable TOC position (top/bottom), heading levels, and list type
 * Light and dark mode styling for TOC
+* Added heading permalinks with show-on-hover and copy-to-clipboard
 
 = 1.3.1 =
 * Fixed text domain to match plugin slug (djot-markup)

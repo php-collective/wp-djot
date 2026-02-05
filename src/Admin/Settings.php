@@ -300,6 +300,15 @@ class Settings
             'wpdjot_toc',
             ['field' => 'toc_list_type', 'description' => __('Use ordered (numbered) or unordered (bulleted) list.', 'djot-markup')],
         );
+
+        add_settings_field(
+            'permalinks_enabled',
+            __('Heading Permalinks', 'djot-markup'),
+            [$this, 'renderCheckboxField'],
+            self::PAGE_SLUG,
+            'wpdjot_toc',
+            ['field' => 'permalinks_enabled', 'description' => __('Add clickable # symbols to headings. Shown on hover, clicking copies the heading URL to clipboard.', 'djot-markup')],
+        );
     }
 
     /**
@@ -352,6 +361,7 @@ class Settings
             'toc_list_type' => in_array($input['toc_list_type'] ?? '', ['ul', 'ol'], true)
                 ? $input['toc_list_type']
                 : 'ul',
+            'permalinks_enabled' => !empty($input['permalinks_enabled']),
         ];
     }
 

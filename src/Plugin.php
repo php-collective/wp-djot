@@ -492,6 +492,21 @@ class Plugin
             );
         }
 
+        // Heading permalink copy-to-clipboard
+        if ($this->options['permalinks_enabled']) {
+            $copyJs = 'document.addEventListener("click",function(e){'
+                . 'var a=e.target.closest(".wpdjot-permalink");'
+                . 'if(!a)return;'
+                . 'e.preventDefault();'
+                . 'var hash=a.getAttribute("href");'
+                . 'history.replaceState(null,null,hash);'
+                . 'navigator.clipboard.writeText(location.href);'
+                . '});';
+            wp_register_script('wpdjot-permalink', false, [], (string)WPDJOT_VERSION, ['in_footer' => true]);
+            wp_enqueue_script('wpdjot-permalink');
+            wp_add_inline_script('wpdjot-permalink', $copyJs);
+        }
+
         // Comment toolbar (when comments are enabled in settings)
         if ($this->options['enable_comments']) {
             wp_enqueue_script(
@@ -537,6 +552,7 @@ class Plugin
             'toc_min_level' => 2,
             'toc_max_level' => 4,
             'toc_list_type' => 'ul',
+            'permalinks_enabled' => false,
         ];
 
         $options = get_option('wpdjot_settings', []);

@@ -9,6 +9,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+use Djot\Extension\SmartQuotesExtension;
+
 /**
  * Admin settings page for WP Djot.
  */
@@ -205,6 +207,15 @@ class Settings
             ['field' => 'comment_soft_break', 'description' => __('How single line breaks are rendered in comments. Overridden by Markdown Compatibility when enabled.', 'djot-markup')],
         );
 
+        add_settings_field(
+            'smart_quotes_locale',
+            __('Smart Quotes', 'djot-markup'),
+            [$this, 'renderSmartQuotesLocaleSelect'],
+            self::PAGE_SLUG,
+            'wpdjot_rendering',
+            ['field' => 'smart_quotes_locale', 'description' => __('Choose which typographic quote characters to use. Default English uses curly quotes.', 'djot-markup')],
+        );
+
         // Code Highlighting Section
         add_settings_section(
             'wpdjot_highlighting',
@@ -348,6 +359,9 @@ class Settings
             'comment_soft_break' => in_array($input['comment_soft_break'] ?? '', ['newline', 'space', 'br'], true)
                 ? $input['comment_soft_break']
                 : 'newline',
+            'smart_quotes_locale' => in_array($input['smart_quotes_locale'] ?? '', array_merge(['auto'], SmartQuotesExtension::getSupportedLocales()), true)
+                ? $input['smart_quotes_locale']
+                : 'en',
             'toc_enabled' => !empty($input['toc_enabled']),
             'toc_position' => in_array($input['toc_position'] ?? '', ['top', 'bottom'], true)
                 ? $input['toc_position']
@@ -632,6 +646,63 @@ class Settings
             );
         }
         echo '</ul>';
+    }
+
+    /**
+     * Render smart quotes locale select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
+    public function renderSmartQuotesLocaleSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $current = $options[$field] ?? 'en';
+
+        $localeLabels = [
+            'en' => "Default (English \u{201C}\u{2026}\u{201D} \u{2018}\u{2026}\u{2019})",
+            'auto' => 'Auto (from site language)',
+            'cs' => "Czech \u{201E}\u{2026}\u{201C} \u{201A}\u{2026}\u{2018}",
+            'da' => "Danish \u{201E}\u{2026}\u{201C} \u{201A}\u{2026}\u{2018}",
+            'nl' => "Dutch \u{201C}\u{2026}\u{201D} \u{2018}\u{2026}\u{2019}",
+            'fi' => "Finnish \u{201D}\u{2026}\u{201D} \u{2019}\u{2026}\u{2019}",
+            'fr' => "French \u{00AB}\u{2026}\u{00BB} \u{2039}\u{2026}\u{203A}",
+            'de' => "German \u{201E}\u{2026}\u{201C} \u{201A}\u{2026}\u{2018}",
+            'de-CH' => "Swiss German \u{00AB}\u{2026}\u{00BB} \u{2039}\u{2026}\u{203A}",
+            'hu' => "Hungarian \u{201E}\u{2026}\u{201D} \u{201A}\u{2026}\u{2019}",
+            'it' => "Italian \u{00AB}\u{2026}\u{00BB} \u{201C}\u{2026}\u{201D}",
+            'ja' => "Japanese \u{300C}\u{2026}\u{300D} \u{300E}\u{2026}\u{300F}",
+            'nb' => "Norwegian Bokm\u{00E5}l \u{00AB}\u{2026}\u{00BB} \u{2018}\u{2026}\u{2019}",
+            'nn' => "Norwegian Nynorsk \u{00AB}\u{2026}\u{00BB} \u{2018}\u{2026}\u{2019}",
+            'pl' => "Polish \u{201E}\u{2026}\u{201D} \u{201A}\u{2026}\u{2019}",
+            'pt' => "Portuguese \u{00AB}\u{2026}\u{00BB} \u{201C}\u{2026}\u{201D}",
+            'ru' => "Russian \u{00AB}\u{2026}\u{00BB} \u{201E}\u{2026}\u{201C}",
+            'es' => "Spanish \u{00AB}\u{2026}\u{00BB} \u{201C}\u{2026}\u{201D}",
+            'sv' => "Swedish \u{201D}\u{2026}\u{201D} \u{2019}\u{2026}\u{2019}",
+            'uk' => "Ukrainian \u{00AB}\u{2026}\u{00BB} \u{201E}\u{2026}\u{201C}",
+            'zh' => "Chinese \u{300C}\u{2026}\u{300D} \u{300E}\u{2026}\u{300F}",
+        ];
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+
+        foreach ($localeLabels as $value => $label) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr($value),
+                selected($current, $value, false),
+                esc_html($label),
+            );
+        }
+
+        echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
     }
 
     public function renderTocSectionDescription(): void

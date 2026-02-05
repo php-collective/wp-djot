@@ -435,6 +435,62 @@ class ConverterTest extends TestCase
         $this->assertStringContainsString('Line 2', $html);
     }
 
+    public function testSmartQuotesDefaultEnglish(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+        );
+
+        $html = $converter->convertArticle('"Hello," she said.');
+
+        // Default English curly quotes (no extension needed)
+        $this->assertStringContainsString("\u{201C}Hello,\u{201D}", $html);
+    }
+
+    public function testSmartQuotesGerman(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+            smartQuotesLocale: 'de',
+        );
+
+        $html = $converter->convertArticle('"Hallo," sagte sie.');
+
+        // German uses „..."/‚...' quotes
+        $this->assertStringContainsString("\u{201E}Hallo,\u{201C}", $html);
+    }
+
+    public function testSmartQuotesAutoFallback(): void
+    {
+        // 'auto' with no WordPress context falls back to 'en'
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+            smartQuotesLocale: 'auto',
+        );
+
+        $html = $converter->convertArticle('"Hello"');
+
+        // Should use English quotes as fallback when get_locale() returns 'en'
+        $this->assertStringContainsString("\u{201C}Hello\u{201D}", $html);
+    }
+
+    public function testSmartQuotesAppliedToComments(): void
+    {
+        $converter = new Converter(
+            safeMode: true,
+            commentProfile: 'comment',
+            smartQuotesLocale: 'de',
+        );
+
+        $html = $converter->convertComment('"Hallo"');
+
+        // German quotes should also apply to comments
+        $this->assertStringContainsString("\u{201E}Hallo\u{201C}", $html);
+    }
+
     /**
      * Add the semantic span handler (same logic as Plugin::customizeConverter)
      */

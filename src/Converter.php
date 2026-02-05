@@ -11,6 +11,7 @@ if (!defined('ABSPATH')) {
 
 use Djot\DjotConverter;
 use Djot\Extension\HeadingPermalinksExtension;
+use Djot\Extension\SmartQuotesExtension;
 use Djot\Extension\TableOfContentsExtension;
 use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
@@ -52,6 +53,8 @@ class Converter
 
     private bool $permalinksEnabled;
 
+    private string $smartQuotesLocale;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
@@ -70,6 +73,7 @@ class Converter
         int $tocMaxLevel = 4,
         string $tocListType = 'ul',
         bool $permalinksEnabled = false,
+        string $smartQuotesLocale = 'en',
     ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
@@ -83,6 +87,7 @@ class Converter
         $this->tocMaxLevel = $tocMaxLevel;
         $this->tocListType = $tocListType;
         $this->permalinksEnabled = $permalinksEnabled;
+        $this->smartQuotesLocale = $smartQuotesLocale;
         $this->converter = new DjotConverter(safeMode: false);
         $this->converter->getRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
@@ -111,6 +116,7 @@ class Converter
             tocMaxLevel: (int)($options['toc_max_level'] ?? 4),
             tocListType: $options['toc_list_type'] ?? 'ul',
             permalinksEnabled: !empty($options['permalinks_enabled']),
+            smartQuotesLocale: $options['smart_quotes_locale'] ?? 'en',
         );
     }
 
@@ -128,7 +134,8 @@ class Converter
             ? '_toc_' . $this->tocPosition . '_' . $this->tocMinLevel . '_' . $this->tocMaxLevel . '_' . $this->tocListType
             : '';
         $permalinksKey = ($this->permalinksEnabled && $context === 'article') ? '_permalinks' : '';
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey;
+        $smartQuotesKey = $this->smartQuotesLocale !== 'en' ? '_sq_' . $this->smartQuotesLocale : '';
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey;
 
         if (!isset($this->profileConverters[$key])) {
             // 'none' means no profile restrictions at all
@@ -190,6 +197,12 @@ class Converter
                     symbol: '#',
                     cssClass: 'wpdjot-permalink',
                 ));
+            }
+
+            // Add smart quotes extension for non-English locales
+            if ($this->smartQuotesLocale !== 'en') {
+                $locale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
+                $converter->addExtension(new SmartQuotesExtension(locale: $locale));
             }
 
             // Allow customization via WordPress filters
@@ -434,5 +447,17 @@ class Converter
         }
 
         return $allowedHtml;
+    }
+
+    /**
+     * Get the WordPress locale, falling back to 'en'.
+     */
+    private function getWpLocale(): string
+    {
+        if (function_exists('get_locale')) {
+            return get_locale() ?: 'en';
+        }
+
+        return 'en';
     }
 }

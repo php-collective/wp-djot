@@ -7,21 +7,23 @@
 # Development
 /.idea
 /.vscode
+/.ddev
 /.phpunit.cache
+/.distignore
 /stubs
 /tests
 /build
+/docs
 
 # Build tools
 /scripts
-/composer.json
 /composer.lock
 /phpcs.xml
 /phpstan.neon
 /phpunit.xml.dist
 /.editorconfig
 
-# Documentation (keep readme.txt)
+# Documentation (keep readme.txt and composer.json)
 /*.md
 CHANGELOG.md
 CONTRIBUTING.md
@@ -30,8 +32,14 @@ README.md
 # Vendor non-permitted files
 vendor/bin/djot
 vendor/php-collective/djot/bin
+vendor/php-collective/djot/docs
 vendor/php-collective/djot/fuzz
 vendor/php-collective/djot/tests
+vendor/php-collective/djot/phpcs.xml
+vendor/php-collective/djot/phpstan.neon
+vendor/php-collective/djot/composer.json
+vendor/php-collective/djot/CONTRIBUTING.md
+vendor/php-collective/djot/README.md
 
 # Temporary files
 /_*

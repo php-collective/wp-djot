@@ -11,13 +11,55 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Validate version consistency
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          HEADER_VERSION=$(grep -oP '^\s*\*\s*Version:\s*\K[0-9]+\.[0-9]+\.[0-9]+' wp-djot.php)
+          CONSTANT_VERSION=$(grep -oP "define\('WPDJOT_VERSION',\s*'\K[0-9]+\.[0-9]+\.[0-9]+" wp-djot.php)
+          STABLE_TAG=$(grep -oP '^Stable tag:\s*\K[0-9]+\.[0-9]+\.[0-9]+' readme.txt)
+
+          echo "Release tag:      $TAG"
+          echo "Header version:   $HEADER_VERSION"
+          echo "Constant version: $CONSTANT_VERSION"
+          echo "Stable tag:       $STABLE_TAG"
+
+          ERRORS=0
+          if [ "$HEADER_VERSION" != "$CONSTANT_VERSION" ]; then
+            echo "::error::Plugin header version ($HEADER_VERSION) does not match WPDJOT_VERSION constant ($CONSTANT_VERSION)"
+            ERRORS=1
+          fi
+          if [ "$HEADER_VERSION" != "$STABLE_TAG" ]; then
+            echo "::error::Plugin header version ($HEADER_VERSION) does not match readme.txt stable tag ($STABLE_TAG)"
+            ERRORS=1
+          fi
+          if [ "$HEADER_VERSION" != "$TAG" ]; then
+            echo "::error::Plugin header version ($HEADER_VERSION) does not match release tag ($TAG)"
+            ERRORS=1
+          fi
+          if [ "$ERRORS" -ne 0 ]; then
+            echo "::error::Version mismatch detected. Run ./scripts/version.sh $TAG to fix."
+            exit 1
+          fi
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Check PHP syntax
+        run: |
+          find src -name "*.php" -exec php -l {} \;
+          php -l wp-djot.php
+          php -l uninstall.php
+
+      - name: Run PHPStan
+        run: composer stan
 
       - name: Install production dependencies
         run: composer install --no-dev --prefer-dist --no-progress --optimize-autoloader

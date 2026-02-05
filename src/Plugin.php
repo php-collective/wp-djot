@@ -291,7 +291,7 @@ class Plugin
         // If there's already a manual excerpt, use it
         if ($excerpt) {
             // Still process it as Djot in case it contains markup
-            $html = $this->converter->convertArticle($excerpt);
+            $html = $this->converter->convertExcerpt($excerpt);
 
             // Strip tags for clean excerpt
             return wp_strip_all_tags($html);
@@ -313,8 +313,8 @@ class Plugin
             $content = explode('<!--more-->', $content)[0];
         }
 
-        // Convert Djot to HTML
-        $html = $this->converter->convertArticle($content);
+        // Convert Djot to HTML (without TOC/permalinks)
+        $html = $this->converter->convertExcerpt($content);
 
         // Strip HTML tags to get plain text
         $text = wp_strip_all_tags($html);

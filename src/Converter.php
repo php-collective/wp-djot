@@ -274,6 +274,18 @@ class Converter
     }
 
     /**
+     * Convert for excerpts using article profile but without TOC or permalinks.
+     */
+    public function convertExcerpt(string $djot): string
+    {
+        $djot = $this->preProcess($djot, true);
+        $converter = $this->getProfileConverter($this->postProfile, false, 'excerpt');
+        $html = $converter->convert($djot);
+
+        return $this->postProcess($html, false);
+    }
+
+    /**
      * Convert for comments using configured profile (always with safe mode).
      *
      * Comments are processed before WordPress filters (wptexturize, wpautop)

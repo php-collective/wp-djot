@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -90,6 +90,9 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 == Changelog ==
 
+= 1.4.1 =
+* Fixed Table of Contents and heading permalinks appearing in post excerpts on archive pages
+
 = 1.4.0 =
 * Added automatic Table of Contents generation from headings
 * Configurable TOC position (top/bottom), heading levels, and list type
@@ -135,6 +138,9 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Template tags for theme developers
 
 == Upgrade Notice ==
+
+= 1.4.1 =
+Fixes TOC and heading permalinks leaking into post excerpts.
 
 = 1.4.0 =
 Adds Table of Contents, heading permalinks, and locale-aware smart quotes.

@@ -523,6 +523,15 @@ class Plugin
                 'nonce' => wp_create_nonce('wp_rest'),
             ]);
         }
+
+        // Code block enhancements (line numbers offset)
+        wp_enqueue_script(
+            'wpdjot-code-blocks',
+            WPDJOT_PLUGIN_URL . 'assets/js/code-blocks.js',
+            [],
+            WPDJOT_VERSION,
+            ['in_footer' => true, 'strategy' => 'defer'],
+        );
     }
 
     /**

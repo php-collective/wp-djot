@@ -82,6 +82,56 @@
     padding: 0;
 }
 
+/* Code Block Line Numbers */
+.djot-content pre.line-numbers {
+    padding-left: 3.5em;
+    position: relative;
+    counter-reset: line-number var(--line-start, 0);
+}
+
+.djot-content pre.line-numbers code {
+    display: block;
+}
+
+.djot-content pre.line-numbers code .line {
+    display: block;
+    position: relative;
+    counter-increment: line-number;
+}
+
+.djot-content pre.line-numbers code .line::before {
+    content: counter(line-number);
+    position: absolute;
+    left: -3.5em;
+    width: 2.5em;
+    text-align: right;
+    color: #6e7781;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Code Block Line Highlighting */
+.djot-content pre.has-highlighted-lines code .line {
+    display: block;
+    margin: 0 -1em;
+    padding: 0 1em;
+}
+
+.djot-content pre.has-highlighted-lines.line-numbers code .line {
+    margin-left: -3.5em;
+    padding-left: 3.5em;
+}
+
+.djot-content pre code .line.highlighted {
+    background-color: rgba(255, 255, 0, 0.15);
+}
+
+/* Combined: line numbers with highlighting need adjusted positioning */
+.djot-content pre.line-numbers.has-highlighted-lines code .line::before {
+    left: 0;
+    padding-right: 0.5em;
+}
+
 /* Blockquotes */
 .djot-content blockquote {
     margin: 1em 0;
@@ -688,6 +738,14 @@ figure.wpdjot-embed figcaption {
 
     .djot-content pre {
         background-color: #161b22;
+    }
+
+    .djot-content pre.line-numbers code .line::before {
+        color: #484f58;
+    }
+
+    .djot-content pre code .line.highlighted {
+        background-color: rgba(187, 128, 9, 0.2);
     }
 
     .djot-content code {

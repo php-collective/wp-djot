@@ -35,6 +35,49 @@ class DjotBlock
         add_action('init', [$this, 'register']);
         add_action('rest_api_init', [$this, 'registerRestRoute']);
         add_action('enqueue_block_editor_assets', [$this, 'enqueueEditorAssets']);
+
+        // @deprecated 1.4.2 Will be removed in 2.0.0. Legacy block name migration will be removed.
+        // Migrate old block name to new when content is loaded in editor.
+        add_filter('the_editor_content', [$this, 'migrateBlockName']);
+        add_filter('content_edit_pre', [$this, 'migrateBlockName']);
+        // Also filter REST API responses for Gutenberg editor.
+        add_filter('rest_prepare_post', [$this, 'migrateBlockNameInRest'], 10, 2);
+        add_filter('rest_prepare_page', [$this, 'migrateBlockNameInRest'], 10, 2);
+    }
+
+    /**
+     * Migrate old wp-djot/djot block names to new wpdjot/djot format.
+     *
+     * This runs when content is loaded in the editor, transparently
+     * updating the block name so existing content can be edited.
+     *
+     * @deprecated 1.4.2 Will be removed in 2.0.0. Legacy block name support will be removed.
+     */
+    public function migrateBlockName(string $content): string
+    {
+        // Replace old block name with new name in block comments
+        return str_replace('<!-- wp:wp-djot/djot', '<!-- wp:wpdjot/djot', $content);
+    }
+
+    /**
+     * Migrate old block name in REST API responses for Gutenberg editor.
+     *
+     * @deprecated 1.4.2 Will be removed in 2.0.0. Legacy block name support will be removed.
+     *
+     * @param \WP_REST_Response $response
+     * @param \WP_Post $post
+     * @return \WP_REST_Response
+     */
+    public function migrateBlockNameInRest(\WP_REST_Response $response, \WP_Post $post): \WP_REST_Response
+    {
+        $data = $response->get_data();
+
+        if (isset($data['content']['raw'])) {
+            $data['content']['raw'] = $this->migrateBlockName($data['content']['raw']);
+            $response->set_data($data);
+        }
+
+        return $response;
     }
 
     /**
@@ -59,8 +102,16 @@ class DjotBlock
         // Register the block - this auto-registers wpdjot-djot-editor-style from block.json
         register_block_type(WPDJOT_PLUGIN_DIR . 'assets/blocks/djot');
 
-        // Register old block name as alias for backward compatibility with existing content
+        // @deprecated 1.4.2 Will be removed in 2.0.0. Legacy block name support will be removed.
+        // Register old block name as alias for backward compatibility with existing content.
+        // Must include attributes so WordPress can parse the saved content in the editor.
         register_block_type('wp-djot/djot', [
+            'attributes' => [
+                'content' => [
+                    'type' => 'string',
+                    'default' => '',
+                ],
+            ],
             'render_callback' => function (array $attributes): string {
                 return $this->renderLegacyBlock($attributes);
             },
@@ -171,6 +222,8 @@ class DjotBlock
 
     /**
      * Render legacy wp-djot/djot blocks for backward compatibility.
+     *
+     * @deprecated 1.4.2 Will be removed in 2.0.0. Legacy block name support will be removed.
      *
      * @param array<string, mixed> $attributes Block attributes.
      */

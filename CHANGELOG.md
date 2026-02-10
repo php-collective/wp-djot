@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-02-10
+
+### Added
+
+- Code block line numbers: Add `#` after language to display line numbers (e.g., ``` php #)
+- Line number offset: Start at specific line with `#=N` (e.g., ``` php #=9)
+- Code block line highlighting: Highlight specific lines with `{lines}` (e.g., ``` php {2,4-5})
+- Combined syntax support: Line numbers and highlighting together (e.g., ``` php # {2,4-5})
+- Line numbers displayed in a gutter outside the code box, right-aligned
+- Documentation for code block enhancements in docs/syntax.md
+
 ## [1.4.1] - 2026-02-05
 
 ### Fixed

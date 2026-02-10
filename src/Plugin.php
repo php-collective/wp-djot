@@ -486,9 +486,14 @@ class Plugin
                 ['in_footer' => true, 'strategy' => 'defer'],
             );
 
-            wp_add_inline_script(
-                'wpdjot-highlight-djot',
-                'document.addEventListener("DOMContentLoaded", function() { hljs.highlightAll(); });',
+            // Code block enhancements (line numbers, highlighting)
+            // This script handles syntax highlighting along with line numbers
+            wp_enqueue_script(
+                'wpdjot-code-blocks',
+                WPDJOT_PLUGIN_URL . 'assets/js/code-blocks.js',
+                ['wpdjot-highlight-djot'],
+                WPDJOT_VERSION,
+                ['in_footer' => true, 'strategy' => 'defer'],
             );
         }
 

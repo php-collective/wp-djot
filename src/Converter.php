@@ -314,6 +314,10 @@ class Converter
         // Normalize line endings
         $djot = str_replace(["\r\n", "\r"], "\n", $djot);
 
+        // Process code block line numbers and highlighting syntax
+        // Syntax: ``` lang # {2,4-5} or ``` lang #=9 {2,4-5}
+        $djot = $this->preProcessCodeBlocks($djot);
+
         // Only clean up WordPress HTML artifacts if content was already processed
         if (!$isRaw) {
             // Remove <br> tags that WordPress wpautop() may have added
@@ -356,6 +360,9 @@ class Converter
             $html = $this->purifyHtml($html);
         }
 
+        // Process code block line numbers and highlighting
+        $html = $this->postProcessCodeBlocks($html);
+
         // Add djot-content wrapper class for styling
         if ($html) {
             $html = '<div class="djot-content">' . $html . '</div>';
@@ -371,6 +378,130 @@ class Converter
         }
 
         return $html;
+    }
+
+    /**
+     * Pre-process code blocks to extract line number and highlighting syntax.
+     *
+     * Converts: ``` lang # {2,4-5} or ``` lang #=9 {2,4-5}
+     * To: ``` lang with a marker injected into the code content
+     */
+    private function preProcessCodeBlocks(string $djot): string
+    {
+        // Pattern: ``` followed by optional language, optional # or #=N, optional {lines}
+        // The # enables line numbers, #=N sets starting line, {lines} highlights specific lines
+        $pattern = '/^(```+)\s*(\w+)?\s*(#(?:=(\d+))?)?(\s*\{([^}]+)\})?\s*$/m';
+
+        return preg_replace_callback($pattern, function (array $matches): string {
+            $fence = $matches[1];
+            $lang = $matches[2] ?? '';
+            $hasLineNumbers = !empty($matches[3]);
+            $startLine = !empty($matches[4]) ? (int)$matches[4] : 1;
+            $highlightLines = $matches[6] ?? '';
+
+            // If no special features, return unchanged
+            if (!$hasLineNumbers && empty($highlightLines)) {
+                return $matches[0];
+            }
+
+            // Build marker to inject (will be first line of code)
+            $marker = '%%WPDJOT_CODE_BLOCK:';
+            if ($hasLineNumbers) {
+                $marker .= 'ln=' . $startLine . ':';
+            }
+            if ($highlightLines) {
+                $marker .= 'hl=' . $highlightLines . ':';
+            }
+            $marker .= '%%';
+
+            // Return fence with just the language, marker will be on next line
+            $result = $fence . ($lang ? ' ' . $lang : '');
+
+            return $result . "\n" . $marker;
+        }, $djot) ?? $djot;
+    }
+
+    /**
+     * Post-process code blocks to add line numbers and highlighting.
+     *
+     * Finds markers in code blocks and converts them to proper HTML structure.
+     */
+    private function postProcessCodeBlocks(string $html): string
+    {
+        // Find code blocks with our marker
+        $pattern = '/<pre><code([^>]*)>%%WPDJOT_CODE_BLOCK:([^%]+)%%(.*?)<\/code><\/pre>/s';
+
+        return preg_replace_callback($pattern, function (array $matches): string {
+            $codeAttrs = $matches[1];
+            $markerData = $matches[2];
+            $codeContent = $matches[3];
+
+            // Parse marker data
+            $hasLineNumbers = false;
+            $startLine = 1;
+            $highlightLines = [];
+
+            if (preg_match('/ln=(\d+):/', $markerData, $m)) {
+                $hasLineNumbers = true;
+                $startLine = (int)$m[1];
+            }
+            if (preg_match('/hl=([^:]+):/', $markerData, $m)) {
+                $highlightLines = $this->parseHighlightLines($m[1]);
+            }
+
+            // Build pre classes
+            $preClasses = [];
+            if ($hasLineNumbers) {
+                $preClasses[] = 'line-numbers';
+            }
+            if (!empty($highlightLines)) {
+                $preClasses[] = 'has-highlighted-lines';
+            }
+
+            // Build pre attributes
+            $preAttrs = '';
+            if ($preClasses) {
+                $preAttrs .= ' class="' . implode(' ', $preClasses) . '"';
+            }
+            if ($hasLineNumbers && $startLine !== 1) {
+                $preAttrs .= ' data-start="' . $startLine . '"';
+            }
+            if (!empty($highlightLines)) {
+                $preAttrs .= ' data-highlight="' . implode(',', $highlightLines) . '"';
+            }
+
+            // Remove the marker newline from code content
+            $codeContent = preg_replace('/^\n/', '', $codeContent);
+
+            return '<pre' . $preAttrs . '><code' . $codeAttrs . '>' . $codeContent . '</code></pre>';
+        }, $html) ?? $html;
+    }
+
+    /**
+     * Parse highlight line specification like "2,4-5,8" into array of line numbers.
+     *
+     * @return array<int>
+     */
+    private function parseHighlightLines(string $spec): array
+    {
+        $lines = [];
+        $parts = explode(',', $spec);
+
+        foreach ($parts as $part) {
+            $part = trim($part);
+            if (str_contains($part, '-')) {
+                [$start, $end] = explode('-', $part, 2);
+                $start = (int)trim($start);
+                $end = (int)trim($end);
+                for ($i = $start; $i <= $end; $i++) {
+                    $lines[] = $i;
+                }
+            } else {
+                $lines[] = (int)$part;
+            }
+        }
+
+        return array_unique($lines);
     }
 
     /**

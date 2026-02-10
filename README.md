@@ -27,6 +27,7 @@ Djot is a light markup syntax created by John MacFarlane (creator of CommonMark 
 - **Content Profiles**: Configurable feature restrictions (full, article, comment, minimal)
 - **Safe Mode**: XSS protection for untrusted content
 - **Syntax Highlighting**: Built-in highlight.js integration with multiple themes
+- **Code Block Enhancements**: Line numbers and line highlighting (VitePress-style syntax)
 - **WP-CLI Migration**: Migrate existing HTML/Markdown content to Djot
 
 ## Example

@@ -82,6 +82,44 @@
     padding: 0;
 }
 
+/* Code Block Line Numbers - positioned outside the code box */
+.djot-content pre.line-numbers {
+    position: relative;
+    padding-left: 3.5em;
+}
+
+.djot-content pre.line-numbers .line-numbers-gutter {
+    position: absolute;
+    left: 0;
+    top: 1em;
+    width: 2.5em;
+    padding-right: 6px;
+    text-align: right;
+    font-size: inherit;
+    line-height: 1.45;
+    color: #6e7781;
+    user-select: none;
+    opacity: 0.6;
+    border-right: 1px solid #d0d7de;
+}
+
+.djot-content pre.line-numbers .line-numbers-gutter .line-num {
+    display: block;
+}
+
+/* Code Block Line Highlighting */
+.djot-content pre.has-highlighted-lines code {
+    display: block;
+}
+
+.djot-content pre.has-highlighted-lines code .line {
+    display: block;
+}
+
+.djot-content pre code .line.highlighted {
+    background-color: rgba(255, 255, 0, 0.2);
+}
+
 /* Blockquotes */
 .djot-content blockquote {
     margin: 1em 0;

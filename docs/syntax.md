@@ -48,6 +48,80 @@ echo "Hello, World!";
 ```
 ````
 
+### Line Numbers
+
+Add `#` after the language to display line numbers:
+
+````
+``` php #
+$foo = 1;
+$bar = 2;
+$baz = 3;
+```
+````
+
+Start line numbers at a specific number with `#=N`:
+
+````
+``` php #=9
+// This starts at line 9
+$offset = 9;
+$next = 10;
+```
+````
+
+### Line Highlighting
+
+Highlight specific lines with `{lines}`:
+
+````
+``` php {2,4}
+$line1 = "normal";
+$line2 = "highlighted";
+$line3 = "normal";
+$line4 = "highlighted";
+```
+````
+
+Use ranges for consecutive lines:
+
+````
+``` php {2,4-6}
+// Line 1 - normal
+// Line 2 - highlighted
+// Line 3 - normal
+// Lines 4-6 - highlighted
+// ...
+```
+````
+
+### Combined
+
+Line numbers and highlighting can be combined:
+
+````
+``` php # {2,4-5}
+function example() {
+    $highlighted = true;
+    $normal = false;
+    $alsoHighlighted = true;
+    $andThisToo = true;
+    return $result;
+}
+```
+````
+
+Or with a starting offset:
+
+````
+``` php #=10 {11,13}
+// Line 10
+// Line 11 - highlighted
+// Line 12
+// Line 13 - highlighted
+```
+````
+
 ## Links
 
 ```

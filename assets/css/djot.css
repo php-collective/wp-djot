@@ -110,10 +110,14 @@
 /* Code Block Line Highlighting */
 .djot-content pre.has-highlighted-lines code {
     display: block;
+    font-size: 0;
+    line-height: 0;
 }
 
 .djot-content pre.has-highlighted-lines code .line {
     display: block;
+    font-size: 14px;
+    line-height: 1.45;
 }
 
 .djot-content pre code .line.highlighted {

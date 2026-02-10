@@ -108,6 +108,10 @@
 }
 
 /* Code Block Line Highlighting */
+.djot-content pre.has-highlighted-lines {
+    overflow-x: clip;
+}
+
 .djot-content pre.has-highlighted-lines code {
     display: block;
 }

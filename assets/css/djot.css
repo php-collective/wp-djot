@@ -108,27 +108,16 @@
 }
 
 /* Code Block Line Highlighting */
-.djot-content pre.has-highlighted-lines {
-    overflow-x: clip;
-}
-
 .djot-content pre.has-highlighted-lines code {
     display: block;
 }
 
 .djot-content pre.has-highlighted-lines code .line {
     display: block;
-    margin: 0 -1em;
-    padding: 0 1em;
-}
-
-.djot-content pre.has-highlighted-lines.line-numbers code .line {
-    margin-left: -3.5em;
-    padding-left: 3.5em;
 }
 
 .djot-content pre code .line.highlighted {
-    background-color: rgba(255, 255, 0, 0.15);
+    background-color: rgba(255, 255, 0, 0.2);
 }
 
 /* Blockquotes */

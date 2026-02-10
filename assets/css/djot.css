@@ -62,12 +62,24 @@
 .djot-content pre {
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
     font-size: 0.875em;
-    line-height: 1.45;
+    line-height: 1.4;
     background-color: #f6f8fa;
     border-radius: 6px;
-    padding: 1em;
+    padding: 0.875em 1em;
     overflow-x: auto;
     margin: 1em 0;
+}
+
+/* Code blocks with line structure need font-size: 0 to collapse newlines between spans */
+.djot-content pre:has(code .line) code {
+    font-size: 0;
+}
+
+.djot-content pre:has(code .line) code .line {
+    display: block;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    white-space: pre;
 }
 
 .djot-content pre code {
@@ -87,27 +99,23 @@
     padding-left: 0;
 }
 
-.djot-content pre.line-numbers code {
-    display: block;
-}
-
 .djot-content pre.line-numbers code .line {
     display: flex;
 }
 
 .djot-content pre.line-numbers code .line .line-num {
     flex-shrink: 0;
-    width: 3em;
-    padding-right: 1em;
+    width: 2.5em;
+    margin-right: 0.75em;
     text-align: right;
     color: #6e7781;
     user-select: none;
+    opacity: 0.6;
 }
 
 
 /* Code Block Line Highlighting */
-.djot-content pre.has-highlighted-lines:not(.line-numbers) code .line {
-    display: block;
+.djot-content pre.has-highlighted-lines code .line {
     margin: 0 -1em;
     padding: 0 1em;
 }
@@ -125,6 +133,7 @@
 .djot-content pre.line-numbers.has-highlighted-lines code .line .line-num {
     margin-left: -1em;
     padding-left: 1em;
+    background: transparent;
 }
 
 /* Blockquotes */

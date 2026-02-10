@@ -84,9 +84,7 @@
 
 /* Code Block Line Numbers */
 .djot-content pre.line-numbers {
-    padding-left: 3.5em;
-    position: relative;
-    counter-reset: line-number var(--line-start, 0);
+    padding-left: 0;
 }
 
 .djot-content pre.line-numbers code {
@@ -94,42 +92,39 @@
 }
 
 .djot-content pre.line-numbers code .line {
-    display: block;
-    position: relative;
-    counter-increment: line-number;
+    display: flex;
 }
 
-.djot-content pre.line-numbers code .line::before {
-    content: counter(line-number);
-    position: absolute;
-    left: -3.5em;
-    width: 2.5em;
+.djot-content pre.line-numbers code .line .line-num {
+    flex-shrink: 0;
+    width: 3em;
+    padding-right: 1em;
     text-align: right;
     color: #6e7781;
     user-select: none;
-    pointer-events: none;
 }
 
+
 /* Code Block Line Highlighting */
-.djot-content pre.has-highlighted-lines code .line {
+.djot-content pre.has-highlighted-lines:not(.line-numbers) code .line {
     display: block;
     margin: 0 -1em;
     padding: 0 1em;
-}
-
-.djot-content pre.has-highlighted-lines.line-numbers code .line {
-    margin-left: -3.5em;
-    padding-left: 3.5em;
 }
 
 .djot-content pre code .line.highlighted {
     background-color: rgba(255, 255, 0, 0.15);
 }
 
-/* Combined: line numbers with highlighting need adjusted positioning */
-.djot-content pre.line-numbers.has-highlighted-lines code .line::before {
-    left: 0;
-    padding-right: 0.5em;
+/* Combined: line numbers with highlighting uses flexbox, extend highlight to edges */
+.djot-content pre.line-numbers.has-highlighted-lines code .line {
+    margin: 0 -1em;
+    padding: 0 1em;
+}
+
+.djot-content pre.line-numbers.has-highlighted-lines code .line .line-num {
+    margin-left: -1em;
+    padding-left: 1em;
 }
 
 /* Blockquotes */
@@ -740,7 +735,7 @@ figure.wpdjot-embed figcaption {
         background-color: #161b22;
     }
 
-    .djot-content pre.line-numbers code .line::before {
+    .djot-content pre.line-numbers code .line .line-num {
         color: #484f58;
     }
 

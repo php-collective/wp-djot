@@ -11,12 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Code block line numbers: Add `#` after language to display line numbers (e.g., ``` php #)
-- Line number offset: Start at specific line with `#=N` (e.g., ``` php #=9)
-- Code block line highlighting: Highlight specific lines with `{lines}` (e.g., ``` php {2,4-5})
-- Combined syntax support: Line numbers and highlighting together (e.g., ``` php # {2,4-5})
-- Line numbers displayed in a gutter outside the code box, right-aligned
-- Documentation for code block enhancements in docs/syntax.md
+- Code block line numbers (`#` after language, e.g., ``` php #)
+- Line number offset (`#=N` to start at specific line)
+- Code block line highlighting (`{lines}` syntax, e.g., ``` php {2,4-5})
+
+### Fixed
+
+- Legacy `wp-djot/djot` blocks now editable in Gutenberg again (migrates to `wpdjot/djot` on save)
 
 ## [1.4.1] - 2026-02-05
 

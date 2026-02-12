@@ -381,16 +381,19 @@ class Converter
     }
 
     /**
-     * Pre-process code blocks to extract line number and highlighting syntax.
+     * Pre-process code blocks to extract line number, highlighting, and filename syntax.
      *
-     * Converts: ``` lang # {2,4-5} or ``` lang #=9 {2,4-5}
-     * To: ``` lang with a marker injected into the code content
+     * Syntax examples:
+     * - ``` php # - line numbers
+     * - ``` php #=9 - line numbers starting at 9
+     * - ``` php {2,4-5} - highlight lines 2, 4-5
+     * - ``` php [config.php] - filename header
+     * - ``` php # {2,4} [config.php] - combined
      */
     private function preProcessCodeBlocks(string $djot): string
     {
-        // Pattern: ``` followed by optional language, optional # or #=N, optional {lines}
-        // The # enables line numbers, #=N sets starting line, {lines} highlights specific lines
-        $pattern = '/^(```+)\s*(\w+)?\s*(#(?:=(\d+))?)?(\s*\{([^}]+)\})?\s*$/m';
+        // Pattern: ``` followed by optional language, optional # or #=N, optional {lines}, optional [filename]
+        $pattern = '/^(```+)\s*(\w+)?\s*(#(?:=(\d+))?)?(\s*\{([^}]+)\})?(\s*\[([^\]]+)\])?\s*$/m';
 
         return preg_replace_callback($pattern, function (array $matches): string {
             $fence = $matches[1];
@@ -398,9 +401,10 @@ class Converter
             $hasLineNumbers = !empty($matches[3]);
             $startLine = !empty($matches[4]) ? (int)$matches[4] : 1;
             $highlightLines = $matches[6] ?? '';
+            $filename = $matches[8] ?? '';
 
             // If no special features, return unchanged
-            if (!$hasLineNumbers && empty($highlightLines)) {
+            if (!$hasLineNumbers && empty($highlightLines) && empty($filename)) {
                 return $matches[0];
             }
 
@@ -412,6 +416,9 @@ class Converter
             if ($highlightLines) {
                 $marker .= 'hl=' . $highlightLines . ':';
             }
+            if ($filename) {
+                $marker .= 'fn=' . $filename . ':';
+            }
             $marker .= '%%';
 
             // Return fence with just the language, marker will be on next line
@@ -422,7 +429,7 @@ class Converter
     }
 
     /**
-     * Post-process code blocks to add line numbers and highlighting.
+     * Post-process code blocks to add line numbers, highlighting, and filename.
      *
      * Finds markers in code blocks and converts them to proper HTML structure.
      */
@@ -440,6 +447,7 @@ class Converter
             $hasLineNumbers = false;
             $startLine = 1;
             $highlightLines = [];
+            $filename = '';
 
             if (preg_match('/ln=(\d+):/', $markerData, $m)) {
                 $hasLineNumbers = true;
@@ -447,6 +455,9 @@ class Converter
             }
             if (preg_match('/hl=([^:]+):/', $markerData, $m)) {
                 $highlightLines = $this->parseHighlightLines($m[1]);
+            }
+            if (preg_match('/fn=([^:]+):/', $markerData, $m)) {
+                $filename = $m[1];
             }
 
             // Build pre classes
@@ -468,6 +479,9 @@ class Converter
             }
             if (!empty($highlightLines)) {
                 $preAttrs .= ' data-highlight="' . implode(',', $highlightLines) . '"';
+            }
+            if ($filename) {
+                $preAttrs .= ' data-filename="' . esc_attr($filename) . '"';
             }
 
             // Remove the marker newline from code content

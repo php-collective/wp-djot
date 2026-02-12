@@ -124,6 +124,148 @@
     background-color: rgba(255, 235, 59, 0.15);
 }
 
+/* Code Block Diff Highlighting */
+.djot-content pre code .line.diff.add {
+    background-color: rgba(46, 160, 67, 0.15);
+}
+
+.djot-content pre code .line.diff.add::after {
+    content: '+';
+    float: right;
+    margin-right: 0.5em;
+    color: #2ea043;
+    font-weight: bold;
+}
+
+.djot-content pre code .line.diff.remove {
+    background-color: rgba(248, 81, 73, 0.15);
+}
+
+.djot-content pre code .line.diff.remove::after {
+    content: '-';
+    float: right;
+    margin-right: 0.5em;
+    color: #f85149;
+    font-weight: bold;
+}
+
+/* Code Block Focus Mode */
+.djot-content pre.has-focus code .line.dimmed {
+    opacity: 0.4;
+    filter: blur(0.5px);
+}
+
+.djot-content pre.has-focus code .line.focus {
+    opacity: 1;
+    filter: none;
+}
+
+/* Code Block Error/Warning - explicit resets to prevent theme bleeding */
+.djot-content pre code .line.error {
+    background-color: rgba(248, 81, 73, 0.2);
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+}
+
+.djot-content pre code .line.error::after {
+    content: '✗';
+    float: right;
+    margin-right: 0.5em;
+    color: #f85149;
+    font-weight: bold;
+}
+
+.djot-content pre code .line.warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+}
+
+.djot-content pre code .line.warning::after {
+    content: '⚠';
+    float: right;
+    margin-right: 0.5em;
+    color: #d29922;
+}
+
+/* Code Block Wrapper and Copy Button */
+.djot-content .code-block-wrapper {
+    position: relative;
+}
+
+.djot-content .code-block-wrapper .code-copy-btn {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    padding: 0.4em;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #57606a;
+    z-index: 10;
+}
+
+.djot-content .code-block-wrapper:hover .code-copy-btn {
+    opacity: 1;
+}
+
+.djot-content .code-block-wrapper .code-copy-btn:hover {
+    background: #fff;
+    color: #24292f;
+}
+
+.djot-content .code-block-wrapper .code-copy-btn.copied {
+    color: #2ea043;
+}
+
+/* Code Block Filename Header */
+.djot-content pre[data-filename] {
+    position: relative;
+    padding-top: 2.5em;
+}
+
+.djot-content pre[data-filename]::before {
+    content: attr(data-filename);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 0.4em 1em;
+    background: #e6e8eb;
+    border-bottom: 1px solid #d0d7de;
+    border-radius: 6px 6px 0 0;
+    font-size: 0.85em;
+    color: #57606a;
+}
+
+/* Adjust gutter position when filename header is present */
+.djot-content pre.line-numbers[data-filename] .line-numbers-gutter {
+    top: 2.5em;
+}
+
+/* Inline markers processed blocks - same styling as highlighted lines */
+.djot-content pre[data-markers-processed] code {
+    display: block;
+    font-size: 0;
+    line-height: 0;
+}
+
+.djot-content pre[data-markers-processed] code .line {
+    display: block;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
 /* Blockquotes */
 .djot-content blockquote {
     margin: 1em 0;

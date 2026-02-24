@@ -381,141 +381,52 @@ class Converter
     }
 
     /**
-     * Pre-process code blocks to extract line number, highlighting, and filename syntax.
+     * Pre-process code blocks to extract filename syntax.
      *
-     * Syntax examples:
-     * - ``` php # - line numbers
-     * - ``` php #=9 - line numbers starting at 9
-     * - ``` php {2,4-5} - highlight lines 2, 4-5
-     * - ``` php [config.php] - filename header
-     * - ``` php # {2,4} [config.php] - combined
+     * Note: Line numbers (#, #=N) and highlighting ({lines}) are handled by djot-php.
+     * This only handles the wp-djot specific [filename] syntax.
+     *
+     * Syntax: ``` php [config.php]
      */
     private function preProcessCodeBlocks(string $djot): string
     {
-        // Pattern: ``` followed by optional language, optional # or #=N, optional {lines}, optional [filename]
-        $pattern = '/^(```+)\s*(\w+)?\s*(#(?:=(\d+))?)?(\s*\{([^}]+)\})?(\s*\[([^\]]+)\])?\s*$/m';
+        // Pattern: ``` followed by language and various options, ending with [filename]
+        // We need to match the whole line to properly extract filename even when other options present
+        $pattern = '/^(```+\s*\w*(?:\s*#(?:=\d+)?)?(?:\s*\{[^}]+\})?)\s*\[([^\]]+)\]\s*$/m';
 
         return preg_replace_callback($pattern, function (array $matches): string {
-            $fence = $matches[1];
-            $lang = $matches[2] ?? '';
-            $hasLineNumbers = !empty($matches[3]);
-            $startLine = !empty($matches[4]) ? (int)$matches[4] : 1;
-            $highlightLines = $matches[6] ?? '';
-            $filename = $matches[8] ?? '';
-
-            // If no special features, return unchanged
-            if (!$hasLineNumbers && empty($highlightLines) && empty($filename)) {
-                return $matches[0];
-            }
+            $fenceWithOptions = $matches[1];
+            $filename = $matches[2];
 
             // Build marker to inject (will be first line of code)
-            $marker = '%%WPDJOT_CODE_BLOCK:';
-            if ($hasLineNumbers) {
-                $marker .= 'ln=' . $startLine . ':';
-            }
-            if ($highlightLines) {
-                $marker .= 'hl=' . $highlightLines . ':';
-            }
-            if ($filename) {
-                $marker .= 'fn=' . $filename . ':';
-            }
-            $marker .= '%%';
+            $marker = '%%WPDJOT_CODE_BLOCK:fn=' . $filename . ':%%';
 
-            // Return fence with just the language, marker will be on next line
-            $result = $fence . ($lang ? ' ' . $lang : '');
-
-            return $result . "\n" . $marker;
+            return $fenceWithOptions . "\n" . $marker;
         }, $djot) ?? $djot;
     }
 
     /**
-     * Post-process code blocks to add line numbers, highlighting, and filename.
+     * Post-process code blocks to add filename header.
      *
-     * Finds markers in code blocks and converts them to proper HTML structure.
+     * Note: Line numbers and highlighting are handled by djot-php.
+     * This only handles the wp-djot specific [filename] feature.
      */
     private function postProcessCodeBlocks(string $html): string
     {
         // Find code blocks with our marker
-        $pattern = '/<pre><code([^>]*)>%%WPDJOT_CODE_BLOCK:([^%]+)%%(.*?)<\/code><\/pre>/s';
+        $pattern = '/<pre([^>]*)><code([^>]*)>%%WPDJOT_CODE_BLOCK:fn=([^:]+):%%\n?(.*?)<\/code><\/pre>/s';
 
         return preg_replace_callback($pattern, function (array $matches): string {
-            $codeAttrs = $matches[1];
-            $markerData = $matches[2];
-            $codeContent = $matches[3];
+            $preAttrs = $matches[1];
+            $codeAttrs = $matches[2];
+            $filename = $matches[3];
+            $codeContent = $matches[4];
 
-            // Parse marker data
-            $hasLineNumbers = false;
-            $startLine = 1;
-            $highlightLines = [];
-            $filename = '';
+            // Add data-filename attribute to existing pre attributes
+            $preAttrs = trim($preAttrs . ' data-filename="' . esc_attr($filename) . '"');
 
-            if (preg_match('/ln=(\d+):/', $markerData, $m)) {
-                $hasLineNumbers = true;
-                $startLine = (int)$m[1];
-            }
-            if (preg_match('/hl=([^:]+):/', $markerData, $m)) {
-                $highlightLines = $this->parseHighlightLines($m[1]);
-            }
-            if (preg_match('/fn=([^:]+):/', $markerData, $m)) {
-                $filename = $m[1];
-            }
-
-            // Build pre classes
-            $preClasses = [];
-            if ($hasLineNumbers) {
-                $preClasses[] = 'line-numbers';
-            }
-            if (!empty($highlightLines)) {
-                $preClasses[] = 'has-highlighted-lines';
-            }
-
-            // Build pre attributes
-            $preAttrs = '';
-            if ($preClasses) {
-                $preAttrs .= ' class="' . implode(' ', $preClasses) . '"';
-            }
-            if ($hasLineNumbers && $startLine !== 1) {
-                $preAttrs .= ' data-start="' . $startLine . '"';
-            }
-            if (!empty($highlightLines)) {
-                $preAttrs .= ' data-highlight="' . implode(',', $highlightLines) . '"';
-            }
-            if ($filename) {
-                $preAttrs .= ' data-filename="' . esc_attr($filename) . '"';
-            }
-
-            // Remove the marker newline from code content
-            $codeContent = preg_replace('/^\n/', '', $codeContent);
-
-            return '<pre' . $preAttrs . '><code' . $codeAttrs . '>' . $codeContent . '</code></pre>';
+            return '<pre ' . $preAttrs . '><code' . $codeAttrs . '>' . $codeContent . '</code></pre>';
         }, $html) ?? $html;
-    }
-
-    /**
-     * Parse highlight line specification like "2,4-5,8" into array of line numbers.
-     *
-     * @return array<int>
-     */
-    private function parseHighlightLines(string $spec): array
-    {
-        $lines = [];
-        $parts = explode(',', $spec);
-
-        foreach ($parts as $part) {
-            $part = trim($part);
-            if (str_contains($part, '-')) {
-                [$start, $end] = explode('-', $part, 2);
-                $start = (int)trim($start);
-                $end = (int)trim($end);
-                for ($i = $start; $i <= $end; $i++) {
-                    $lines[] = $i;
-                }
-            } else {
-                $lines[] = (int)$part;
-            }
-        }
-
-        return array_unique($lines);
     }
 
     /**

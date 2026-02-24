@@ -2,29 +2,20 @@
  * WP Djot - Code Block Enhancements
  *
  * VitePress-style code block features:
- * - Line numbers (outside gutter, right-aligned)
- * - Line highlighting
+ * - Line numbers gutter (visual display - structure from djot-php)
  * - Diff highlighting (++/--)
  * - Focus mode
  * - Error/Warning highlights
- * - Filename headers
  * - Copy button
+ *
+ * Note: Line wrapping and highlighting classes are handled server-side by djot-php.
+ * This JS only handles visual gutter, inline markers, and copy functionality.
  *
  * @package WpDjot
  */
 
 (function () {
     'use strict';
-
-    // Inline code markers
-    var MARKERS = {
-        DIFF_ADD: '// [!code ++]',
-        DIFF_REMOVE: '// [!code --]',
-        FOCUS: '// [!code focus]',
-        ERROR: '// [!code error]',
-        WARNING: '// [!code warning]',
-        HIGHLIGHT: '// [!code highlight]'
-    };
 
     /**
      * Process inline markers in code content.
@@ -151,70 +142,6 @@
     }
 
     /**
-     * Add highlighting to specific lines.
-     */
-    function addLineHighlighting() {
-        var preBlocks = document.querySelectorAll('.djot-content pre.has-highlighted-lines');
-
-        preBlocks.forEach(function (pre) {
-            if (pre.hasAttribute('data-highlight-processed')) {
-                return;
-            }
-            pre.setAttribute('data-highlight-processed', 'true');
-
-            var code = pre.querySelector('code');
-            if (!code) {
-                return;
-            }
-
-            var highlightAttr = pre.getAttribute('data-highlight');
-            if (!highlightAttr) {
-                return;
-            }
-
-            var highlightLines = highlightAttr.split(',').map(function (n) {
-                return parseInt(n, 10);
-            });
-
-            var start = 1;
-            if (pre.hasAttribute('data-start')) {
-                start = parseInt(pre.getAttribute('data-start'), 10) || 1;
-            }
-
-            // Check if already has line structure from processCodeMarkers
-            var existingLines = code.querySelectorAll('.line');
-            if (existingLines.length > 0) {
-                // Just add highlighted class to the appropriate lines
-                existingLines.forEach(function (lineEl, index) {
-                    var lineNumber = start + index;
-                    if (highlightLines.indexOf(lineNumber) !== -1) {
-                        lineEl.classList.add('highlighted');
-                    }
-                });
-                return;
-            }
-
-            var codeHtml = code.innerHTML;
-            var lines = codeHtml.split('\n');
-
-            var hadTrailingNewline = false;
-            if (lines.length > 1 && lines[lines.length - 1] === '') {
-                lines.pop();
-                hadTrailingNewline = true;
-            }
-
-            var wrappedLines = lines.map(function (line, index) {
-                var lineNumber = start + index;
-                var isHighlighted = highlightLines.indexOf(lineNumber) !== -1;
-                var className = 'line' + (isHighlighted ? ' highlighted' : '');
-                return '<span class="' + className + '">' + line + '</span>';
-            });
-
-            code.innerHTML = wrappedLines.join('\n') + (hadTrailingNewline ? '\n' : '');
-        });
-    }
-
-    /**
      * Process inline code markers (diff, focus, error, warning).
      */
     function processCodeMarkers() {
@@ -328,10 +255,12 @@
 
     /**
      * Initialize code block enhancements.
+     *
+     * Note: Line highlighting is handled server-side by djot-php.
+     * We only handle: inline markers, line number gutter, copy buttons, and syntax highlighting.
      */
     function init() {
         processCodeMarkers();
-        addLineHighlighting();
         addLineNumbers();
         addCopyButtons();
         applySyntaxHighlighting();

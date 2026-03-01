@@ -82,37 +82,28 @@
     padding: 0;
 }
 
-/* Code Block Line Structure - use flexbox to eliminate whitespace between line spans */
-.djot-content pre.line-numbers code,
-.djot-content pre.has-highlighted-lines code,
-.djot-content pre[data-markers-processed] code {
-    display: flex;
-    flex-direction: column;
-}
-
-/* Preserve whitespace/indentation in all line spans */
+/* Code Block Line Spans - display as blocks to stack vertically */
 .djot-content pre code .line {
-    white-space: pre;
+    display: block;
 }
 
-/* Code Block Line Numbers - use grid for perfect alignment */
+/* Code Block Line Numbers */
+.djot-content pre.line-numbers code {
+    padding-left: 3.5em;
+}
+
 .djot-content pre.line-numbers code .line {
-    display: grid;
-    grid-template-columns: 2em 1fr;
-    gap: 0.5em;
+    position: relative;
 }
 
 .djot-content pre.line-numbers code .line::before {
     content: attr(data-line);
+    position: absolute;
+    left: -3.5em;
+    width: 2.5em;
     text-align: right;
     color: #6e7781;
     user-select: none;
-    white-space: nowrap;
-}
-
-/* Hide JS-generated gutter if present (fallback compatibility) */
-.djot-content pre.line-numbers .line-numbers-gutter {
-    display: none;
 }
 
 .djot-content pre code .line.highlighted {

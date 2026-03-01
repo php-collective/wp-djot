@@ -381,6 +381,11 @@ class Converter
     }
 
     /**
+     * @var array<int, string> Temporary storage for filename markers during conversion
+     */
+    private array $filenameMarkers = [];
+
+    /**
      * Pre-process code blocks to extract filename syntax.
      *
      * Note: Line numbers (#, #=N) and highlighting ({lines}) are handled by djot-php.
@@ -390,18 +395,27 @@ class Converter
      */
     private function preProcessCodeBlocks(string $djot): string
     {
-        // Pattern: ``` followed by language and various options, ending with [filename]
-        // We need to match the whole line to properly extract filename even when other options present
-        $pattern = '/^(```+\s*\w*(?:\s*#(?:=\d+)?)?(?:\s*\{[^}]+\})?)\s*\[([^\]]+)\]\s*$/m';
+        $this->filenameMarkers = [];
+        $counter = 0;
 
-        return preg_replace_callback($pattern, function (array $matches): string {
-            $fenceWithOptions = $matches[1];
-            $filename = $matches[2];
+        // Pattern: Match complete fenced code block with [filename] in the opening fence
+        $pattern = '/^(```+)(\s*\w*(?:\s*#(?:=\d+)?)?(?:\s*\{[^}]+\})?)\s*\[([^\]]+)\]\s*$(.*?)^\1\s*$/ms';
 
-            // Build marker to inject (will be first line of code)
-            $marker = '%%WPDJOT_CODE_BLOCK:fn=' . $filename . ':%%';
+        return preg_replace_callback($pattern, function (array $matches) use (&$counter): string {
+            $fence = $matches[1];
+            $options = $matches[2];
+            $filename = $matches[3];
+            $content = $matches[4];
 
-            return $fenceWithOptions . "\n" . $marker;
+            // Store filename and use a unique marker
+            $marker = '___WPDJOT_FN_' . $counter . '___';
+            $this->filenameMarkers[$counter] = $filename;
+            $counter++;
+
+            // Return the code block without [filename], with marker at the END of content
+            // The marker will be on its own line and converted to data-filename in post-processing
+            // Putting it at the end ensures line numbers for actual code stay correct
+            return $fence . $options . $content . $marker . "\n" . $fence;
         }, $djot) ?? $djot;
     }
 
@@ -413,20 +427,34 @@ class Converter
      */
     private function postProcessCodeBlocks(string $html): string
     {
-        // Find code blocks with our marker
-        $pattern = '/<pre([^>]*)><code([^>]*)>%%WPDJOT_CODE_BLOCK:fn=([^:]+):%%\n?(.*?)<\/code><\/pre>/s';
+        if (empty($this->filenameMarkers)) {
+            return $html;
+        }
 
-        return preg_replace_callback($pattern, function (array $matches): string {
-            $preAttrs = $matches[1];
-            $codeAttrs = $matches[2];
-            $filename = $matches[3];
-            $codeContent = $matches[4];
+        // Find code blocks containing our filename markers (at the end of code content)
+        // The marker may be wrapped in a <span class="line"> element by djot-php
+        foreach ($this->filenameMarkers as $index => $filename) {
+            $marker = '___WPDJOT_FN_' . $index . '___';
 
-            // Add data-filename attribute to existing pre attributes
-            $preAttrs = trim($preAttrs . ' data-filename="' . esc_attr($filename) . '"');
+            // Pattern to find the pre tag containing this marker and add data-filename
+            // The marker is at the end, so we match the whole code block and remove the marker line
+            $pattern = '/(<pre)([^>]*)(><code[^>]*>)(.*?)(?:<span[^>]*>)?' . preg_quote($marker, '/') . '(?:<\/span>)?\n?(<\/code><\/pre>)/s';
 
-            return '<pre ' . $preAttrs . '><code' . $codeAttrs . '>' . $codeContent . '</code></pre>';
-        }, $html) ?? $html;
+            $html = preg_replace_callback($pattern, function (array $matches) use ($filename): string {
+                $preOpen = $matches[1];
+                $preAttrs = $matches[2];
+                $codeOpen = $matches[3];
+                $codeContent = $matches[4];
+                $codeClose = $matches[5];
+
+                // Add data-filename attribute to existing pre attributes
+                $preAttrs = trim($preAttrs . ' data-filename="' . esc_attr($filename) . '"');
+
+                return $preOpen . ' ' . $preAttrs . $codeOpen . $codeContent . $codeClose;
+            }, $html) ?? $html;
+        }
+
+        return $html;
     }
 
     /**

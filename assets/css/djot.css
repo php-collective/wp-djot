@@ -83,9 +83,17 @@
 }
 
 /* Code Block Line Structure - consistent styling for all code blocks with line spans */
+/* Set font-size: 0 on code to eliminate whitespace from newlines between spans */
+.djot-content pre.line-numbers code,
+.djot-content pre.has-highlighted-lines code,
+.djot-content pre[data-markers-processed] code {
+    font-size: 0;
+    line-height: 0;
+}
+
 .djot-content pre code .line {
     display: block;
-    font-size: inherit;
+    font-size: 0.875rem;
     line-height: 1.45;
     position: relative;
 }

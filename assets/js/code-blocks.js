@@ -2,29 +2,19 @@
  * WP Djot - Code Block Enhancements
  *
  * VitePress-style code block features:
- * - Line numbers (outside gutter, right-aligned)
- * - Line highlighting
  * - Diff highlighting (++/--)
  * - Focus mode
  * - Error/Warning highlights
- * - Filename headers
  * - Copy button
+ *
+ * Note: Line numbers are handled via CSS using data-line attributes from djot-php.
+ * Line highlighting is also handled server-side by djot-php.
  *
  * @package WpDjot
  */
 
 (function () {
     'use strict';
-
-    // Inline code markers
-    var MARKERS = {
-        DIFF_ADD: '// [!code ++]',
-        DIFF_REMOVE: '// [!code --]',
-        FOCUS: '// [!code focus]',
-        ERROR: '// [!code error]',
-        WARNING: '// [!code warning]',
-        HIGHLIGHT: '// [!code highlight]'
-    };
 
     /**
      * Process inline markers in code content.
@@ -64,7 +54,7 @@
         }
 
         // Process each line
-        var wrappedLines = lines.map(function (line) {
+        var wrappedLines = lines.map(function (line, index) {
             var classes = ['line'];
             var cleanLine = line;
 
@@ -97,186 +87,14 @@
                 classes.push('dimmed');
             }
 
-            return '<span class="' + classes.join(' ') + '">' + cleanLine + '</span>';
+            // Add data-line for CSS line numbers (1-indexed)
+            return '<span class="' + classes.join(' ') + '" data-line="' + (index + 1) + '">' + cleanLine + '</span>';
         });
 
         return {
             html: wrappedLines.join('\n') + (hadTrailingNewline ? '\n' : ''),
             hasFocus: hasFocus
         };
-    }
-
-    /**
-     * Add line numbers gutter to code blocks.
-     */
-    function addLineNumbers() {
-        var preBlocks = document.querySelectorAll('.djot-content pre.line-numbers');
-
-        preBlocks.forEach(function (pre) {
-            if (pre.querySelector('.line-numbers-gutter')) {
-                return;
-            }
-
-            var code = pre.querySelector('code');
-            if (!code) {
-                return;
-            }
-
-            var start = 1;
-            if (pre.hasAttribute('data-start')) {
-                start = parseInt(pre.getAttribute('data-start'), 10) || 1;
-            }
-
-            // Prefer generated line spans when present to keep exact sync
-            // with highlight/marker processing (including empty lines).
-            var lineEls = code.querySelectorAll('.line');
-            var lineCount = lineEls.length;
-            if (lineCount === 0) {
-                var codeText = code.textContent || '';
-                var lines = codeText.split('\n');
-                if (lines.length > 1 && lines[lines.length - 1] === '') {
-                    lines.pop();
-                }
-                lineCount = lines.length;
-            }
-
-            var gutter = document.createElement('div');
-            gutter.className = 'line-numbers-gutter';
-            gutter.setAttribute('aria-hidden', 'true');
-
-            for (var i = 0; i < lineCount; i++) {
-                var lineNum = document.createElement('span');
-                lineNum.className = 'line-num';
-                lineNum.textContent = String(start + i);
-                gutter.appendChild(lineNum);
-            }
-
-            pre.classList.add('has-line-gutter');
-            pre.insertBefore(gutter, pre.firstChild);
-        });
-    }
-
-    /**
-     * Sync gutter line heights with rendered code line heights.
-     *
-     * Theme typography can alter line metrics; measure actual rendered line
-     * boxes and copy the height to each line number to avoid drift.
-     */
-    function syncLineNumberHeights() {
-        var preBlocks = document.querySelectorAll('.djot-content pre.has-line-gutter');
-
-        preBlocks.forEach(function (pre) {
-            var code = pre.querySelector('code');
-            var gutter = pre.querySelector('.line-numbers-gutter');
-            if (!code || !gutter) {
-                return;
-            }
-
-            var lineEls = code.querySelectorAll('.line');
-            var numEls = gutter.querySelectorAll('.line-num');
-
-            if (lineEls.length === 0 || numEls.length === 0) {
-                return;
-            }
-
-            // If counts drift for any reason, rebuild gutter from rendered lines.
-            if (lineEls.length !== numEls.length) {
-                var start = 1;
-                if (pre.hasAttribute('data-start')) {
-                    start = parseInt(pre.getAttribute('data-start'), 10) || 1;
-                }
-
-                gutter.innerHTML = '';
-                for (var i = 0; i < lineEls.length; i++) {
-                    var lineNum = document.createElement('span');
-                    lineNum.className = 'line-num';
-                    lineNum.textContent = String(start + i);
-                    gutter.appendChild(lineNum);
-                }
-                numEls = gutter.querySelectorAll('.line-num');
-            }
-
-            lineEls.forEach(function (lineEl, index) {
-                if (!numEls[index]) {
-                    return;
-                }
-
-                // Ensure empty lines contribute a measurable height.
-                if (lineEl.textContent === '') {
-                    lineEl.innerHTML = '&nbsp;';
-                }
-
-                var h = Math.ceil(lineEl.getBoundingClientRect().height);
-                if (h > 0) {
-                    numEls[index].style.height = h + 'px';
-                    numEls[index].style.lineHeight = h + 'px';
-                }
-            });
-        });
-    }
-
-    /**
-     * Add highlighting to specific lines.
-     */
-    function addLineHighlighting() {
-        var preBlocks = document.querySelectorAll('.djot-content pre.has-highlighted-lines');
-
-        preBlocks.forEach(function (pre) {
-            if (pre.hasAttribute('data-highlight-processed')) {
-                return;
-            }
-            pre.setAttribute('data-highlight-processed', 'true');
-
-            var code = pre.querySelector('code');
-            if (!code) {
-                return;
-            }
-
-            var highlightAttr = pre.getAttribute('data-highlight');
-            if (!highlightAttr) {
-                return;
-            }
-
-            var highlightLines = highlightAttr.split(',').map(function (n) {
-                return parseInt(n, 10);
-            });
-
-            var start = 1;
-            if (pre.hasAttribute('data-start')) {
-                start = parseInt(pre.getAttribute('data-start'), 10) || 1;
-            }
-
-            // Check if already has line structure from processCodeMarkers
-            var existingLines = code.querySelectorAll('.line');
-            if (existingLines.length > 0) {
-                // Just add highlighted class to the appropriate lines
-                existingLines.forEach(function (lineEl, index) {
-                    var lineNumber = start + index;
-                    if (highlightLines.indexOf(lineNumber) !== -1) {
-                        lineEl.classList.add('highlighted');
-                    }
-                });
-                return;
-            }
-
-            var codeHtml = code.innerHTML;
-            var lines = codeHtml.split('\n');
-
-            var hadTrailingNewline = false;
-            if (lines.length > 1 && lines[lines.length - 1] === '') {
-                lines.pop();
-                hadTrailingNewline = true;
-            }
-
-            var wrappedLines = lines.map(function (line, index) {
-                var lineNumber = start + index;
-                var isHighlighted = highlightLines.indexOf(lineNumber) !== -1;
-                var className = 'line' + (isHighlighted ? ' highlighted' : '');
-                return '<span class="' + className + '">' + line + '</span>';
-            });
-
-            code.innerHTML = wrappedLines.join('\n') + (hadTrailingNewline ? '\n' : '');
-        });
     }
 
     /**
@@ -295,7 +113,7 @@
                 return;
             }
 
-            // Check if already has line structure
+            // Check if already has line structure from djot-php
             if (code.querySelector('.line')) {
                 return;
             }
@@ -396,14 +214,8 @@
      */
     function init() {
         processCodeMarkers();
-        addLineHighlighting();
-        addLineNumbers();
         addCopyButtons();
         applySyntaxHighlighting();
-        syncLineNumberHeights();
-
-        // Late re-sync after fonts/styles finish settling.
-        setTimeout(syncLineNumberHeights, 80);
     }
 
     if (document.readyState === 'loading') {
@@ -411,9 +223,6 @@
     } else {
         init();
     }
-
-    // Keep gutters aligned when viewport changes.
-    window.addEventListener('resize', syncLineNumberHeights);
 
     window.wpDjotCodeBlocks = { init: init };
 })();

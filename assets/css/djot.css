@@ -90,26 +90,19 @@
     flex-direction: column;
 }
 
-.djot-content pre code .line {
-    position: relative;
-}
-
-/* Code Block Line Numbers - using CSS with data-line attribute for perfect alignment */
-.djot-content pre.line-numbers {
-    padding-left: 3.5em;
-    position: relative;
+/* Code Block Line Numbers - inline with each line for perfect alignment */
+.djot-content pre.line-numbers code .line {
+    display: flex;
 }
 
 .djot-content pre.line-numbers code .line::before {
     content: attr(data-line);
-    position: absolute;
-    left: -3.5em;
+    flex-shrink: 0;
     width: 3em;
-    padding-right: 0.5em;
+    margin-right: 1em;
     text-align: right;
     color: #6e7781;
     user-select: none;
-    pointer-events: none;
 }
 
 /* Hide JS-generated gutter if present (fallback compatibility) */

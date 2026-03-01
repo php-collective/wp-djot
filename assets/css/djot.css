@@ -90,21 +90,24 @@
     flex-direction: column;
 }
 
-/* Code Block Line Numbers - inline with each line for perfect alignment */
-.djot-content pre.line-numbers code .line {
-    display: flex;
+/* Preserve whitespace/indentation in all line spans */
+.djot-content pre code .line {
     white-space: pre;
+}
+
+/* Code Block Line Numbers - use grid for perfect alignment */
+.djot-content pre.line-numbers code .line {
+    display: grid;
+    grid-template-columns: 2em 1fr;
+    gap: 0.5em;
 }
 
 .djot-content pre.line-numbers code .line::before {
     content: attr(data-line);
-    flex-shrink: 0;
-    width: 3em;
-    margin-right: 1em;
     text-align: right;
     color: #6e7781;
     user-select: none;
-    white-space: normal;
+    white-space: nowrap;
 }
 
 /* Hide JS-generated gutter if present (fallback compatibility) */

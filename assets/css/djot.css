@@ -93,6 +93,7 @@
 /* Code Block Line Numbers - inline with each line for perfect alignment */
 .djot-content pre.line-numbers code .line {
     display: flex;
+    white-space: pre;
 }
 
 .djot-content pre.line-numbers code .line::before {
@@ -103,6 +104,7 @@
     text-align: right;
     color: #6e7781;
     user-select: none;
+    white-space: normal;
 }
 
 /* Hide JS-generated gutter if present (fallback compatibility) */

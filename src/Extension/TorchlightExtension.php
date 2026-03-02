@@ -14,7 +14,6 @@ use Djot\Event\RenderEvent;
 use Djot\Extension\ExtensionInterface;
 use Djot\Node\Block\CodeBlock;
 use Torchlight\Engine\Engine;
-use Torchlight\Engine\Options;
 
 /**
  * Torchlight syntax highlighting extension for djot-php.
@@ -73,18 +72,16 @@ class TorchlightExtension implements ExtensionInterface
         $rawLanguage = $block->getLanguage() ?: 'text';
         $code = $block->getContent();
 
-        // Parse language string for options (e.g., "php #" or "php #=42 {1,3-5}")
+        // Parse language string for options (e.g., "php #" or "php #=42")
         $parsed = $this->parseLanguageOptions($rawLanguage);
         $language = $parsed['language'];
         $showLineNumbers = $parsed['lineNumbers'] || $this->showLineNumbers;
 
-        // Configure Torchlight options for line numbers
-        if ($showLineNumbers || $parsed['startLine'] !== 1) {
-            $options = new Options(
-                lineNumbersEnabled: $showLineNumbers,
-                lineNumbersStart: $parsed['startLine'],
-            );
-            $this->engine->setTorchlightOptions($options);
+        // Use inline torchlight options for custom start line
+        // (API options are reset by Engine internally, but inline comments work)
+        if ($parsed['startLine'] !== 1) {
+            $options = ['lineNumbersStart' => $parsed['startLine']];
+            $code = '// torchlight! ' . json_encode($options) . "\n" . $code;
         }
 
         try {

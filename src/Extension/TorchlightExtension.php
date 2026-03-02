@@ -14,6 +14,7 @@ use Djot\Event\RenderEvent;
 use Djot\Extension\ExtensionInterface;
 use Djot\Node\Block\CodeBlock;
 use Torchlight\Engine\Engine;
+use Torchlight\Engine\Options;
 
 /**
  * Torchlight syntax highlighting extension for djot-php.
@@ -72,10 +73,19 @@ class TorchlightExtension implements ExtensionInterface
         $rawLanguage = $block->getLanguage() ?: 'text';
         $code = $block->getContent();
 
-        // Parse language string for options (e.g., "php #" or "php #=42")
+        // Parse language string for options (e.g., "php #" or "php #=42 {1,3-5}")
         $parsed = $this->parseLanguageOptions($rawLanguage);
         $language = $parsed['language'];
         $showLineNumbers = $parsed['lineNumbers'] || $this->showLineNumbers;
+
+        // Configure Torchlight options for line numbers
+        if ($showLineNumbers || $parsed['startLine'] !== 1) {
+            $options = new Options(
+                lineNumbersEnabled: $showLineNumbers,
+                lineNumbersStart: $parsed['startLine'],
+            );
+            $this->engine->setTorchlightOptions($options);
+        }
 
         try {
             $html = $this->engine->codeToHtml($code, $language, $this->theme, withGutter: $showLineNumbers);
@@ -96,16 +106,22 @@ class TorchlightExtension implements ExtensionInterface
      * - "php #" -> language with line numbers
      * - "php #=5" -> language with line numbers starting at 5
      *
+     * Note: Line highlighting uses Torchlight's inline annotations:
+     * - // [tl! highlight] - highlight this line
+     * - // [tl! focus] - focus this line
+     * - // [tl! ++] - diff add
+     * - // [tl! --] - diff remove
+     *
      * @return array{language: string, lineNumbers: bool, startLine: int}
      */
     private function parseLanguageOptions(string $raw): array
     {
-        $language = $raw;
+        $language = trim($raw);
         $lineNumbers = false;
         $startLine = 1;
 
         // Check for line numbers syntax: # or #=N
-        if (preg_match('/^(\S+)\s+#(?:=(\d+))?/', $raw, $matches)) {
+        if (preg_match('/^(\S+)\s+#(?:=(\d+))?/', $language, $matches)) {
             $language = $matches[1];
             $lineNumbers = true;
             if (isset($matches[2])) {

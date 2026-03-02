@@ -83,6 +83,14 @@
     background: transparent;
 }
 
+/* Torchlight line numbers */
+.djot-content pre code.torchlight .line-number {
+    display: inline-block;
+    width: 2em;
+    margin-right: 1em;
+    text-align: right;
+}
+
 /* Torchlight focus mode - dim unfocused lines */
 .djot-content pre code.torchlight.has-focus-lines .line:not(.line-focus) {
     opacity: 0.5;

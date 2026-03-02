@@ -69,32 +69,16 @@ class TorchlightExtension implements ExtensionInterface
             return;
         }
 
-        $language = $block->getLanguage() ?: 'text';
+        $rawLanguage = $block->getLanguage() ?: 'text';
         $code = $block->getContent();
-        $attributes = $block->getAttributes();
 
-        // Check for line numbers attribute (from djot {#} syntax or data attribute)
-        $showLineNumbers = $this->showLineNumbers;
-        $startLine = 1;
-
-        // Parse djot code block options (e.g., "php #" for line numbers, "php #=42" for start at 42)
-        if (isset($attributes['lineNumbers'])) {
-            $showLineNumbers = true;
-            if (is_numeric($attributes['lineNumbers'])) {
-                $startLine = (int) $attributes['lineNumbers'];
-            }
-        }
+        // Parse language string for options (e.g., "php #" or "php #=42")
+        $parsed = $this->parseLanguageOptions($rawLanguage);
+        $language = $parsed['language'];
+        $showLineNumbers = $parsed['lineNumbers'] || $this->showLineNumbers;
 
         try {
-            $html = $this->engine->codeToHtml($code, $language, $this->theme);
-
-            // Wrap with appropriate classes
-            $classes = ['torchlight'];
-            if ($showLineNumbers) {
-                $classes[] = 'has-line-numbers';
-            }
-
-            // Extract the inner content from Torchlight's output and wrap with our classes
+            $html = $this->engine->codeToHtml($code, $language, $this->theme, withGutter: $showLineNumbers);
             $event->setHtml($html);
         } catch (\Throwable $e) {
             // Fallback to basic rendering on error
@@ -102,5 +86,37 @@ class TorchlightExtension implements ExtensionInterface
             $langClass = $language ? ' class="language-' . htmlspecialchars($language, ENT_QUOTES, 'UTF-8') . '"' : '';
             $event->setHtml('<pre><code' . $langClass . '>' . $escapedCode . '</code></pre>' . "\n");
         }
+    }
+
+    /**
+     * Parse language string to extract language and options.
+     *
+     * Supports:
+     * - "php" -> language only
+     * - "php #" -> language with line numbers
+     * - "php #=5" -> language with line numbers starting at 5
+     *
+     * @return array{language: string, lineNumbers: bool, startLine: int}
+     */
+    private function parseLanguageOptions(string $raw): array
+    {
+        $language = $raw;
+        $lineNumbers = false;
+        $startLine = 1;
+
+        // Check for line numbers syntax: # or #=N
+        if (preg_match('/^(\S+)\s+#(?:=(\d+))?/', $raw, $matches)) {
+            $language = $matches[1];
+            $lineNumbers = true;
+            if (isset($matches[2])) {
+                $startLine = (int) $matches[2];
+            }
+        }
+
+        return [
+            'language' => $language,
+            'lineNumbers' => $lineNumbers,
+            'startLine' => $startLine,
+        ];
     }
 }

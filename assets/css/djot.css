@@ -85,6 +85,7 @@
 /* Code Block Line Spans - display as blocks to stack vertically */
 .djot-content pre code .line {
     display: block;
+    line-height: 1.45;
 }
 
 /* Code Block Line Numbers */

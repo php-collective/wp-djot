@@ -77,106 +77,22 @@
     border-radius: 0;
 }
 
-/* Override highlight.js padding */
-.djot-content pre code.hljs {
+/* Torchlight/Phiki Syntax Highlighting */
+.djot-content pre code.torchlight {
     padding: 0;
+    background: transparent;
 }
 
-/* Code Block Line Spans - display as blocks to stack vertically */
-.djot-content pre code .line {
-    display: block;
-    line-height: 1.45;
-}
-
-/* Code Block Line Numbers */
-.djot-content pre.line-numbers code {
-    padding-left: 3.5em;
-}
-
-.djot-content pre.line-numbers code .line {
-    position: relative;
-}
-
-.djot-content pre.line-numbers code .line::before {
-    content: attr(data-line);
-    position: absolute;
-    left: -3.5em;
-    width: 2.5em;
-    text-align: right;
-    color: #6e7781;
-    user-select: none;
-}
-
-.djot-content pre code .line.highlighted {
-    background-color: rgba(255, 235, 59, 0.15);
-}
-
-/* Code Block Diff Highlighting */
-.djot-content pre code .line.diff.add {
-    background-color: rgba(46, 160, 67, 0.15);
-}
-
-.djot-content pre code .line.diff.add::after {
-    content: '+';
-    float: right;
-    margin-right: 0.5em;
-    color: #2ea043;
-    font-weight: bold;
-}
-
-.djot-content pre code .line.diff.remove {
-    background-color: rgba(248, 81, 73, 0.15);
-}
-
-.djot-content pre code .line.diff.remove::after {
-    content: '-';
-    float: right;
-    margin-right: 0.5em;
-    color: #f85149;
-    font-weight: bold;
-}
-
-/* Code Block Focus Mode */
-.djot-content pre.has-focus code .line.dimmed {
-    opacity: 0.4;
+/* Torchlight focus mode - dim unfocused lines */
+.djot-content pre code.torchlight.has-focus-lines .line:not(.line-focus) {
+    opacity: 0.5;
     filter: blur(0.5px);
+    transition: opacity 0.2s, filter 0.2s;
 }
 
-.djot-content pre.has-focus code .line.focus {
+.djot-content pre code.torchlight.has-focus-lines:hover .line:not(.line-focus) {
     opacity: 1;
     filter: none;
-}
-
-/* Code Block Error/Warning - explicit resets to prevent theme bleeding */
-.djot-content pre code .line.error {
-    background-color: rgba(248, 81, 73, 0.2);
-    padding: 0;
-    margin: 0;
-    border: none;
-    border-radius: 0;
-}
-
-.djot-content pre code .line.error::after {
-    content: '✗';
-    float: right;
-    margin-right: 0.5em;
-    color: #f85149;
-    font-weight: bold;
-}
-
-.djot-content pre code .line.warning {
-    background-color: rgba(255, 193, 7, 0.2);
-    padding: 0;
-    margin: 0;
-    border: none;
-    border-radius: 0;
-}
-
-.djot-content pre code .line.warning::after {
-    content: '⚠';
-    float: right;
-    margin-right: 0.5em;
-    color: #d29922;
 }
 
 /* Code Block Wrapper and Copy Button */

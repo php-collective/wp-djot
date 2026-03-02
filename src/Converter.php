@@ -17,6 +17,7 @@ use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
 use HTMLPurifier_Config;
+use WpDjot\Extension\TorchlightExtension;
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- wpdjot_ is our plugin prefix
 
@@ -204,6 +205,11 @@ class Converter
                 $locale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
                 $converter->addExtension(new SmartQuotesExtension(locale: $locale));
             }
+
+            // Add Torchlight syntax highlighting
+            $converter->addExtension(new TorchlightExtension(
+                theme: 'github-light',
+            ));
 
             // Allow customization via WordPress filters
             if (function_exists('apply_filters')) {

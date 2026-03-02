@@ -234,24 +234,6 @@
     color: #57606a;
 }
 
-/* Adjust gutter position when filename header is present */
-.djot-content pre.line-numbers[data-filename] .line-numbers-gutter {
-    top: 2.5em;
-}
-
-/* Inline markers processed blocks - same styling as highlighted lines */
-.djot-content pre[data-markers-processed] code {
-    display: block;
-    font-size: 0;
-    line-height: 0;
-}
-
-.djot-content pre[data-markers-processed] code .line {
-    display: block;
-    font-size: 14px;
-    line-height: 1.45;
-}
-
 /* Blockquotes */
 .djot-content blockquote {
     margin: 1em 0;

@@ -79,28 +79,63 @@
 
 /* Torchlight/Phiki Syntax Highlighting */
 .djot-content pre code.torchlight {
-    padding: 0;
+    display: block;
+    min-width: max-content;
+    padding: 1rem 0;
     background: transparent;
+}
+
+.djot-content pre code.torchlight .line {
+    display: block;
+    padding: 0 1rem;
 }
 
 /* Torchlight line numbers */
 .djot-content pre code.torchlight .line-number {
     display: inline-block;
     width: 2em;
-    margin-right: 1em;
+    margin-right: 1rem;
     text-align: right;
+    color: #6e7681;
+    user-select: none;
+}
+
+/* Torchlight highlight lines */
+.djot-content pre code.torchlight .line-highlight {
+    background: rgba(255, 255, 0, 0.15);
 }
 
 /* Torchlight focus mode - dim unfocused lines */
 .djot-content pre code.torchlight.has-focus-lines .line:not(.line-focus) {
-    opacity: 0.5;
-    filter: blur(0.5px);
-    transition: opacity 0.2s, filter 0.2s;
+    transition: filter 0.35s, opacity 0.35s;
+    filter: blur(0.095rem);
+    opacity: 0.65;
 }
 
 .djot-content pre code.torchlight.has-focus-lines:hover .line:not(.line-focus) {
+    filter: blur(0);
     opacity: 1;
-    filter: none;
+}
+
+/* Torchlight diff annotations */
+.djot-content pre code.torchlight .line-add {
+    background: rgba(46, 160, 67, 0.15);
+}
+
+.djot-content pre code.torchlight .line-remove {
+    background: rgba(248, 81, 73, 0.15);
+}
+
+.djot-content pre code.torchlight .diff-indicator {
+    user-select: none;
+}
+
+.djot-content pre code.torchlight .diff-indicator-add {
+    color: #3fb950;
+}
+
+.djot-content pre code.torchlight .diff-indicator-remove {
+    color: #f85149;
 }
 
 /* Code Block Wrapper and Copy Button */

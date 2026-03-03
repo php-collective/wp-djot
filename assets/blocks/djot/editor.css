@@ -107,6 +107,66 @@
     padding: 0;
 }
 
+/* Torchlight code block structure */
+.wpdjot-preview.djot-content pre code.torchlight {
+    display: block;
+    min-width: max-content;
+    padding: 1rem 0;
+    background: transparent;
+}
+
+.wpdjot-preview.djot-content pre code.torchlight .line {
+    display: block;
+    padding: 0 1rem;
+}
+
+.wpdjot-preview.djot-content pre code.torchlight .line-number {
+    display: inline-block;
+    width: 2em;
+    margin-right: 1rem;
+    text-align: right;
+    color: #6e7681;
+    user-select: none;
+}
+
+/* Torchlight highlight lines */
+.wpdjot-preview.djot-content pre code.torchlight .line-highlight {
+    background: rgba(255, 255, 0, 0.15);
+}
+
+/* Torchlight focus mode */
+.wpdjot-preview.djot-content pre code.torchlight.has-focus-lines .line:not(.line-focus) {
+    transition: filter 0.35s, opacity 0.35s;
+    filter: blur(0.095rem);
+    opacity: 0.65;
+}
+
+.wpdjot-preview.djot-content pre code.torchlight.has-focus-lines:hover .line:not(.line-focus) {
+    filter: blur(0);
+    opacity: 1;
+}
+
+/* Torchlight diff annotations */
+.wpdjot-preview.djot-content pre code.torchlight .line-add {
+    background: rgba(46, 160, 67, 0.15);
+}
+
+.wpdjot-preview.djot-content pre code.torchlight .line-remove {
+    background: rgba(248, 81, 73, 0.15);
+}
+
+.wpdjot-preview.djot-content pre code.torchlight .diff-indicator {
+    user-select: none;
+}
+
+.wpdjot-preview.djot-content pre code.torchlight .diff-indicator-add {
+    color: #3fb950;
+}
+
+.wpdjot-preview.djot-content pre code.torchlight .diff-indicator-remove {
+    color: #f85149;
+}
+
 .wpdjot-preview.djot-content blockquote {
     border-left: 4px solid #ddd;
     margin-left: 0;

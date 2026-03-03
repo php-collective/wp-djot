@@ -73,6 +73,23 @@ rm -f "$TMP_DIR/vendor/php-collective/djot/composer.json"
 rm -f "$TMP_DIR/vendor/php-collective/djot/CONTRIBUTING.md"
 rm -f "$TMP_DIR/vendor/php-collective/djot/README.md"
 
+# Clean torchlight/engine
+rm -rf "$TMP_DIR/vendor/torchlight/engine/.github"
+rm -rf "$TMP_DIR/vendor/torchlight/engine/tests"
+rm -f "$TMP_DIR/vendor/torchlight/engine/phpunit.xml"
+rm -f "$TMP_DIR/vendor/torchlight/engine/composer.json"
+rm -f "$TMP_DIR/vendor/torchlight/engine/README.md"
+
+# Clean phiki/phiki
+rm -rf "$TMP_DIR/vendor/phiki/phiki/bin"
+rm -f "$TMP_DIR/vendor/phiki/phiki/phpunit.xml"
+rm -f "$TMP_DIR/vendor/phiki/phiki/phpstan.neon"
+rm -f "$TMP_DIR/vendor/phiki/phiki/composer.json"
+rm -f "$TMP_DIR/vendor/phiki/phiki/package.json"
+rm -f "$TMP_DIR/vendor/phiki/phiki/package-lock.json"
+rm -f "$TMP_DIR/vendor/phiki/phiki/CONTRIBUTING.md"
+rm -f "$TMP_DIR/vendor/phiki/phiki/README.md"
+
 # Build zip
 mkdir -p "$BUILD_DIR"
 rm -f "$BUILD_DIR/$ZIP_NAME"

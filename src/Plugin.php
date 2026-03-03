@@ -458,44 +458,15 @@ class Plugin
             WPDJOT_VERSION,
         );
 
-        // Code highlighting
-        if ($this->options['highlight_code']) {
-            $theme = $this->options['highlight_theme'];
-
-            wp_enqueue_style(
-                'wpdjot-highlight',
-                WPDJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
-                [],
-                WPDJOT_VERSION,
-            );
-
-            wp_enqueue_script(
-                'wpdjot-highlight',
-                WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
-                [],
-                WPDJOT_VERSION,
-                ['in_footer' => true, 'strategy' => 'defer'],
-            );
-
-            // Djot language definition for highlight.js
-            wp_enqueue_script(
-                'wpdjot-highlight-djot',
-                WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/languages/hljs-djot.js',
-                ['wpdjot-highlight'],
-                WPDJOT_VERSION,
-                ['in_footer' => true, 'strategy' => 'defer'],
-            );
-
-            // Code block enhancements (line numbers, highlighting)
-            // This script handles syntax highlighting along with line numbers
-            wp_enqueue_script(
-                'wpdjot-code-blocks',
-                WPDJOT_PLUGIN_URL . 'assets/js/code-blocks.js',
-                ['wpdjot-highlight-djot'],
-                WPDJOT_VERSION,
-                ['in_footer' => true, 'strategy' => 'defer'],
-            );
-        }
+        // Code block enhancements (copy button)
+        // Note: Syntax highlighting is handled server-side by Torchlight
+        wp_enqueue_script(
+            'wpdjot-code-blocks',
+            WPDJOT_PLUGIN_URL . 'assets/js/code-blocks.js',
+            [],
+            WPDJOT_VERSION,
+            ['in_footer' => true, 'strategy' => 'defer'],
+        );
 
         // Heading permalink copy-to-clipboard
         if ($this->options['permalinks_enabled']) {

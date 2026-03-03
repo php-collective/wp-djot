@@ -25,6 +25,15 @@ echo "Building wp-djot $VERSION..."
 echo "Installing production dependencies..."
 cp "$PLUGIN_DIR/composer.json" "$PLUGIN_DIR/composer.lock" "$TMP_DIR/"
 php "$(command -v composer)" install --working-dir="$TMP_DIR" --no-dev --optimize-autoloader --no-interaction --quiet
+
+# Downgrade PHP 8.2 syntax to PHP 8.1 for WordPress.org compatibility
+echo "Downgrading PHP 8.2 syntax in vendor..."
+cp "$PLUGIN_DIR/rector.php" "$PLUGIN_DIR/rector-bootstrap.php" "$TMP_DIR/"
+cd "$TMP_DIR"
+php -d auto_prepend_file=rector-bootstrap.php "$PLUGIN_DIR/vendor/bin/rector" process --no-diffs 2>/dev/null || true
+rm -f "$TMP_DIR/rector.php" "$TMP_DIR/rector-bootstrap.php"
+cd "$PLUGIN_DIR"
+
 rm "$TMP_DIR/composer.json" "$TMP_DIR/composer.lock"
 
 # Copy plugin files, excluding development files

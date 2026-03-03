@@ -67,6 +67,27 @@ jobs:
       - name: Install production dependencies
         run: composer install --no-dev --prefer-dist --no-progress --optimize-autoloader
 
+      - name: Downgrade PHP 8.2 syntax for WordPress.org
+        run: |
+          composer require --dev rector/rector --no-progress --quiet
+          # Create bootstrap to define ABSPATH (prevents exit in WP plugin files)
+          echo "<?php define('ABSPATH', '/tmp/');" > rector-bootstrap.php
+          # Create rector config for downgrading vendor to PHP 8.1
+          cat > rector.php << 'EOF'
+          <?php
+          declare(strict_types=1);
+          use Rector\Config\RectorConfig;
+          use Rector\Set\ValueObject\DowngradeLevelSetList;
+          return RectorConfig::configure()
+              ->withBootstrapFiles([__DIR__ . '/rector-bootstrap.php'])
+              ->withPaths([__DIR__ . '/vendor'])
+              ->withSets([DowngradeLevelSetList::DOWN_TO_PHP_81]);
+          EOF
+          # Run rector with -d flag to load bootstrap before autoloader
+          php -d auto_prepend_file=rector-bootstrap.php vendor/bin/rector process vendor --no-diffs || true
+          rm -f rector-bootstrap.php rector.php
+          composer install --no-dev --prefer-dist --no-progress --optimize-autoloader --quiet
+
       - name: WordPress Plugin Deploy
         id: deploy
         uses: 10up/action-wordpress-plugin-deploy@stable

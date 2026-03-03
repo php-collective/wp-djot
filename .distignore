@@ -21,6 +21,8 @@
 /phpcs.xml
 /phpstan.neon
 /phpunit.xml.dist
+/rector.php
+/rector-bootstrap.php
 /.editorconfig
 
 # Documentation (keep readme.txt and composer.json)

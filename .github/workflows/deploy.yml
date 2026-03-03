@@ -70,8 +70,15 @@ jobs:
       - name: Downgrade PHP 8.2 syntax for WordPress.org
         run: |
           composer require --dev rector/rector --no-progress --quiet
+          # Verify readonly classes exist before processing
+          echo "=== Files with readonly class before Rector ==="
+          grep -r "readonly class" vendor || echo "No readonly classes found"
           # Run rector with bootstrap to define ABSPATH (prevents exit in WP plugin files)
-          php -d auto_prepend_file=rector-bootstrap.php vendor/bin/rector process vendor --no-diffs || true
+          echo "=== Running Rector ==="
+          php -d auto_prepend_file=rector-bootstrap.php vendor/bin/rector process vendor --debug 2>&1 | head -200 || true
+          # Verify readonly classes are gone after processing
+          echo "=== Files with readonly class after Rector ==="
+          grep -r "readonly class" vendor || echo "No readonly classes found"
           composer install --no-dev --prefer-dist --no-progress --optimize-autoloader --quiet
 
       - name: WordPress Plugin Deploy

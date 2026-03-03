@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified code block CSS (Torchlight handles syntax and annotation styling)
 - Updated documentation with Torchlight annotation syntax
 
+### Removed
+
+- highlight.js dependency (replaced by server-side Torchlight Engine)
+- Code Highlighting settings section (no longer needed)
+
 ## [1.4.3] - 2026-02-10
 
 ### Fixed

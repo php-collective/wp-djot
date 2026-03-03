@@ -216,32 +216,6 @@ class Settings
             ['field' => 'smart_quotes_locale', 'description' => __('Choose which typographic quote characters to use. Default English uses curly quotes.', 'djot-markup')],
         );
 
-        // Code Highlighting Section
-        add_settings_section(
-            'wpdjot_highlighting',
-            __('Code Highlighting', 'djot-markup'),
-            [$this, 'renderHighlightingSectionDescription'],
-            self::PAGE_SLUG,
-        );
-
-        add_settings_field(
-            'highlight_code',
-            __('Enable Highlighting', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_highlighting',
-            ['field' => 'highlight_code', 'description' => __('Enable syntax highlighting for code blocks using highlight.js.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'highlight_theme',
-            __('Highlight Theme', 'djot-markup'),
-            [$this, 'renderThemeSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_highlighting',
-            ['field' => 'highlight_theme'],
-        );
-
         // Advanced Settings Section
         add_settings_section(
             'wpdjot_advanced',
@@ -349,8 +323,6 @@ class Settings
             'comment_profile' => in_array($input['comment_profile'] ?? '', $validCommentProfiles, true)
                 ? $input['comment_profile']
                 : 'comment',
-            'highlight_code' => !empty($input['highlight_code']),
-            'highlight_theme' => sanitize_text_field($input['highlight_theme'] ?? 'github'),
             'shortcode_tag' => sanitize_key($input['shortcode_tag'] ?? 'djot'),
             'markdown_mode' => !empty($input['markdown_mode']),
             'post_soft_break' => in_array($input['post_soft_break'] ?? '', ['newline', 'space', 'br'], true)
@@ -402,11 +374,6 @@ class Settings
     public function renderSecuritySectionDescription(): void
     {
         echo '<p>' . esc_html__('Security options for handling potentially unsafe content.', 'djot-markup') . '</p>';
-    }
-
-    public function renderHighlightingSectionDescription(): void
-    {
-        echo '<p>' . esc_html__('Configure syntax highlighting for code blocks.', 'djot-markup') . '</p>';
     }
 
     public function renderRenderingSectionDescription(): void
@@ -463,51 +430,6 @@ class Settings
         if (!empty($args['description'])) {
             printf('<p class="description">%s</p>', esc_html($args['description']));
         }
-    }
-
-    /**
-     * Render theme select dropdown.
-     *
-     * @param array<string, mixed> $args
-     */
-    public function renderThemeSelect(array $args): void
-    {
-        $options = get_option(self::OPTION_GROUP, []);
-        $field = $args['field'];
-        $current = $options[$field] ?? 'github';
-
-        $themes = [
-            'github' => 'GitHub',
-            'github-dark' => 'GitHub Dark',
-            'monokai' => 'Monokai',
-            'dracula' => 'Dracula',
-            'nord' => 'Nord',
-            'atom-one-light' => 'Atom One Light',
-            'atom-one-dark' => 'Atom One Dark',
-            'vs' => 'Visual Studio',
-            'vs2015' => 'Visual Studio 2015',
-            'xcode' => 'Xcode',
-            'stackoverflow-light' => 'Stack Overflow Light',
-            'stackoverflow-dark' => 'Stack Overflow Dark',
-        ];
-
-        printf(
-            '<select id="%1$s" name="%2$s[%1$s]">',
-            esc_attr($field),
-            esc_attr(self::OPTION_GROUP),
-        );
-
-        foreach ($themes as $value => $label) {
-            printf(
-                '<option value="%s" %s>%s</option>',
-                esc_attr($value),
-                selected($current, $value, false),
-                esc_html($label),
-            );
-        }
-
-        echo '</select>';
-        echo '<p class="description">' . esc_html__('Choose a syntax highlighting color scheme.', 'djot-markup') . '</p>';
     }
 
     /**

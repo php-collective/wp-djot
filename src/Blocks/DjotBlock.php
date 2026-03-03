@@ -81,24 +81,10 @@ class DjotBlock
     }
 
     /**
-     * Register the block with highlight.js styles as editor style dependency.
+     * Register the Gutenberg block.
      */
     public function register(): void
     {
-        $options = get_option('wpdjot_settings', []);
-        $highlightCode = $options['highlight_code'] ?? true;
-        $theme = $options['highlight_theme'] ?? 'github';
-
-        if ($highlightCode) {
-            // Register highlight.js style
-            wp_register_style(
-                'wpdjot-highlight',
-                WPDJOT_PLUGIN_URL . "assets/vendor/highlight.js/styles/{$theme}.min.css",
-                [],
-                WPDJOT_VERSION,
-            );
-        }
-
         // Register the block - this auto-registers wpdjot-djot-editor-style from block.json
         register_block_type(WPDJOT_PLUGIN_DIR . 'assets/blocks/djot');
 
@@ -116,34 +102,13 @@ class DjotBlock
                 return $this->renderLegacyBlock($attributes);
             },
         ]);
-
-        if ($highlightCode) {
-            // Add highlight.js CSS as dependency of the block's editor style
-            $styles = wp_styles();
-            if (isset($styles->registered['wpdjot-djot-editor-style'])) {
-                $styles->registered['wpdjot-djot-editor-style']->deps[] = 'wpdjot-highlight';
-            }
-        }
     }
 
     /**
-     * Enqueue highlight.js script for block editor preview.
+     * Enqueue editor assets.
      */
     public function enqueueEditorAssets(): void
     {
-        $options = get_option('wpdjot_settings', []);
-        $highlightCode = $options['highlight_code'] ?? true;
-
-        if ($highlightCode) {
-            wp_enqueue_script(
-                'wpdjot-highlight-editor',
-                WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
-                [],
-                WPDJOT_VERSION,
-                false,
-            );
-        }
-
         // Torchlight annotations in block inspector
         wp_enqueue_script(
             'wpdjot-editor-torchlight',

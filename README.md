@@ -26,7 +26,7 @@ Djot is a light markup syntax created by John MacFarlane (creator of CommonMark 
 - **Heading Permalinks**: Clickable `#` symbols on headings (show on hover, copy URL to clipboard)
 - **Content Profiles**: Configurable feature restrictions (full, article, comment, minimal)
 - **Safe Mode**: XSS protection for untrusted content
-- **Syntax Highlighting**: Built-in highlight.js integration with multiple themes
+- **Syntax Highlighting**: Server-side highlighting with Torchlight Engine
 - **Code Block Enhancements**: Line numbers and line highlighting (VitePress-style syntax)
 - **WP-CLI Migration**: Migrate existing HTML/Markdown content to Djot
 
@@ -114,7 +114,7 @@ For complete Djot syntax documentation, visit [djot.net](https://djot.net/).
 ## Credits
 
 - [djot-php](https://github.com/php-collective/djot-php) by PHP Collective
-- [highlight.js](https://highlightjs.org/) for syntax highlighting
+- [Torchlight Engine](https://github.com/torchlight-api/engine) for syntax highlighting
 
 ## Changelog
 

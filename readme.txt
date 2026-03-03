@@ -21,7 +21,7 @@ Djot Markup adds support for the [Djot](https://djot.net/) markup language in Wo
 * **Content Filtering**: Automatically process `{djot}...{/djot}` blocks
 * **Table of Contents**: Automatic TOC generation from headings with configurable levels and position
 * **Safe Mode**: XSS protection for untrusted content
-* **Syntax Highlighting**: Built-in highlight.js integration with 12+ themes
+* **Syntax Highlighting**: Server-side highlighting with Torchlight Engine
 * **Admin Settings**: Easy configuration through WordPress admin
 * **Template Tags**: Functions for theme developers
 * **Dark Mode Support**: CSS adapts to dark mode preferences

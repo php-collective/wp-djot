@@ -520,8 +520,6 @@ class Plugin
             'markdown_mode' => false,
             'post_soft_break' => 'newline',
             'comment_soft_break' => 'newline',
-            'highlight_code' => true,
-            'highlight_theme' => 'github',
             'shortcode_tag' => 'djot',
             'toc_enabled' => false,
             'toc_position' => 'top',

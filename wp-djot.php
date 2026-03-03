@@ -66,8 +66,6 @@ register_activation_hook(__FILE__, static function (): void {
         'enable_comments' => false,
         'process_full_content' => true,
         'safe_mode' => true,
-        'highlight_code' => true,
-        'highlight_theme' => 'github',
         'shortcode_tag' => 'djot',
         'filter_priority' => 5,
     ];

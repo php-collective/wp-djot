@@ -30,16 +30,35 @@ CONTRIBUTING.md
 README.md
 
 # Vendor non-permitted files
-vendor/bin/djot
-vendor/php-collective/djot/bin
-vendor/php-collective/djot/docs
-vendor/php-collective/djot/fuzz
-vendor/php-collective/djot/tests
-vendor/php-collective/djot/phpcs.xml
-vendor/php-collective/djot/phpstan.neon
-vendor/php-collective/djot/composer.json
-vendor/php-collective/djot/CONTRIBUTING.md
-vendor/php-collective/djot/README.md
+vendor/bin
+vendor/*/tests
+vendor/*/*/tests
+vendor/*/*/*/tests
+vendor/*/docs
+vendor/*/*/docs
+vendor/*/.github
+vendor/*/*/.github
+vendor/*/.art
+vendor/*/*/.art
+vendor/*/bin
+vendor/*/*/bin
+vendor/*/fuzz
+vendor/*/*/fuzz
+vendor/*/*.md
+vendor/*/*/*.md
+vendor/*/*.xml
+vendor/*/*/*.xml
+vendor/*/*.neon
+vendor/*/*/*.neon
+vendor/*/composer.json
+vendor/*/*/composer.json
+vendor/*/*/*/composer.json
+vendor/*/phpunit.xml
+vendor/*/*/phpunit.xml
+vendor/*/package.json
+vendor/*/*/package.json
+vendor/*/package-lock.json
+vendor/*/*/package-lock.json
 
 # Temporary files
 /_*

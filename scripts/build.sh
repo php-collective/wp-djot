@@ -90,6 +90,18 @@ rm -f "$TMP_DIR/vendor/phiki/phiki/package-lock.json"
 rm -f "$TMP_DIR/vendor/phiki/phiki/CONTRIBUTING.md"
 rm -f "$TMP_DIR/vendor/phiki/phiki/README.md"
 
+# Clean all vendor test directories and non-essential files
+find "$TMP_DIR/vendor" -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true
+find "$TMP_DIR/vendor" -type d -name ".github" -exec rm -rf {} + 2>/dev/null || true
+find "$TMP_DIR/vendor" -type d -name ".art" -exec rm -rf {} + 2>/dev/null || true
+find "$TMP_DIR/vendor" -type d -name "docs" -exec rm -rf {} + 2>/dev/null || true
+find "$TMP_DIR/vendor" -type f -name "*.md" -delete 2>/dev/null || true
+find "$TMP_DIR/vendor" -type f -name "phpunit.xml*" -delete 2>/dev/null || true
+find "$TMP_DIR/vendor" -type f -name "phpstan.neon" -delete 2>/dev/null || true
+find "$TMP_DIR/vendor" -type f -name "phpcs.xml" -delete 2>/dev/null || true
+find "$TMP_DIR/vendor" -depth -type d -name "bin" ! -path "$TMP_DIR/vendor/bin" -exec rm -rf {} + 2>/dev/null || true
+rm -rf "$TMP_DIR/vendor/bin"
+
 # Build zip
 mkdir -p "$BUILD_DIR"
 rm -f "$BUILD_DIR/$ZIP_NAME"

@@ -60,67 +60,91 @@ $baz = 3;
 ```
 ````
 
-Start line numbers at a specific number with `#=N`:
+Start line numbers at a specific number using inline Torchlight options:
 
 ````
-``` php #=9
-// This starts at line 9
-$offset = 9;
-$next = 10;
+``` php #
+// torchlight! {"lineNumbersStart": 42}
+$answer = 42;
+$question = "What is 6 x 7?";
 ```
 ````
 
-### Line Highlighting
+### Code Annotations (Torchlight)
 
-Highlight specific lines with `{lines}`:
+WP Djot uses [Torchlight Engine](https://torchlight.dev/) for advanced code block features. Add inline annotations to highlight, focus, or mark lines as diffs.
+
+#### Highlight Lines
 
 ````
-``` php {2,4}
-$line1 = "normal";
-$line2 = "highlighted";
-$line3 = "normal";
-$line4 = "highlighted";
+``` php #
+$normal = "not highlighted";
+$important = "this line stands out"; // [tl! highlight]
+$another = "also normal";
 ```
 ````
 
-Use ranges for consecutive lines:
+Highlight a range of lines:
 
 ````
-``` php {2,4-6}
-// Line 1 - normal
-// Line 2 - highlighted
-// Line 3 - normal
-// Lines 4-6 - highlighted
-// ...
+``` php #
+$before = "normal";
+$start = "highlighted"; // [tl! highlight:start]
+$middle = "also highlighted";
+$end = "last highlighted"; // [tl! highlight:end]
+$after = "normal again";
 ```
 ````
 
-### Combined
+#### Focus Mode
 
-Line numbers and highlighting can be combined:
+Dim all lines except the focused ones:
 
 ````
-``` php # {2,4-5}
-function example() {
-    $highlighted = true;
-    $normal = false;
-    $alsoHighlighted = true;
-    $andThisToo = true;
-    return $result;
-}
+``` php #
+$context = "dimmed";
+$important = "this stands out"; // [tl! focus]
+$more = "also dimmed";
 ```
 ````
 
-Or with a starting offset:
+Focus a range:
 
 ````
-``` php #=10 {11,13}
-// Line 10
-// Line 11 - highlighted
-// Line 12
-// Line 13 - highlighted
+``` php #
+$setup = "dimmed";
+$key1 = "focused"; // [tl! focus:start]
+$key2 = "also focused";
+$key3 = "still focused"; // [tl! focus:end]
+$teardown = "dimmed";
 ```
 ````
+
+#### Diff Highlighting
+
+Mark lines as added or removed:
+
+````
+``` php #
+$unchanged = "stays the same";
+$old = "remove this"; // [tl! --]
+$new = "add this"; // [tl! ++]
+```
+````
+
+#### Combining Annotations
+
+Multiple annotations can be combined on a single line:
+
+````
+``` php #
+$line = "highlighted and focused"; // [tl! highlight focus]
+```
+````
+
+#### Editor Toolbar
+
+When editing a Djot block, expand the **"Code Annotations"** panel in the right sidebar to quickly insert annotations at your cursor position.
 
 ## Links
 

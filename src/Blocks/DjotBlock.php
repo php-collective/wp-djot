@@ -134,16 +134,23 @@ class DjotBlock
         $options = get_option('wpdjot_settings', []);
         $highlightCode = $options['highlight_code'] ?? true;
 
-        if (!$highlightCode) {
-            return;
+        if ($highlightCode) {
+            wp_enqueue_script(
+                'wpdjot-highlight-editor',
+                WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
+                [],
+                WPDJOT_VERSION,
+                false,
+            );
         }
 
+        // Torchlight annotations in block inspector
         wp_enqueue_script(
-            'wpdjot-highlight-editor',
-            WPDJOT_PLUGIN_URL . 'assets/vendor/highlight.js/highlight.min.js',
-            [],
+            'wpdjot-editor-torchlight',
+            WPDJOT_PLUGIN_URL . 'assets/js/editor-torchlight.js',
+            ['wp-compose', 'wp-block-editor', 'wp-components', 'wp-element', 'wp-hooks', 'wp-data'],
             WPDJOT_VERSION,
-            false,
+            true,
         );
     }
 

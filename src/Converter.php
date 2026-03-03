@@ -17,6 +17,7 @@ use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
 use HTMLPurifier_Config;
+use WpDjot\Extension\TorchlightExtension;
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- wpdjot_ is our plugin prefix
 
@@ -205,6 +206,11 @@ class Converter
                 $converter->addExtension(new SmartQuotesExtension(locale: $locale));
             }
 
+            // Add Torchlight syntax highlighting
+            $converter->addExtension(new TorchlightExtension(
+                theme: 'github-light',
+            ));
+
             // Allow customization via WordPress filters
             if (function_exists('apply_filters')) {
                 /** @var \Djot\DjotConverter $converter */
@@ -381,127 +387,80 @@ class Converter
     }
 
     /**
-     * Pre-process code blocks to extract line number and highlighting syntax.
+     * @var array<int, string> Temporary storage for filename markers during conversion
+     */
+    private array $filenameMarkers = [];
+
+    /**
+     * Pre-process code blocks to extract filename syntax.
      *
-     * Converts: ``` lang # {2,4-5} or ``` lang #=9 {2,4-5}
-     * To: ``` lang with a marker injected into the code content
+     * Note: Line numbers (#, #=N) and highlighting ({lines}) are handled by djot-php.
+     * This only handles the wp-djot specific [filename] syntax.
+     *
+     * Syntax: ``` php [config.php]
      */
     private function preProcessCodeBlocks(string $djot): string
     {
-        // Pattern: ``` followed by optional language, optional # or #=N, optional {lines}
-        // The # enables line numbers, #=N sets starting line, {lines} highlights specific lines
-        $pattern = '/^(```+)\s*(\w+)?\s*(#(?:=(\d+))?)?(\s*\{([^}]+)\})?\s*$/m';
+        $this->filenameMarkers = [];
+        $counter = 0;
 
-        return preg_replace_callback($pattern, function (array $matches): string {
+        // Pattern: Match complete fenced code block with [filename] in the opening fence
+        $pattern = '/^(```+)(\s*\w*(?:\s*#(?:=\d+)?)?(?:\s*\{[^}]+\})?)\s*\[([^\]]+)\]\s*$(.*?)^\1\s*$/ms';
+
+        return preg_replace_callback($pattern, function (array $matches) use (&$counter): string {
             $fence = $matches[1];
-            $lang = $matches[2] ?? '';
-            $hasLineNumbers = !empty($matches[3]);
-            $startLine = !empty($matches[4]) ? (int)$matches[4] : 1;
-            $highlightLines = $matches[6] ?? '';
+            $options = $matches[2];
+            $filename = $matches[3];
+            $content = $matches[4];
 
-            // If no special features, return unchanged
-            if (!$hasLineNumbers && empty($highlightLines)) {
-                return $matches[0];
-            }
+            // Store filename and use a unique marker
+            $marker = '___WPDJOT_FN_' . $counter . '___';
+            $this->filenameMarkers[$counter] = $filename;
+            $counter++;
 
-            // Build marker to inject (will be first line of code)
-            $marker = '%%WPDJOT_CODE_BLOCK:';
-            if ($hasLineNumbers) {
-                $marker .= 'ln=' . $startLine . ':';
-            }
-            if ($highlightLines) {
-                $marker .= 'hl=' . $highlightLines . ':';
-            }
-            $marker .= '%%';
-
-            // Return fence with just the language, marker will be on next line
-            $result = $fence . ($lang ? ' ' . $lang : '');
-
-            return $result . "\n" . $marker;
+            // Return the code block without [filename], with marker at the END of content
+            // The marker will be on its own line and converted to data-filename in post-processing
+            // Putting it at the end ensures line numbers for actual code stay correct
+            return $fence . $options . $content . $marker . "\n" . $fence;
         }, $djot) ?? $djot;
     }
 
     /**
-     * Post-process code blocks to add line numbers and highlighting.
+     * Post-process code blocks to add filename header.
      *
-     * Finds markers in code blocks and converts them to proper HTML structure.
+     * Note: Line numbers and highlighting are handled by djot-php.
+     * This only handles the wp-djot specific [filename] feature.
      */
     private function postProcessCodeBlocks(string $html): string
     {
-        // Find code blocks with our marker
-        $pattern = '/<pre><code([^>]*)>%%WPDJOT_CODE_BLOCK:([^%]+)%%(.*?)<\/code><\/pre>/s';
-
-        return preg_replace_callback($pattern, function (array $matches): string {
-            $codeAttrs = $matches[1];
-            $markerData = $matches[2];
-            $codeContent = $matches[3];
-
-            // Parse marker data
-            $hasLineNumbers = false;
-            $startLine = 1;
-            $highlightLines = [];
-
-            if (preg_match('/ln=(\d+):/', $markerData, $m)) {
-                $hasLineNumbers = true;
-                $startLine = (int)$m[1];
-            }
-            if (preg_match('/hl=([^:]+):/', $markerData, $m)) {
-                $highlightLines = $this->parseHighlightLines($m[1]);
-            }
-
-            // Build pre classes
-            $preClasses = [];
-            if ($hasLineNumbers) {
-                $preClasses[] = 'line-numbers';
-            }
-            if (!empty($highlightLines)) {
-                $preClasses[] = 'has-highlighted-lines';
-            }
-
-            // Build pre attributes
-            $preAttrs = '';
-            if ($preClasses) {
-                $preAttrs .= ' class="' . implode(' ', $preClasses) . '"';
-            }
-            if ($hasLineNumbers && $startLine !== 1) {
-                $preAttrs .= ' data-start="' . $startLine . '"';
-            }
-            if (!empty($highlightLines)) {
-                $preAttrs .= ' data-highlight="' . implode(',', $highlightLines) . '"';
-            }
-
-            // Remove the marker newline from code content
-            $codeContent = preg_replace('/^\n/', '', $codeContent);
-
-            return '<pre' . $preAttrs . '><code' . $codeAttrs . '>' . $codeContent . '</code></pre>';
-        }, $html) ?? $html;
-    }
-
-    /**
-     * Parse highlight line specification like "2,4-5,8" into array of line numbers.
-     *
-     * @return array<int>
-     */
-    private function parseHighlightLines(string $spec): array
-    {
-        $lines = [];
-        $parts = explode(',', $spec);
-
-        foreach ($parts as $part) {
-            $part = trim($part);
-            if (str_contains($part, '-')) {
-                [$start, $end] = explode('-', $part, 2);
-                $start = (int)trim($start);
-                $end = (int)trim($end);
-                for ($i = $start; $i <= $end; $i++) {
-                    $lines[] = $i;
-                }
-            } else {
-                $lines[] = (int)$part;
-            }
+        if (empty($this->filenameMarkers)) {
+            return $html;
         }
 
-        return array_unique($lines);
+        // Find code blocks containing our filename markers (at the end of code content)
+        // The marker may be wrapped in a <span class="line"> element by djot-php
+        foreach ($this->filenameMarkers as $index => $filename) {
+            $marker = '___WPDJOT_FN_' . $index . '___';
+
+            // Pattern to find the pre tag containing this marker and add data-filename
+            // The marker is at the end, so we match the whole code block and remove the marker line
+            $pattern = '/(<pre)([^>]*)(><code[^>]*>)(.*?)(?:<span[^>]*>)?' . preg_quote($marker, '/') . '(?:<\/span>)?\n?(<\/code><\/pre>)/s';
+
+            $html = preg_replace_callback($pattern, function (array $matches) use ($filename): string {
+                $preOpen = $matches[1];
+                $preAttrs = $matches[2];
+                $codeOpen = $matches[3];
+                $codeContent = $matches[4];
+                $codeClose = $matches[5];
+
+                // Add data-filename attribute to existing pre attributes
+                $preAttrs = trim($preAttrs . ' data-filename="' . esc_attr($filename) . '"');
+
+                return $preOpen . ' ' . $preAttrs . $codeOpen . $codeContent . $codeClose;
+            }, $html) ?? $html;
+        }
+
+        return $html;
     }
 
     /**

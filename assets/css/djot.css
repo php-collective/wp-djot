@@ -77,51 +77,86 @@
     border-radius: 0;
 }
 
-/* Override highlight.js padding */
-.djot-content pre code.hljs {
+/* Torchlight/Phiki Syntax Highlighting */
+.djot-content pre code.torchlight {
     padding: 0;
+    background: transparent;
 }
 
-/* Code Block Line Numbers - positioned outside the code box */
-.djot-content pre.line-numbers {
-    position: relative;
-    padding-left: 3.5em;
-}
-
-.djot-content pre.line-numbers .line-numbers-gutter {
-    position: absolute;
-    left: 0;
-    top: 1em;
-    width: 2.5em;
-    padding-right: 6px;
+/* Torchlight line numbers */
+.djot-content pre code.torchlight .line-number {
+    display: inline-block;
+    width: 2em;
+    margin-right: 1em;
     text-align: right;
-    font-size: inherit;
-    line-height: 1.45;
-    color: #6e7781;
-    user-select: none;
-    opacity: 0.6;
-    border-right: 1px solid #d0d7de;
 }
 
-.djot-content pre.line-numbers .line-numbers-gutter .line-num {
-    display: block;
+/* Torchlight focus mode - dim unfocused lines */
+.djot-content pre code.torchlight.has-focus-lines .line:not(.line-focus) {
+    opacity: 0.5;
+    filter: blur(0.5px);
+    transition: opacity 0.2s, filter 0.2s;
 }
 
-/* Code Block Line Highlighting */
-.djot-content pre.has-highlighted-lines code {
-    display: block;
-    font-size: 0;
-    line-height: 0;
+.djot-content pre code.torchlight.has-focus-lines:hover .line:not(.line-focus) {
+    opacity: 1;
+    filter: none;
 }
 
-.djot-content pre.has-highlighted-lines code .line {
-    display: block;
-    font-size: 14px;
-    line-height: 1.45;
+/* Code Block Wrapper and Copy Button */
+.djot-content .code-block-wrapper {
+    position: relative;
 }
 
-.djot-content pre code .line.highlighted {
-    background-color: rgba(255, 235, 59, 0.15);
+.djot-content .code-block-wrapper .code-copy-btn {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    padding: 0.4em;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #57606a;
+    z-index: 10;
+}
+
+.djot-content .code-block-wrapper:hover .code-copy-btn {
+    opacity: 1;
+}
+
+.djot-content .code-block-wrapper .code-copy-btn:hover {
+    background: #fff;
+    color: #24292f;
+}
+
+.djot-content .code-block-wrapper .code-copy-btn.copied {
+    color: #2ea043;
+}
+
+/* Code Block Filename Header */
+.djot-content pre[data-filename] {
+    position: relative;
+    padding-top: 2.5em;
+}
+
+.djot-content pre[data-filename]::before {
+    content: attr(data-filename);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 0.4em 1em;
+    background: #e6e8eb;
+    border-bottom: 1px solid #d0d7de;
+    border-radius: 6px 6px 0 0;
+    font-size: 0.85em;
+    color: #57606a;
 }
 
 /* Blockquotes */

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Torchlight Engine integration for advanced code block features
+- Inline code annotations: highlight, focus, diff (+/-), and ranges
+- Code Annotations panel in block editor sidebar for quick annotation insertion
+
+### Changed
+
+- Code highlighting now powered by Torchlight/Phiki instead of custom CSS/JS
+- Simplified code block CSS (Torchlight handles syntax and annotation styling)
+- Updated documentation with Torchlight annotation syntax
+
 ## [1.4.3] - 2026-02-10
 
 ### Fixed

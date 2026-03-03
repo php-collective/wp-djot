@@ -64,17 +64,15 @@ jobs:
       - name: Run PHPStan
         run: composer stan
 
-      - name: Install production dependencies
-        run: composer install --no-dev --prefer-dist --no-progress --optimize-autoloader
-
       - name: Downgrade PHP 8.2 syntax for WordPress.org
         run: |
-          composer require --dev rector/rector --no-progress --quiet
+          # Rector is already installed (in require-dev)
           # Run rector with bootstrap to define ABSPATH (prevents exit in WP plugin files)
           php -d auto_prepend_file=rector-bootstrap.php vendor/bin/rector process vendor --no-diffs || true
-          # Remove dev dependencies but keep vendor files modified by Rector
-          # Using --no-scripts to prevent any file regeneration
-          rm -rf vendor/rector vendor/phpunit vendor/phpstan vendor/sebastian vendor/php-collective/code-sniffer vendor/squizlabs vendor/dealerdirect vendor/slevomat
+          # Remove dev dependencies manually (don't use composer which would re-download packages)
+          rm -rf vendor/rector vendor/phpunit vendor/phpstan vendor/sebastian vendor/php-collective/code-sniffer vendor/squizlabs vendor/dealerdirect vendor/slevomat vendor/bin
+          # Regenerate autoloader without dev dependencies
+          composer dump-autoload --no-dev --optimize
 
       - name: WordPress Plugin Deploy
         id: deploy

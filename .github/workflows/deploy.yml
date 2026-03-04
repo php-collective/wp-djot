@@ -68,9 +68,10 @@ jobs:
         run: |
           # Rector is already installed (in require-dev)
           # Run rector with bootstrap to define ABSPATH (prevents exit in WP plugin files)
-          php -d auto_prepend_file=rector-bootstrap.php vendor/bin/rector process vendor --no-diffs || true
+          # Paths are configured in rector.php - only targets packages needing downgrade
+          php -d auto_prepend_file=rector-bootstrap.php vendor/bin/rector process --no-diffs || true
           # Remove dev dependencies manually (don't use composer which would re-download packages)
-          rm -rf vendor/rector vendor/phpunit vendor/phpstan vendor/sebastian vendor/php-collective/code-sniffer vendor/squizlabs vendor/dealerdirect vendor/slevomat vendor/bin
+          rm -rf vendor/rector vendor/phpunit vendor/phpstan vendor/sebastian vendor/php-collective/code-sniffer vendor/squizlabs vendor/dealerdirect vendor/slevomat vendor/phpcsstandards vendor/phar-io vendor/myclabs vendor/nikic vendor/theseer vendor/bin
           # Regenerate autoloader without dev dependencies
           composer dump-autoload --no-dev --optimize
 

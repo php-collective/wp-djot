@@ -10,12 +10,11 @@ return RectorConfig::configure()
         __DIR__ . '/rector-bootstrap.php',
     ])
     ->withPaths([
-        __DIR__ . '/vendor',
-    ])
-    ->withSkip([
-        // Skip our own code - only downgrade vendor
-        __DIR__ . '/src',
-        __DIR__ . '/tests',
+        // Only downgrade packages with PHP 8.2 readonly class syntax
+        __DIR__ . '/vendor/torchlight/engine',
+        __DIR__ . '/vendor/phiki/phiki',
+        __DIR__ . '/vendor/nette/schema',
+        __DIR__ . '/vendor/nette/utils',
     ])
     ->withSets([
         DowngradeLevelSetList::DOWN_TO_PHP_81,

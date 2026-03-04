@@ -70,6 +70,44 @@ jobs:
           # Run rector with bootstrap to define ABSPATH (prevents exit in WP plugin files)
           # Paths are configured in rector.php - only targets packages needing downgrade
           php -d auto_prepend_file=rector-bootstrap.php vendor/bin/rector process --no-diffs || true
+
+          # Manually fix trait constants (PHP 8.2 feature not handled by Rector)
+          # Move constants from trait to a separate class
+          TRAIT_FILE="vendor/torchlight/engine/src/Generators/Concerns/ProcessesFileLanguage.php"
+          if [ -f "$TRAIT_FILE" ]; then
+            # Extract constants and create a helper class
+            php << 'PHPSCRIPT'
+          <?php
+          $file = 'vendor/torchlight/engine/src/Generators/Concerns/ProcessesFileLanguage.php';
+          $content = file_get_contents($file);
+
+          // Find all const declarations in the trait
+          if (preg_match_all('/^\s*const\s+(\w+)\s*=\s*([^;]+);/m', $content, $matches, PREG_SET_ORDER)) {
+              // Build the helper class
+              $helperClass = "<?php\n\nnamespace Torchlight\\Engine\\Generators\\Concerns;\n\nclass ProcessesFileLanguageConstants\n{\n";
+              foreach ($matches as $match) {
+                  $helperClass .= "    public const {$match[1]} = {$match[2]};\n";
+              }
+              $helperClass .= "}\n";
+
+              // Write helper class
+              file_put_contents('vendor/torchlight/engine/src/Generators/Concerns/ProcessesFileLanguageConstants.php', $helperClass);
+
+              // Remove const declarations from trait
+              $content = preg_replace('/^\s*const\s+\w+\s*=\s*[^;]+;\s*\/\/[^\n]*\n?/m', '', $content);
+              $content = preg_replace('/^\s*const\s+\w+\s*=\s*[^;]+;\s*\n?/m', '', $content);
+
+              // Replace self::CONST_NAME with ProcessesFileLanguageConstants::CONST_NAME
+              foreach ($matches as $match) {
+                  $content = str_replace("self::{$match[1]}", "ProcessesFileLanguageConstants::{$match[1]}", $content);
+              }
+
+              file_put_contents($file, $content);
+              echo "Fixed trait constants in ProcessesFileLanguage.php\n";
+          }
+          PHPSCRIPT
+          fi
+
           # Remove dev dependencies manually (don't use composer which would re-download packages)
           rm -rf vendor/rector vendor/phpunit vendor/phpstan vendor/sebastian vendor/php-collective/code-sniffer vendor/squizlabs vendor/dealerdirect vendor/slevomat vendor/phpcsstandards vendor/phar-io vendor/myclabs vendor/nikic vendor/theseer vendor/bin
           # Regenerate autoloader without dev dependencies

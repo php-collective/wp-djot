@@ -17,5 +17,6 @@ return RectorConfig::configure()
         __DIR__ . '/vendor/nette/utils',
     ])
     ->withSets([
-        DowngradeLevelSetList::DOWN_TO_PHP_81,
+        // DOWN_TO_PHP_80 to catch traits with constants and other PHP 8.1/8.2 features
+        DowngradeLevelSetList::DOWN_TO_PHP_80,
     ]);

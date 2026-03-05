@@ -75,7 +75,9 @@
     background: transparent;
 }
 
-.djot-content pre code.torchlight .line {
+/* All line divs (both .line and bare divs for highlighted lines) */
+.djot-content pre code.torchlight .line,
+.djot-content pre code.torchlight > div {
     display: block;
     padding: 0 1rem;
 }
@@ -90,7 +92,14 @@
     user-select: none;
 }
 
-/* Torchlight highlight lines */
+/* Torchlight highlight lines - Torchlight removes 'line' class from highlighted lines */
+.djot-content pre code.torchlight.has-highlight-lines > div:not(.line),
+pre code.torchlight.has-highlight-lines > div:not(.line),
+code.torchlight.has-highlight-lines > div:not(.line) {
+    background: rgba(255, 255, 0, 0.15);
+}
+
+/* Also support explicit .line-highlight class if used */
 .djot-content pre code.torchlight .line-highlight {
     background: rgba(255, 255, 0, 0.15);
 }
@@ -107,7 +116,38 @@
     opacity: 1;
 }
 
-/* Torchlight diff annotations */
+/* Torchlight diff annotations - Torchlight removes 'line' class from diff lines */
+/* When only add lines present */
+.djot-content pre code.torchlight.has-add-lines:not(.has-remove-lines):not(.has-highlight-lines) > div:not(.line) {
+    background: rgba(46, 160, 67, 0.15);
+}
+
+/* When only remove lines present */
+.djot-content pre code.torchlight.has-remove-lines:not(.has-add-lines):not(.has-highlight-lines) > div:not(.line) {
+    background: rgba(248, 81, 73, 0.15);
+}
+
+/* When both add and remove are present, we style based on line number content */
+/* This uses :has() to detect the +/- indicator in the line number */
+.djot-content pre code.torchlight.has-add-lines.has-remove-lines > div:not(.line):has(.line-number) {
+    /* Default to neutral for mixed diff blocks */
+}
+
+/* Detect add lines by green-colored line number */
+.djot-content pre code.torchlight > div:not(.line):has(.line-number[style*="22863a"]),
+pre code.torchlight > div:not(.line):has(.line-number[style*="22863a"]),
+code.torchlight > div:not(.line):has(.line-number[style*="22863a"]) {
+    background: rgba(46, 160, 67, 0.15);
+}
+
+/* Detect remove lines by red-colored line number */
+.djot-content pre code.torchlight > div:not(.line):has(.line-number[style*="b31d28"]),
+pre code.torchlight > div:not(.line):has(.line-number[style*="b31d28"]),
+code.torchlight > div:not(.line):has(.line-number[style*="b31d28"]) {
+    background: rgba(248, 81, 73, 0.15);
+}
+
+/* Also support explicit classes if used */
 .djot-content pre code.torchlight .line-add {
     background: rgba(46, 160, 67, 0.15);
 }

@@ -39,16 +39,6 @@
     margin: 0 0 1em;
 }
 
-/* Links */
-.djot-content a {
-    color: #0066cc;
-    text-decoration: underline;
-}
-
-.djot-content a:hover {
-    color: #004499;
-}
-
 /* Code - Inline */
 .djot-content code {
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
@@ -194,15 +184,7 @@
     color: #57606a;
 }
 
-/* Blockquotes */
-.djot-content blockquote {
-    margin: 1em 0;
-    padding: 0.5em 1em;
-    border-left: 4px solid #dfe2e5;
-    color: #57606a;
-    background-color: #f6f8fa;
-}
-
+/* Blockquotes - minimal reset, let theme handle visual styling */
 .djot-content blockquote > :first-child {
     margin-top: 0;
 }
@@ -296,36 +278,14 @@ article .entry-content .djot-content .task-list li {
     margin: 1em 0;
 }
 
-.djot-content th,
-.djot-content td {
-    border: 1px solid #d0d7de;
-    padding: 0.5em 1em;
-    text-align: left;
-}
-
 .djot-content th {
-    background-color: #f6f8fa;
     font-weight: 600;
-}
-
-.djot-content tr:nth-child(even) {
-    background-color: #f6f8fa;
-}
-
-/* Horizontal Rules */
-.djot-content hr {
-    height: 0.25em;
-    padding: 0;
-    margin: 1.5em 0;
-    background-color: #d0d7de;
-    border: 0;
 }
 
 /* Images */
 .djot-content img {
     max-width: 100%;
     height: auto;
-    border-radius: 4px;
 }
 
 /* Figures and Captions */
@@ -341,14 +301,12 @@ article .entry-content .djot-content .task-list li {
 
 .djot-content figure blockquote {
     margin: 0;
-    border-left-width: 4px;
 }
 
 .djot-content figcaption {
     margin-top: 0.75em;
     padding: 0 0.5em;
     font-size: 0.875em;
-    color: #57606a;
     text-align: center;
     font-style: italic;
 }
@@ -369,7 +327,6 @@ article .entry-content .djot-content .task-list li {
     caption-side: bottom;
     padding: 0.75em 0.5em;
     font-size: 0.875em;
-    color: #57606a;
     text-align: center;
     font-style: italic;
 }
@@ -387,7 +344,6 @@ article .entry-content .djot-content .task-list li {
 figure.wpdjot-embed figcaption {
     margin-top: 0.75em;
     font-size: 0.875em;
-    color: #57606a;
     text-align: center;
     font-style: italic;
 }
@@ -534,21 +490,6 @@ figure.wpdjot-embed figcaption {
 
 .djot-content strong {
     font-weight: 600;
-}
-
-/* Strikethrough / Deleted - GitHub style red */
-.djot-content del,
-.djot-content s {
-    text-decoration: line-through;
-    background-color: #ffebe9;
-    color: #82071e;
-}
-
-/* Inserted - GitHub style green */
-.djot-content ins {
-    text-decoration: none;
-    background-color: #dafbe1;
-    color: #116329;
 }
 
 /* Highlighted / Mark - GitHub style yellow */
@@ -806,31 +747,6 @@ figure.wpdjot-embed figcaption {
         background-color: rgba(110, 118, 129, 0.4);
     }
 
-    .djot-content blockquote {
-        border-left-color: #3b434b;
-        background-color: #161b22;
-        color: #8b949e;
-    }
-
-    .djot-content th,
-    .djot-content td {
-        border-color: #30363d;
-        color: #c9d1d9;
-        background-color: #0d1117;
-    }
-
-    .djot-content th {
-        background-color: #161b22;
-    }
-
-    .djot-content tr:nth-child(even) td {
-        background-color: #161b22;
-    }
-
-    .djot-content hr {
-        background-color: #30363d;
-    }
-
     .djot-content .note {
         background-color: rgba(56, 139, 253, 0.15);
     }
@@ -841,17 +757,6 @@ figure.wpdjot-embed figcaption {
 
     .djot-content .tip {
         background-color: rgba(46, 160, 67, 0.15);
-    }
-
-    .djot-content del,
-    .djot-content s {
-        background-color: rgba(248, 81, 73, 0.2);
-        color: #ff7b72;
-    }
-
-    .djot-content ins {
-        background-color: rgba(63, 185, 80, 0.2);
-        color: #7ee787;
     }
 
     .djot-content mark {
@@ -875,18 +780,6 @@ figure.wpdjot-embed figcaption {
     }
 
     .djot-content .task-list li:has(input[type="checkbox"]:checked) {
-        color: #8b949e;
-    }
-
-    .djot-content figcaption {
-        color: #8b949e;
-    }
-
-    .djot-content table caption {
-        color: #8b949e;
-    }
-
-    figure.wpdjot-embed figcaption {
         color: #8b949e;
     }
 

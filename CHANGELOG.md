@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.4] - 2026-03-05
+
+### Fixed
+
+- Torchlight line highlighting CSS selectors (annotated lines lose `line` class)
+
+### Changed
+
+- Removed opinionated visual styling (blockquotes, links, tables, hr, images, captions, del/ins) - let themes handle it
+
+## [1.5.3] - 2026-03-04
+
+### Fixed
+
+- PHP 8.2 trait constants compatibility (Rector downgrade)
+
+## [1.5.2] - 2026-03-04
+
+### Fixed
+
+- More aggressive PHP 8.0 downgrade for WordPress.org compatibility
+
+## [1.5.1] - 2026-03-04
+
+### Fixed
+
+- Deployment: remove missing dev dependencies from distribution
+
 ## [1.5.0] - 2026-03-03
 
 ### Added
@@ -222,7 +250,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.4.1...HEAD
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.5.4...HEAD
+[1.5.4]: https://github.com/php-collective/wp-djot/compare/1.5.3...1.5.4
+[1.5.3]: https://github.com/php-collective/wp-djot/compare/1.5.2...1.5.3
+[1.5.2]: https://github.com/php-collective/wp-djot/compare/1.5.1...1.5.2
+[1.5.1]: https://github.com/php-collective/wp-djot/compare/1.5.0...1.5.1
+[1.5.0]: https://github.com/php-collective/wp-djot/compare/1.4.3...1.5.0
+[1.4.3]: https://github.com/php-collective/wp-djot/compare/1.4.2...1.4.3
+[1.4.2]: https://github.com/php-collective/wp-djot/compare/1.4.1...1.4.2
 [1.4.1]: https://github.com/php-collective/wp-djot/compare/1.4.0...1.4.1
 [1.4.0]: https://github.com/php-collective/wp-djot/compare/1.3.1...1.4.0
 [1.3.1]: https://github.com/php-collective/wp-djot/compare/1.1.5...1.3.1

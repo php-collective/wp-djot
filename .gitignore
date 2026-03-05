@@ -21,6 +21,7 @@ composer.lock
 /coverage/
 /.phpunit.result.cache
 /.phpunit.cache/
+/.ddev
 
 # Temporary files
 *.log

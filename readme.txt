@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.5.3
+Stable tag: 1.5.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -90,6 +90,32 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 == Changelog ==
 
+= 1.5.4 =
+* Fixed Torchlight line highlighting CSS selectors for annotated lines
+* Removed opinionated visual styling (blockquotes, links, tables, etc.) - let themes handle it
+
+= 1.5.3 =
+* Fixed PHP 8.2 trait constants compatibility (Rector downgrade)
+
+= 1.5.2 =
+* Fixed PHP 8.0 downgrade for WordPress.org compatibility
+
+= 1.5.1 =
+* Fixed deployment: remove missing dev dependencies from distribution
+
+= 1.5.0 =
+* Added Torchlight Engine integration for advanced code block features
+* Added inline code annotations: highlight, focus, diff (+/-), and ranges
+* Added Code Annotations panel in block editor sidebar
+* Replaced highlight.js with server-side Torchlight/Phiki
+
+= 1.4.3 =
+* Fixed vertical spacing in highlighted code blocks
+
+= 1.4.2 =
+* Added code block line numbers and line highlighting syntax
+* Fixed legacy wp-djot/djot blocks editability in Gutenberg
+
 = 1.4.1 =
 * Fixed Table of Contents and heading permalinks appearing in post excerpts on archive pages
 
@@ -138,6 +164,12 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Template tags for theme developers
 
 == Upgrade Notice ==
+
+= 1.5.4 =
+Fixes Torchlight line highlighting CSS selectors and removes opinionated styling to let themes handle visual presentation.
+
+= 1.5.0 =
+Major update: Torchlight Engine replaces highlight.js for code highlighting. New inline code annotations (highlight, focus, diff).
 
 = 1.4.1 =
 Fixes TOC and heading permalinks leaking into post excerpts.

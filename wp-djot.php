@@ -3,7 +3,7 @@
  * Plugin Name: Djot Markup
  * Plugin URI: https://wordpress.org/plugins/djot-markup/
  * Description: <a href="https://djot.net/" target="_blank">Djot</a> markup language support for WordPress – a modern, cleaner alternative to Markdown with syntax highlighting. Convert Djot syntax to HTML in posts, pages, and comments.
- * Version: 1.5.3
+ * Version: 1.5.4
  * Requires at least: 6.0
  * Requires PHP: 8.2
  * Author: Mark Scherer

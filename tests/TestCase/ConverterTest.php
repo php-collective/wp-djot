@@ -491,6 +491,48 @@ class ConverterTest extends TestCase
         $this->assertStringContainsString("\u{201E}Hallo\u{201C}", $html);
     }
 
+    public function testCodeBlockFilename(): void
+    {
+        // Use convertArticle() which has TorchlightExtension with filename support
+        $djot = "``` php [config.php]\n\$foo = 'bar';\n```";
+
+        $html = $this->converter->convertArticle($djot);
+
+        // Should have data-filename attribute on the pre element
+        $this->assertStringContainsString('data-filename="config.php"', $html);
+        $this->assertStringContainsString('<code', $html);
+        $this->assertStringContainsString('$foo', $html);
+    }
+
+    public function testCodeBlockFilenameWithLineNumbers(): void
+    {
+        $djot = "``` php # [script.php]\necho 'hello';\n```";
+
+        $html = $this->converter->convertArticle($djot);
+
+        $this->assertStringContainsString('data-filename="script.php"', $html);
+    }
+
+    public function testCodeBlockFilenameWithSpecialCharacters(): void
+    {
+        // Filename with special characters (colon)
+        $djot = "``` ini [program:worker]\ncommand=php worker.php\n```";
+
+        $html = $this->converter->convertArticle($djot);
+
+        $this->assertStringContainsString('data-filename="program:worker"', $html);
+    }
+
+    public function testCodeBlockWithoutFilename(): void
+    {
+        $djot = "``` php\n\$foo = 'bar';\n```";
+
+        $html = $this->converter->convertArticle($djot);
+
+        // Should NOT have data-filename attribute
+        $this->assertStringNotContainsString('data-filename', $html);
+    }
+
     /**
      * Add the semantic span handler (same logic as Plugin::customizeConverter)
      */

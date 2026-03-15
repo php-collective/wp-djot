@@ -72,10 +72,11 @@ class TorchlightExtension implements ExtensionInterface
         $rawLanguage = $block->getLanguage() ?: 'text';
         $code = $block->getContent();
 
-        // Parse language string for options (e.g., "php #" or "php #=42")
+        // Parse language string for options (e.g., "php #" or "php #=42" or "php [config.php]")
         $parsed = $this->parseLanguageOptions($rawLanguage);
         $language = $parsed['language'];
         $showLineNumbers = $parsed['lineNumbers'] || $this->showLineNumbers;
+        $filename = $parsed['filename'];
 
         // Use inline torchlight options for custom start line
         // (API options are reset by Engine internally, but inline comments work)
@@ -86,13 +87,35 @@ class TorchlightExtension implements ExtensionInterface
 
         try {
             $html = $this->engine->codeToHtml($code, $language, $this->theme, withGutter: $showLineNumbers);
+
+            // Add data-filename attribute to the pre element if filename is specified
+            if ($filename !== null) {
+                $html = $this->addFilenameAttribute($html, $filename);
+            }
+
             $event->setHtml($html);
         } catch (\Throwable $e) {
             // Fallback to basic rendering on error
             $escapedCode = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
             $langClass = $language ? ' class="language-' . htmlspecialchars($language, ENT_QUOTES, 'UTF-8') . '"' : '';
-            $event->setHtml('<pre><code' . $langClass . '>' . $escapedCode . '</code></pre>' . "\n");
+            $filenameAttr = $filename !== null ? ' data-filename="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '"' : '';
+            $event->setHtml('<pre' . $filenameAttr . '><code' . $langClass . '>' . $escapedCode . '</code></pre>' . "\n");
         }
+    }
+
+    /**
+     * Add data-filename attribute to the pre element in HTML output.
+     */
+    private function addFilenameAttribute(string $html, string $filename): string
+    {
+        $escapedFilename = htmlspecialchars($filename, ENT_QUOTES, 'UTF-8');
+
+        // Add data-filename to the opening <pre> tag
+        return preg_replace(
+            '/^<pre\b/',
+            '<pre data-filename="' . $escapedFilename . '"',
+            $html,
+        ) ?? $html;
     }
 
     /**
@@ -102,6 +125,8 @@ class TorchlightExtension implements ExtensionInterface
      * - "php" -> language only
      * - "php #" -> language with line numbers
      * - "php #=5" -> language with line numbers starting at 5
+     * - "php [config.php]" -> language with filename
+     * - "php # [config.php]" -> language with line numbers and filename
      *
      * Note: Line highlighting uses Torchlight's inline annotations:
      * - // [tl! highlight] - highlight this line
@@ -109,13 +134,20 @@ class TorchlightExtension implements ExtensionInterface
      * - // [tl! ++] - diff add
      * - // [tl! --] - diff remove
      *
-     * @return array{language: string, lineNumbers: bool, startLine: int}
+     * @return array{language: string, lineNumbers: bool, startLine: int, filename: string|null}
      */
     private function parseLanguageOptions(string $raw): array
     {
         $language = trim($raw);
         $lineNumbers = false;
         $startLine = 1;
+        $filename = null;
+
+        // Check for filename syntax: [filename] at the end
+        if (preg_match('/^(.+?)\s*\[([^\]]+)\]\s*$/', $language, $matches)) {
+            $language = trim($matches[1]);
+            $filename = $matches[2];
+        }
 
         // Check for line numbers syntax: # or #=N
         if (preg_match('/^(\S+)\s+#(?:=(\d+))?/', $language, $matches)) {
@@ -130,6 +162,7 @@ class TorchlightExtension implements ExtensionInterface
             'language' => $language,
             'lineNumbers' => $lineNumbers,
             'startLine' => $startLine,
+            'filename' => $filename,
         ];
     }
 }

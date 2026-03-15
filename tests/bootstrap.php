@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+// Define WordPress constants for testing
+if (!defined('ABSPATH')) {
+    define('ABSPATH', dirname(__DIR__) . '/');
+}
+
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 // Mock WordPress functions for testing

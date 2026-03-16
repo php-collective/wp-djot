@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.5] - 2026-03-16
+
+### Added
+
+- Djot syntax highlighting for code blocks via [djot-grammars](https://github.com/php-collective/djot-grammars)
+
+### Fixed
+
+- Code block filename markers leaking into output
+
+### Changed
+
+- Updated php-collective/djot to 0.1.17
+
 ## [1.5.4] - 2026-03-05
 
 ### Fixed

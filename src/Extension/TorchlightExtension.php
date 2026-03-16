@@ -47,6 +47,13 @@ class TorchlightExtension implements ExtensionInterface
         $this->theme = $theme;
         $this->showLineNumbers = $showLineNumbers;
         $this->engine = new Engine();
+
+        // Register djot grammar from djot-grammars package
+        $grammarPath = dirname(__DIR__, 2) . '/vendor/php-collective/djot-grammars/textmate/djot.tmLanguage.json';
+        if (file_exists($grammarPath)) {
+            $this->engine->getEnvironment()->getGrammarRepository()->register('djot', $grammarPath);
+            $this->engine->getEnvironment()->getGrammarRepository()->alias('dj', 'djot');
+        }
     }
 
     /**

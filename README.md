@@ -115,6 +115,7 @@ For complete Djot syntax documentation, visit [djot.net](https://djot.net/).
 
 - [djot-php](https://github.com/php-collective/djot-php) by PHP Collective
 - [Torchlight Engine](https://github.com/torchlight-api/engine) for syntax highlighting
+- [djot-grammars](https://github.com/php-collective/djot-grammars) for Djot syntax highlighting in code blocks
 
 ## Changelog
 

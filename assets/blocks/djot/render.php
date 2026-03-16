@@ -41,9 +41,9 @@ $html = preg_replace_callback(
 
 $wrapper_attributes = get_block_wrapper_attributes(['class' => 'wpdjot-block-rendered djot-content']);
 
-// Build output: wp_kses_post covers both $wrapper_attributes (pre-escaped by get_block_wrapper_attributes) and $html
+// Build output: use custom allowlist to preserve all allowed HTML including task list checkboxes
 if ($postProfile !== 'none' && $postProfile !== 'full') {
     $html = wp_kses($html, WpDjot\Converter::getAllowedHtml());
 }
 
-echo wp_kses_post(sprintf('<div %s>%s</div>', $wrapper_attributes, $html));
+echo wp_kses(sprintf('<div %s>%s</div>', $wrapper_attributes, $html), WpDjot\Converter::getAllowedHtml());

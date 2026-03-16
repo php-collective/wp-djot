@@ -9,12 +9,6 @@
             "homepage": "https://www.dereuromark.de"
         }
     ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/php-collective/djot-grammars"
-        }
-    ],
     "require": {
         "php": ">=8.2",
         "php-collective/djot": "^0.1.17",

@@ -826,6 +826,7 @@ figure.wpdjot-embed figcaption {
     .wpdjot-toc {
         background: #161b22;
         border-color: #30363d;
+        color: #c9d1d9;
     }
 
     .wpdjot-toc a:hover {

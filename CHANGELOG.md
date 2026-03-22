@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.6] - 2026-03-22
+
+### Fixed
+
+- Task list checkboxes stripped by wp_kses_post
+- Dark mode TOC text color missing
+
 ## [1.5.5] - 2026-03-16
 
 ### Added

@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.5.5
+Stable tag: 1.5.6
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -89,6 +89,10 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 3. Rendered output with syntax highlighting
 
 == Changelog ==
+
+= 1.5.6 =
+* Fixed task list checkboxes stripped by wp_kses_post
+* Fixed dark mode TOC text color
 
 = 1.5.5 =
 * Added Djot syntax highlighting for code blocks via djot-grammars

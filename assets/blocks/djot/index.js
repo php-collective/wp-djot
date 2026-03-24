@@ -1395,6 +1395,58 @@
                 };
             }, [ editorMode ] );
 
+            // Keyboard shortcuts for visual mode
+            // Tiptap has different default shortcuts, so we add custom ones to match write mode
+            useEffect( function() {
+                if ( editorMode !== 'visual' ) return;
+
+                function handleVisualKeyDown( e ) {
+                    var visualEditor = getVisualEditor();
+                    if ( ! visualEditor ) return;
+                    if ( ! visualEditor.commands ) return;
+
+                    var isMod = e.ctrlKey || e.metaKey;
+                    if ( ! isMod ) return;
+
+                    var handled = false;
+
+                    if ( e.shiftKey ) {
+                        switch ( e.key.toLowerCase() ) {
+                            case 'x': visualEditor.commands.strikethrough(); handled = true; break;
+                            case 'e': visualEditor.commands.codeBlock(); handled = true; break;
+                            case 'h': visualEditor.commands.highlight(); handled = true; break;
+                            case 'i': onImage(); handled = true; break;
+                            case '.': visualEditor.commands.blockquote(); handled = true; break;
+                            case '8': visualEditor.commands.bulletList(); handled = true; break;
+                            case '7': visualEditor.commands.orderedList(); handled = true; break;
+                        }
+                    } else {
+                        switch ( e.key.toLowerCase() ) {
+                            case 'k': onLink(); handled = true; break;
+                            case '.': visualEditor.commands.superscript(); handled = true; break;
+                            case ',': visualEditor.commands.subscript(); handled = true; break;
+                            case '1': visualEditor.commands.heading( 1 ); handled = true; break;
+                            case '2': visualEditor.commands.heading( 2 ); handled = true; break;
+                            case '3': visualEditor.commands.heading( 3 ); handled = true; break;
+                            case '4': visualEditor.commands.heading( 4 ); handled = true; break;
+                            case '5': visualEditor.commands.heading( 5 ); handled = true; break;
+                            case '6': visualEditor.commands.heading( 6 ); handled = true; break;
+                            // Bold, Italic, Code handled by Tiptap natively (Mod-b, Mod-i, Mod-e)
+                        }
+                    }
+
+                    if ( handled ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }
+
+                document.addEventListener( 'keydown', handleVisualKeyDown );
+                return function() {
+                    document.removeEventListener( 'keydown', handleVisualKeyDown );
+                };
+            }, [ editorMode ] );
+
             // Switch to write mode, syncing content from visual editor if needed
             function switchToWriteMode() {
                 if ( editorMode === 'visual' && visualEditorInstance ) {

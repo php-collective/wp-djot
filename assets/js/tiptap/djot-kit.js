@@ -21,6 +21,8 @@ import TaskItem from 'https://esm.sh/@tiptap/extension-task-item@2';
 import { DjotInsert } from './extensions/djot-insert.js';
 import { DjotDelete } from './extensions/djot-delete.js';
 import { DjotDiv } from './extensions/djot-div.js';
+import { DjotSpan } from './extensions/djot-span.js';
+import { DjotFootnote } from './extensions/djot-footnote.js';
 
 /**
  * DjotKit - A Tiptap extension bundle for Djot markup
@@ -126,6 +128,16 @@ export const DjotKit = Extension.create({
 
         if (this.options.djotDiv !== false) {
             extensions.push(DjotDiv.configure(this.options.djotDiv ?? {}));
+        }
+
+        // Span with class mark (maps to [text]{.class})
+        if (this.options.djotSpan !== false) {
+            extensions.push(DjotSpan.configure(this.options.djotSpan ?? {}));
+        }
+
+        // Footnote reference node (maps to [^label])
+        if (this.options.djotFootnote !== false) {
+            extensions.push(DjotFootnote.configure(this.options.djotFootnote ?? {}));
         }
 
         return extensions;

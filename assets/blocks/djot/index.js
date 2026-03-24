@@ -173,6 +173,8 @@
                             image: function( src, alt ) { return editor.chain().focus().setImage( { src: src, alt: alt } ).run(); },
                             table: function( rows, cols ) { return editor.chain().focus().insertTable( { rows: rows, cols: cols, withHeaderRow: true } ).run(); },
                             djotDiv: function( className ) { return editor.chain().focus().setDjotDiv( { class: className } ).run(); },
+                            djotSpan: function( className ) { return editor.chain().focus().setDjotSpan( { class: className } ).run(); },
+                            djotFootnote: function( label ) { return editor.chain().focus().insertDjotFootnote( { label: label } ).run(); },
                         },
                     };
                 }
@@ -483,7 +485,14 @@
                     insertMarkup( '{~', '~}' );
                 }
             }
-            function onSpan() { insertMarkup( '[', ']{.class}' ); }
+            function onSpan() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotSpan( 'class' );
+                } else {
+                    insertMarkup( '[', ']{.class}' );
+                }
+            }
 
             function onLink() {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
@@ -681,7 +690,14 @@
                     insertMultiLineBlock( '::: note', ':::', '' );
                 }
             }
-            function onFootnote() { insertMarkup( '[^', ']' ); }
+            function onFootnote() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotFootnote( 'note' );
+                } else {
+                    insertMarkup( '[^', ']' );
+                }
+            }
 
             function onTable() {
                 setTableCols( 3 );

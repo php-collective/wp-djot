@@ -180,7 +180,9 @@ export function serializeToDjot(doc) {
                 const hasInsert = marks.some(m => m.type === 'djotInsert');
                 const hasSup = marks.some(m => m.type === 'superscript');
                 const hasSub = marks.some(m => m.type === 'subscript');
+                const hasStrike = marks.some(m => m.type === 'strike');
                 const link = marks.find(m => m.type === 'link');
+                const djotSpan = marks.find(m => m.type === 'djotSpan');
 
                 // Apply marks from innermost to outermost
                 let t = text;
@@ -189,10 +191,12 @@ export function serializeToDjot(doc) {
                 if (hasSup) t = '^' + t + '^';
                 if (hasInsert) t = '{+' + t + '+}';
                 if (hasDelete) t = '{-' + t + '-}';
+                if (hasStrike) t = '{~' + t + '~}';
                 if (hasHighlight) t = '{=' + t + '=}';
                 if (hasItalic) t = '_' + t + '_';
                 if (hasBold) t = '*' + t + '*';
                 if (link) t = '[' + t + '](' + link.attrs.href + ')';
+                if (djotSpan) t = '[' + t + ']{.' + (djotSpan.attrs?.class || 'class') + '}';
 
                 result += t;
             } else if (node.type === 'hardBreak') {
@@ -201,6 +205,9 @@ export function serializeToDjot(doc) {
                 const alt = node.attrs?.alt || '';
                 const src = node.attrs?.src || '';
                 result += '![' + alt + '](' + src + ')';
+            } else if (node.type === 'djotFootnote') {
+                const label = node.attrs?.label || 'note';
+                result += '[^' + label + ']';
             }
         });
 

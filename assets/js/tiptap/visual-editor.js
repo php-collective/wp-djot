@@ -93,6 +93,8 @@ export async function initVisualEditor(container, initialContent, onChange) {
             image: (src, alt) => editorInstance.chain().focus().setImage({ src, alt }).run(),
             table: (rows, cols) => editorInstance.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run(),
             djotDiv: (className) => editorInstance.chain().focus().setDjotDiv({ class: className }).run(),
+            djotSpan: (className) => editorInstance.chain().focus().setDjotSpan({ class: className }).run(),
+            djotFootnote: (label) => editorInstance.chain().focus().insertDjotFootnote({ label }).run(),
             undo: () => editorInstance.chain().focus().undo().run(),
             redo: () => editorInstance.chain().focus().redo().run(),
         },

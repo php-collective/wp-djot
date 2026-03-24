@@ -787,11 +787,6 @@
             }
 
             function onDefList() {
-                // Definition lists use Djot-specific syntax, only available in write mode
-                if ( editorMode === 'visual' ) {
-                    alert( __( 'Definition lists are only available in Write mode. Please switch to Write mode first.', 'djot-markup' ) );
-                    return;
-                }
                 setDefListTerms( [ '' ] );
                 setDefListDefinitions( [ '' ] );
                 setShowDefListModal( true );
@@ -822,9 +817,30 @@
                     return ': +\n\n' + indentedDef;
                 } ).join( '\n\n' );
 
-                var defListText = termsText + '\n\n' + defsText + '\n';
+                var defListText = termsText + '\n\n' + defsText;
 
-                insertMultiLineBlock( '', '', defListText );
+                // Visual mode: convert to HTML and insert
+                if ( editorMode === 'visual' ) {
+                    apiFetch( {
+                        path: '/wpdjot/v1/render',
+                        method: 'POST',
+                        data: { content: defListText },
+                    } ).then( function( response ) {
+                        var visualEditor = getVisualEditor();
+                        if ( visualEditor && visualEditor.editor ) {
+                            visualEditor.editor.chain().focus().insertContent( response.html || '' ).run();
+                        }
+                        setShowDefListModal( false );
+                        setDefListTerms( [ '' ] );
+                        setDefListDefinitions( [ '' ] );
+                    } ).catch( function() {
+                        alert( __( 'Error inserting definition list', 'djot-markup' ) );
+                    } );
+                    return;
+                }
+
+                // Write mode: insert Djot syntax
+                insertMultiLineBlock( '', '', defListText + '\n' );
                 setShowDefListModal( false );
             }
 

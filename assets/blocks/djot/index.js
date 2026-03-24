@@ -141,6 +141,44 @@
                 className: 'wpdjot-block',
             } );
 
+            // Helper to get visual editor instance reliably
+            // Uses React state if available, falls back to global instance
+            function getVisualEditor() {
+                if ( visualEditorInstance ) {
+                    return visualEditorInstance;
+                }
+                // Fallback to global instance if React state is stale
+                if ( window.WpDjotVisualEditor && window.WpDjotVisualEditor.getEditor() ) {
+                    var editor = window.WpDjotVisualEditor.getEditor();
+                    // Return a compatible interface
+                    return {
+                        commands: {
+                            bold: function() { return editor.chain().focus().toggleBold().run(); },
+                            italic: function() { return editor.chain().focus().toggleItalic().run(); },
+                            code: function() { return editor.chain().focus().toggleCode().run(); },
+                            highlight: function() { return editor.chain().focus().toggleHighlight().run(); },
+                            strikethrough: function() { return editor.chain().focus().toggleStrike().run(); },
+                            superscript: function() { return editor.chain().focus().toggleSuperscript().run(); },
+                            subscript: function() { return editor.chain().focus().toggleSubscript().run(); },
+                            djotInsert: function() { return editor.chain().focus().toggleDjotInsert().run(); },
+                            djotDelete: function() { return editor.chain().focus().toggleDjotDelete().run(); },
+                            heading: function( level ) { return editor.chain().focus().toggleHeading( { level: level } ).run(); },
+                            blockquote: function() { return editor.chain().focus().toggleBlockquote().run(); },
+                            bulletList: function() { return editor.chain().focus().toggleBulletList().run(); },
+                            orderedList: function() { return editor.chain().focus().toggleOrderedList().run(); },
+                            taskList: function() { return editor.chain().focus().toggleTaskList().run(); },
+                            codeBlock: function() { return editor.chain().focus().toggleCodeBlock().run(); },
+                            horizontalRule: function() { return editor.chain().focus().setHorizontalRule().run(); },
+                            link: function( href ) { return href ? editor.chain().focus().setLink( { href: href } ).run() : editor.chain().focus().unsetLink().run(); },
+                            image: function( src, alt ) { return editor.chain().focus().setImage( { src: src, alt: alt } ).run(); },
+                            table: function( rows, cols ) { return editor.chain().focus().insertTable( { rows: rows, cols: cols, withHeaderRow: true } ).run(); },
+                            djotDiv: function( className ) { return editor.chain().focus().setDjotDiv( { class: className } ).run(); },
+                        },
+                    };
+                }
+                return null;
+            }
+
             // Track selection in textarea and check if in table
             function updateSelection() {
                 if ( textareaRef.current ) {
@@ -373,15 +411,78 @@
             }
 
             // Toolbar button handlers
-            function onBold() { insertMarkup( '*', '*' ); }
-            function onItalic() { insertMarkup( '_', '_' ); }
-            function onCode() { insertMarkup( '`', '`' ); }
-            function onSuperscript() { insertMarkup( '^', '^' ); }
-            function onSubscript() { insertMarkup( '~', '~' ); }
-            function onHighlight() { insertMarkup( '{=', '=}' ); }
-            function onInsert() { insertMarkup( '{+', '+}' ); }
-            function onDelete() { insertMarkup( '{-', '-}' ); }
-            function onStrikethrough() { insertMarkup( '{~', '~}' ); }
+            function onBold() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.bold();
+                } else {
+                    insertMarkup( '*', '*' );
+                }
+            }
+            function onItalic() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.italic();
+                } else {
+                    insertMarkup( '_', '_' );
+                }
+            }
+            function onCode() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.code();
+                } else {
+                    insertMarkup( '`', '`' );
+                }
+            }
+            function onSuperscript() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.superscript();
+                } else {
+                    insertMarkup( '^', '^' );
+                }
+            }
+            function onSubscript() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.subscript();
+                } else {
+                    insertMarkup( '~', '~' );
+                }
+            }
+            function onHighlight() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.highlight();
+                } else {
+                    insertMarkup( '{=', '=}' );
+                }
+            }
+            function onInsert() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotInsert();
+                } else {
+                    insertMarkup( '{+', '+}' );
+                }
+            }
+            function onDelete() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotDelete();
+                } else {
+                    insertMarkup( '{-', '-}' );
+                }
+            }
+            function onStrikethrough() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.strikethrough();
+                } else {
+                    insertMarkup( '{~', '~}' );
+                }
+            }
             function onSpan() { insertMarkup( '[', ']{.class}' ); }
 
             function onLink() {
@@ -395,6 +496,16 @@
             }
 
             function onInsertLink() {
+                // Visual mode: use Tiptap link command
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.link( linkUrl );
+                    setShowLinkModal( false );
+                    setLinkUrl( '' );
+                    setLinkText( '' );
+                    return;
+                }
+
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
@@ -434,6 +545,16 @@
             }
 
             function onInsertImage() {
+                // Visual mode: use Tiptap image command
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.image( imageUrl, imageAlt );
+                    setShowImageModal( false );
+                    setImageUrl( '' );
+                    setImageAlt( '' );
+                    return;
+                }
+
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
@@ -461,6 +582,12 @@
             }
 
             function onHeading( level ) {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.heading( level );
+                    return;
+                }
+
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
@@ -506,12 +633,54 @@
                 }
             }
 
-            function onBlockquote() { insertBlockMarkup( '> ', '' ); }
-            function onListUl() { insertBlockMarkup( '- ', '' ); }
-            function onListOl() { insertBlockMarkup( '1. ', '' ); }
-            function onHorizontalRule() { insertMultiLineBlock( '---', '', '' ); }
-            function onCodeBlock() { insertMultiLineBlock( '```', '```', '' ); }
-            function onDiv() { insertMultiLineBlock( '::: note', ':::', '' ); }
+            function onBlockquote() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.blockquote();
+                } else {
+                    insertBlockMarkup( '> ', '' );
+                }
+            }
+            function onListUl() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.bulletList();
+                } else {
+                    insertBlockMarkup( '- ', '' );
+                }
+            }
+            function onListOl() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.orderedList();
+                } else {
+                    insertBlockMarkup( '1. ', '' );
+                }
+            }
+            function onHorizontalRule() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.horizontalRule();
+                } else {
+                    insertMultiLineBlock( '---', '', '' );
+                }
+            }
+            function onCodeBlock() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.codeBlock();
+                } else {
+                    insertMultiLineBlock( '```', '```', '' );
+                }
+            }
+            function onDiv() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotDiv( 'note' );
+                } else {
+                    insertMultiLineBlock( '::: note', ':::', '' );
+                }
+            }
             function onFootnote() { insertMarkup( '[^', ']' ); }
 
             function onTable() {
@@ -523,6 +692,14 @@
             function onInsertTable() {
                 var cols = Math.max( 1, Math.min( 10, tableCols ) );
                 var rows = Math.max( 1, Math.min( 20, tableRows ) );
+
+                // Visual mode: use Tiptap table command
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.table( rows, cols );
+                    setShowTableModal( false );
+                    return;
+                }
 
                 // Build header row
                 var headerCells = [];
@@ -550,6 +727,12 @@
             }
 
             function onTaskList() {
+                // Visual mode: toggle task list directly
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.taskList();
+                    return;
+                }
                 setTaskListItems( [ { text: '', checked: false } ] );
                 setShowTaskListModal( true );
             }

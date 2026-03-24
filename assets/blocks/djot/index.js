@@ -1313,8 +1313,8 @@
             return wp.element.createElement(
                 'div',
                 blockProps,
-                // Block Controls (Toolbar)
-                wp.element.createElement(
+                // Block Controls (Toolbar) - only show for write/visual modes, not preview
+                editorMode !== 'preview' && wp.element.createElement(
                     BlockControls,
                     null,
                     // Inline formatting group
@@ -1342,6 +1342,16 @@
                             onClick: onStrikethrough,
                         } )
                     ),
+                    // Headings dropdown
+                    wp.element.createElement(
+                        ToolbarGroup,
+                        null,
+                        wp.element.createElement( ToolbarDropdownMenu, {
+                            icon: icons.heading,
+                            label: __( 'Headings', 'djot-markup' ),
+                            controls: headingControls,
+                        } )
+                    ),
                     // Links and media group
                     wp.element.createElement(
                         ToolbarGroup,
@@ -1355,16 +1365,6 @@
                             icon: icons.image,
                             label: __( 'Image (![alt](url))', 'djot-markup' ),
                             onClick: onImage,
-                        } )
-                    ),
-                    // Headings dropdown
-                    wp.element.createElement(
-                        ToolbarGroup,
-                        null,
-                        wp.element.createElement( ToolbarDropdownMenu, {
-                            icon: icons.heading,
-                            label: __( 'Headings', 'djot-markup' ),
-                            controls: headingControls,
                         } )
                     ),
                     // Block elements group

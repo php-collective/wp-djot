@@ -1099,11 +1099,6 @@
 
             // Open import modal
             function onImport( type ) {
-                // Import converts to Djot text, only available in write mode
-                if ( editorMode === 'visual' ) {
-                    alert( __( 'Import is only available in Write mode. Please switch to Write mode first.', 'djot-markup' ) );
-                    return;
-                }
                 setImportType( type );
                 setImportInput( '' );
                 setDjotPreview( '' );
@@ -1154,6 +1149,27 @@
                     return;
                 }
 
+                // Visual mode: convert Djot to HTML and insert into editor
+                if ( editorMode === 'visual' ) {
+                    apiFetch( {
+                        path: '/wpdjot/v1/render',
+                        method: 'POST',
+                        data: { content: djotPreview },
+                    } ).then( function( response ) {
+                        var visualEditor = getVisualEditor();
+                        if ( visualEditor && visualEditor.editor ) {
+                            visualEditor.editor.chain().focus().insertContent( response.html || '' ).run();
+                        }
+                        setShowImportModal( false );
+                        setImportInput( '' );
+                        setDjotPreview( '' );
+                    } ).catch( function() {
+                        alert( __( 'Error converting content', 'djot-markup' ) );
+                    } );
+                    return;
+                }
+
+                // Write mode: insert Djot text at cursor
                 // Create undo boundary so this change is a separate undo step
                 if ( markUndoBoundary ) {
                     markUndoBoundary();
@@ -1183,7 +1199,7 @@
 
                 setAttributes( { content: newText } );
                 setShowImportModal( false );
-                setMarkdownInput( '' );
+                setImportInput( '' );
                 setDjotPreview( '' );
 
                 if ( textarea ) {

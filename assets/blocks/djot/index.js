@@ -103,7 +103,7 @@
             const { __unstableMarkLastChangeAsPersistent: markUndoBoundary } = useDispatch( 'core/block-editor' );
             const [ preview, setPreview ] = useState( '' );
             const [ editorMode, setEditorMode ] = useState( 'write' ); // 'write' | 'visual' | 'preview'
-            const [ previousMode, setPreviousMode ] = useState( 'write' ); // Track mode before preview
+            const previousModeRef = useRef( 'write' ); // Track mode before preview (ref avoids closure issues)
             const [ isLoading, setIsLoading ] = useState( false );
             const [ visualEditorInstance, setVisualEditorInstance ] = useState( null );
             const [ isVisualLoading, setIsVisualLoading ] = useState( false );
@@ -1375,9 +1375,16 @@
                     if ( e.key === 'Escape' ) {
                         e.preventDefault();
                         if ( editorMode === 'preview' ) {
-                            exitPreviewMode();
+                            // Return to previous mode (read from ref to get current value)
+                            if ( previousModeRef.current === 'visual' ) {
+                                setEditorMode( 'visual' );
+                                setIsVisualLoading( true );
+                            } else {
+                                setEditorMode( 'write' );
+                            }
                         } else {
-                            switchToWriteMode();
+                            // From visual mode, go to write
+                            setEditorMode( 'write' );
                         }
                     }
                 }
@@ -1386,7 +1393,7 @@
                 return function() {
                     document.removeEventListener( 'keydown', handleKeyDown );
                 };
-            }, [ editorMode, previousMode ] );
+            }, [ editorMode ] );
 
             // Switch to write mode, syncing content from visual editor if needed
             function switchToWriteMode() {
@@ -1417,14 +1424,14 @@
                 }
                 // Save current mode before switching to preview
                 if ( editorMode !== 'preview' ) {
-                    setPreviousMode( editorMode );
+                    previousModeRef.current = editorMode;
                 }
                 setEditorMode( 'preview' );
             }
 
             // Exit preview mode, return to previous mode (write or visual)
             function exitPreviewMode() {
-                if ( previousMode === 'visual' ) {
+                if ( previousModeRef.current === 'visual' ) {
                     switchToVisualMode();
                 } else {
                     switchToWriteMode();

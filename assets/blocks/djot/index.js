@@ -102,8 +102,12 @@
             const { content } = attributes;
             const { __unstableMarkLastChangeAsPersistent: markUndoBoundary } = useDispatch( 'core/block-editor' );
             const [ preview, setPreview ] = useState( '' );
-            const [ isPreviewMode, setIsPreviewMode ] = useState( false );
+            const [ editorMode, setEditorMode ] = useState( 'write' ); // 'write' | 'visual' | 'preview'
             const [ isLoading, setIsLoading ] = useState( false );
+            const [ visualEditorInstance, setVisualEditorInstance ] = useState( null );
+            const [ isVisualLoading, setIsVisualLoading ] = useState( false );
+            const visualEditorRef = useRef( null );
+            const pendingDjotContent = useRef( null );
             const [ showLinkModal, setShowLinkModal ] = useState( false );
             const [ showImageModal, setShowImageModal ] = useState( false );
             const [ showTableModal, setShowTableModal ] = useState( false );
@@ -189,7 +193,7 @@
                 }
 
                 // External content change (undo/redo)
-                if ( ! isPreviewMode ) {
+                if ( editorMode === 'write' ) {
                     var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                     if ( textarea ) {
                         var oldContent = previousContent.current;
@@ -1158,19 +1162,19 @@
             );
 
             useEffect( function() {
-                if ( isPreviewMode && content ) {
+                if ( editorMode === 'preview' && content ) {
                     fetchPreview( content );
                 }
-            }, [ content, isPreviewMode ] );
+            }, [ content, editorMode ] );
 
-            // ESC key exits preview mode
+            // ESC key exits preview/visual mode back to write mode
             useEffect( function() {
-                if ( ! isPreviewMode ) return;
+                if ( editorMode === 'write' ) return;
 
                 function handleKeyDown( e ) {
                     if ( e.key === 'Escape' ) {
                         e.preventDefault();
-                        setIsPreviewMode( false );
+                        switchToWriteMode();
                     }
                 }
 
@@ -1178,7 +1182,90 @@
                 return function() {
                     document.removeEventListener( 'keydown', handleKeyDown );
                 };
-            }, [ isPreviewMode ] );
+            }, [ editorMode ] );
+
+            // Switch to write mode, syncing content from visual editor if needed
+            function switchToWriteMode() {
+                if ( editorMode === 'visual' && visualEditorInstance ) {
+                    // Get Djot content from visual editor before switching
+                    var djotContent = visualEditorInstance.getDjot();
+                    if ( djotContent !== content ) {
+                        setAttributes( { content: djotContent } );
+                    }
+                }
+                setEditorMode( 'write' );
+            }
+
+            // Switch to visual mode
+            function switchToVisualMode() {
+                setEditorMode( 'visual' );
+                setIsVisualLoading( true );
+            }
+
+            // Switch to preview mode
+            function switchToPreviewMode() {
+                // If coming from visual mode, sync content first
+                if ( editorMode === 'visual' && visualEditorInstance ) {
+                    var djotContent = visualEditorInstance.getDjot();
+                    if ( djotContent !== content ) {
+                        setAttributes( { content: djotContent } );
+                    }
+                }
+                setEditorMode( 'preview' );
+            }
+
+            // Initialize visual editor when switching to visual mode
+            useEffect( function() {
+                if ( editorMode !== 'visual' ) return;
+                if ( ! visualEditorRef.current ) return;
+
+                // Load the visual editor module
+                async function loadVisualEditor() {
+                    try {
+                        // First, render the content as HTML via the API
+                        var htmlContent = '<p></p>';
+                        if ( content ) {
+                            var response = await apiFetch( {
+                                path: '/wpdjot/v1/render',
+                                method: 'POST',
+                                data: { content: content },
+                            } );
+                            htmlContent = response.html || '<p></p>';
+                        }
+
+                        // Load the visual editor module
+                        var baseUrl = window.wpdjotBlockData ? window.wpdjotBlockData.assetsUrl : '/wp-content/plugins/djot-markup/assets/';
+                        var module = await import( baseUrl + 'js/tiptap/visual-editor.js' );
+
+                        // Initialize the editor
+                        var instance = await module.initVisualEditor(
+                            visualEditorRef.current,
+                            htmlContent,
+                            function( djotContent ) {
+                                // Store pending content update (debounced sync)
+                                pendingDjotContent.current = djotContent;
+                            }
+                        );
+
+                        setVisualEditorInstance( instance );
+                        setIsVisualLoading( false );
+                    } catch ( error ) {
+                        console.error( 'Failed to load visual editor:', error );
+                        setIsVisualLoading( false );
+                        setEditorMode( 'write' ); // Fall back to write mode
+                    }
+                }
+
+                loadVisualEditor();
+
+                return function() {
+                    // Cleanup visual editor when leaving visual mode
+                    if ( visualEditorInstance ) {
+                        visualEditorInstance.destroy();
+                        setVisualEditorInstance( null );
+                    }
+                };
+            }, [ editorMode ] );
 
             function onChangeContent( newContent ) {
                 isInternalChange.current = true;
@@ -1208,10 +1295,10 @@
 
             // Sync scroll when entering preview mode
             useEffect( function() {
-                if ( isPreviewMode && preview && ! isLoading ) {
+                if ( editorMode === 'preview' && preview && ! isLoading ) {
                     syncPreviewScroll();
                 }
-            }, [ isPreviewMode, preview, isLoading ] );
+            }, [ editorMode, preview, isLoading ] );
 
             // Heading dropdown controls
             const headingControls = [
@@ -1383,12 +1470,28 @@
                     wp.element.createElement(
                         PanelBody,
                         { title: __( 'Djot Settings', 'djot-markup' ) },
-                        wp.element.createElement( ToggleControl, {
-                            label: __( 'Show Preview', 'djot-markup' ),
-                            checked: isPreviewMode,
-                            onChange: setIsPreviewMode,
-                            __nextHasNoMarginBottom: true,
-                        } )
+                        wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 500 } },
+                                __( 'Editor Mode', 'djot-markup' )
+                            ),
+                            wp.element.createElement( 'div', { style: { display: 'flex', gap: '8px' } },
+                                wp.element.createElement( Button, {
+                                    variant: editorMode === 'write' ? 'primary' : 'secondary',
+                                    onClick: switchToWriteMode,
+                                    style: { flex: 1 },
+                                }, __( 'Write', 'djot-markup' ) ),
+                                wp.element.createElement( Button, {
+                                    variant: editorMode === 'visual' ? 'primary' : 'secondary',
+                                    onClick: switchToVisualMode,
+                                    style: { flex: 1 },
+                                }, __( 'Visual', 'djot-markup' ) ),
+                                wp.element.createElement( Button, {
+                                    variant: editorMode === 'preview' ? 'primary' : 'secondary',
+                                    onClick: switchToPreviewMode,
+                                    style: { flex: 1 },
+                                }, __( 'Preview', 'djot-markup' ) )
+                            )
+                        )
                     ),
                     wp.element.createElement(
                         PanelBody,
@@ -1837,71 +1940,82 @@
                         }, __( 'Cancel', 'djot-markup' ) )
                     )
                 ),
+                // Mode tabs
+                wp.element.createElement(
+                    'div',
+                    { className: 'wpdjot-mode-tabs' },
+                    wp.element.createElement( 'button', {
+                        className: editorMode === 'write' ? 'active' : '',
+                        onClick: switchToWriteMode,
+                    }, __( 'Write', 'djot-markup' ) ),
+                    wp.element.createElement( 'button', {
+                        className: editorMode === 'visual' ? 'active' : '',
+                        onClick: switchToVisualMode,
+                    }, __( 'Visual', 'djot-markup' ) ),
+                    wp.element.createElement( 'button', {
+                        className: editorMode === 'preview' ? 'active' : '',
+                        onClick: switchToPreviewMode,
+                    }, __( 'Preview', 'djot-markup' ) )
+                ),
                 // Main content area
-                content || isPreviewMode
-                    ? wp.element.createElement(
-                          'div',
-                          { className: 'wpdjot-block-wrapper', ref: textareaRef },
-                          ! isPreviewMode &&
-                              wp.element.createElement( PlainText, {
-                                  value: content,
-                                  onChange: onChangeContent,
-                                  onSelect: updateSelection,
-                                  onClick: updateSelection,
-                                  onKeyUp: updateSelection,
-                                  onKeyDown: handleTextareaKeyDown,
-                                  className: 'wpdjot-editor',
-                                  placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'djot-markup' ),
-                              } ),
-                          isPreviewMode &&
-                              wp.element.createElement(
-                                  'div',
-                                  { className: 'wpdjot-preview-wrapper' },
-                                  wp.element.createElement(
-                                      'div',
-                                      { className: 'wpdjot-preview-header' },
-                                      wp.element.createElement( 'span', null, __( 'Preview', 'djot-markup' ) ),
-                                      wp.element.createElement(
-                                          'button',
-                                          {
-                                              className: 'wpdjot-edit-button',
-                                              onClick: function() { setIsPreviewMode( false ); },
-                                              title: __( 'Press ESC to exit preview', 'djot-markup' ),
-                                          },
-                                          __( 'Edit (ESC)', 'djot-markup' )
-                                      )
-                                  ),
-                                  isLoading
-                                      ? wp.element.createElement( Spinner, null )
-                                      : wp.element.createElement( 'div', {
-                                            ref: previewRef,
-                                            className: 'wpdjot-preview djot-content',
-                                            dangerouslySetInnerHTML: { __html: preview },
-                                        } )
+                wp.element.createElement(
+                    'div',
+                    { className: 'wpdjot-block-wrapper' },
+                    // Write mode (textarea)
+                    editorMode === 'write' && wp.element.createElement(
+                        'div',
+                        { ref: textareaRef },
+                        wp.element.createElement( PlainText, {
+                            value: content,
+                            onChange: onChangeContent,
+                            onSelect: updateSelection,
+                            onClick: updateSelection,
+                            onKeyUp: updateSelection,
+                            onKeyDown: handleTextareaKeyDown,
+                            className: 'wpdjot-editor',
+                            placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'djot-markup' ),
+                        } )
+                    ),
+                    // Visual mode (Tiptap editor)
+                    editorMode === 'visual' && wp.element.createElement(
+                        'div',
+                        { className: 'wpdjot-visual-wrapper' },
+                        isVisualLoading
+                            ? wp.element.createElement( 'div', { className: 'wpdjot-visual-loading' },
+                                  __( 'Loading visual editor...', 'djot-markup' )
                               )
-                      )
-                    : wp.element.createElement(
-                          Placeholder,
-                          {
-                              icon: 'editor-code',
-                              label: __( 'Djot', 'djot-markup' ),
-                              instructions: __( 'Write content using Djot markup language. Use the toolbar above for formatting.', 'djot-markup' ),
-                          },
-                          wp.element.createElement(
-                              'div',
-                              { ref: textareaRef, style: { width: '100%' } },
-                              wp.element.createElement( PlainText, {
-                                  value: content,
-                                  onChange: onChangeContent,
-                                  onSelect: updateSelection,
-                                  onClick: updateSelection,
-                                  onKeyUp: updateSelection,
-                                  onKeyDown: handleTextareaKeyDown,
-                                  className: 'wpdjot-editor',
-                                  placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'djot-markup' ),
+                            : wp.element.createElement( 'div', {
+                                  ref: visualEditorRef,
+                                  className: 'wpdjot-visual-container',
                               } )
-                          )
-                      )
+                    ),
+                    // Preview mode
+                    editorMode === 'preview' && wp.element.createElement(
+                        'div',
+                        { className: 'wpdjot-preview-wrapper' },
+                        wp.element.createElement(
+                            'div',
+                            { className: 'wpdjot-preview-header' },
+                            wp.element.createElement( 'span', null, __( 'Preview', 'djot-markup' ) ),
+                            wp.element.createElement(
+                                'button',
+                                {
+                                    className: 'wpdjot-edit-button',
+                                    onClick: switchToWriteMode,
+                                    title: __( 'Press ESC to exit preview', 'djot-markup' ),
+                                },
+                                __( 'Edit (ESC)', 'djot-markup' )
+                            )
+                        ),
+                        isLoading
+                            ? wp.element.createElement( Spinner, null )
+                            : wp.element.createElement( 'div', {
+                                  ref: previewRef,
+                                  className: 'wpdjot-preview djot-content',
+                                  dangerouslySetInnerHTML: { __html: preview },
+                              } )
+                    )
+                )
             );
         },
 

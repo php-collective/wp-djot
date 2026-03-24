@@ -88,6 +88,15 @@ class DjotBlock
         // Register the block - this auto-registers wpdjot-djot-editor-style from block.json
         register_block_type(WPDJOT_PLUGIN_DIR . 'assets/blocks/djot');
 
+        // Localize script with assets URL for dynamic module loading (visual editor)
+        wp_localize_script(
+            'wpdjot-djot-editor-script',
+            'wpdjotBlockData',
+            [
+                'assetsUrl' => WPDJOT_PLUGIN_URL . 'assets/',
+            ],
+        );
+
         // @deprecated 1.4.2 Will be removed in 2.0.0. Legacy block name support will be removed.
         // Register old block name as alias for backward compatibility with existing content.
         // Must include attributes so WordPress can parse the saved content in the editor.

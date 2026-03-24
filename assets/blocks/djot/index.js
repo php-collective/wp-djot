@@ -103,6 +103,7 @@
             const { __unstableMarkLastChangeAsPersistent: markUndoBoundary } = useDispatch( 'core/block-editor' );
             const [ preview, setPreview ] = useState( '' );
             const [ editorMode, setEditorMode ] = useState( 'write' ); // 'write' | 'visual' | 'preview'
+            const [ previousMode, setPreviousMode ] = useState( 'write' ); // Track mode before preview
             const [ isLoading, setIsLoading ] = useState( false );
             const [ visualEditorInstance, setVisualEditorInstance ] = useState( null );
             const [ isVisualLoading, setIsVisualLoading ] = useState( false );
@@ -1366,14 +1367,18 @@
                 }
             }, [ content, editorMode ] );
 
-            // ESC key exits preview/visual mode back to write mode
+            // ESC key exits preview mode back to previous mode, or visual mode back to write
             useEffect( function() {
                 if ( editorMode === 'write' ) return;
 
                 function handleKeyDown( e ) {
                     if ( e.key === 'Escape' ) {
                         e.preventDefault();
-                        switchToWriteMode();
+                        if ( editorMode === 'preview' ) {
+                            exitPreviewMode();
+                        } else {
+                            switchToWriteMode();
+                        }
                     }
                 }
 
@@ -1381,7 +1386,7 @@
                 return function() {
                     document.removeEventListener( 'keydown', handleKeyDown );
                 };
-            }, [ editorMode ] );
+            }, [ editorMode, previousMode ] );
 
             // Switch to write mode, syncing content from visual editor if needed
             function switchToWriteMode() {
@@ -1410,7 +1415,20 @@
                         setAttributes( { content: djotContent } );
                     }
                 }
+                // Save current mode before switching to preview
+                if ( editorMode !== 'preview' ) {
+                    setPreviousMode( editorMode );
+                }
                 setEditorMode( 'preview' );
+            }
+
+            // Exit preview mode, return to previous mode (write or visual)
+            function exitPreviewMode() {
+                if ( previousMode === 'visual' ) {
+                    switchToVisualMode();
+                } else {
+                    switchToWriteMode();
+                }
             }
 
             // Initialize visual editor when switching to visual mode
@@ -2202,7 +2220,7 @@
                                 'button',
                                 {
                                     className: 'wpdjot-edit-button',
-                                    onClick: switchToWriteMode,
+                                    onClick: exitPreviewMode,
                                     title: __( 'Press ESC to exit preview', 'djot-markup' ),
                                 },
                                 __( 'Edit (ESC)', 'djot-markup' )

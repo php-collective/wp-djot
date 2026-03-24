@@ -1980,14 +1980,16 @@
                     editorMode === 'visual' && wp.element.createElement(
                         'div',
                         { className: 'wpdjot-visual-wrapper' },
-                        isVisualLoading
-                            ? wp.element.createElement( 'div', { className: 'wpdjot-visual-loading' },
-                                  __( 'Loading visual editor...', 'djot-markup' )
-                              )
-                            : wp.element.createElement( 'div', {
-                                  ref: visualEditorRef,
-                                  className: 'wpdjot-visual-container',
-                              } )
+                        // Always render the container so the ref is available for useEffect
+                        wp.element.createElement( 'div', {
+                            ref: visualEditorRef,
+                            className: 'wpdjot-visual-container',
+                            style: isVisualLoading ? { display: 'none' } : {},
+                        } ),
+                        // Show loading indicator while loading
+                        isVisualLoading && wp.element.createElement( 'div', { className: 'wpdjot-visual-loading' },
+                            __( 'Loading visual editor...', 'djot-markup' )
+                        )
                     ),
                     // Preview mode
                     editorMode === 'preview' && wp.element.createElement(

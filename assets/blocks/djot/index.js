@@ -787,6 +787,11 @@
             }
 
             function onDefList() {
+                // Definition lists use Djot-specific syntax, only available in write mode
+                if ( editorMode === 'visual' ) {
+                    alert( __( 'Definition lists are only available in Write mode. Please switch to Write mode first.', 'djot-markup' ) );
+                    return;
+                }
                 setDefListTerms( [ '' ] );
                 setDefListDefinitions( [ '' ] );
                 setShowDefListModal( true );
@@ -858,6 +863,11 @@
             }
 
             function onVideo() {
+                // Video uses Djot-specific syntax, only available in write mode
+                if ( editorMode === 'visual' ) {
+                    alert( __( 'Video insertion is only available in Write mode. Please switch to Write mode first.', 'djot-markup' ) );
+                    return;
+                }
                 setVideoUrl( '' );
                 setVideoCaption( '' );
                 setVideoWidth( '' );
@@ -1089,6 +1099,11 @@
 
             // Open import modal
             function onImport( type ) {
+                // Import converts to Djot text, only available in write mode
+                if ( editorMode === 'visual' ) {
+                    alert( __( 'Import is only available in Write mode. Please switch to Write mode first.', 'djot-markup' ) );
+                    return;
+                }
                 setImportType( type );
                 setImportInput( '' );
                 setDjotPreview( '' );

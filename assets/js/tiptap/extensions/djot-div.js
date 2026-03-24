@@ -42,6 +42,38 @@ export const DjotDiv = Node.create({
     parseHTML() {
         return [
             { tag: 'div.djot-div' },
+            // Also match common container classes rendered by djot-php
+            { tag: 'div.note' },
+            { tag: 'div.tip' },
+            { tag: 'div.warning' },
+            { tag: 'div.danger' },
+            { tag: 'div.info' },
+            // Match any div with a single class (likely a ::: container)
+            {
+                tag: 'div[class]',
+                getAttrs: element => {
+                    // Only match divs with a simple class (not complex component divs)
+                    const className = element.className;
+                    // Skip if it looks like a WordPress/editor component
+                    if (className.includes('wp-') || className.includes('block-') ||
+                        className.includes('editor-') || className.includes('is-')) {
+                        return false;
+                    }
+                    // Skip Torchlight code block line divs
+                    if (className === 'line' || className.includes('line-')) {
+                        return false;
+                    }
+                    // Skip if inside a pre or code element (Torchlight highlighting)
+                    if (element.closest('pre') || element.closest('code')) {
+                        return false;
+                    }
+                    // Accept single-word classes or djot-div
+                    if (/^[a-z-]+$/i.test(className) || className.includes('djot-div')) {
+                        return {};
+                    }
+                    return false;
+                },
+            },
         ];
     },
 

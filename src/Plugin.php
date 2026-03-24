@@ -220,14 +220,25 @@ class Plugin
         // Get alt text for optional caption
         $alt = $node->getAlt();
 
+        // Build original Djot source for round-trip preservation
+        $djotSrc = '![' . $alt . '](' . $url . '){video';
+        if ($width) {
+            $djotSrc .= ' width=' . $width;
+        }
+        if ($height) {
+            $djotSrc .= ' height=' . $height;
+        }
+        $djotSrc .= '}';
+        $escapedDjotSrc = htmlspecialchars($djotSrc, ENT_QUOTES, 'UTF-8');
+
         // Wrap in figure if there's a caption (alt text)
         if ($alt) {
-            $embedHtml = '<figure class="wpdjot-embed">'
+            $embedHtml = '<figure class="wpdjot-embed" data-djot-src="' . $escapedDjotSrc . '">'
                 . $embedHtml
                 . '<figcaption>' . esc_html($alt) . '</figcaption>'
                 . '</figure>';
         } else {
-            $embedHtml = '<div class="wpdjot-embed">' . $embedHtml . '</div>';
+            $embedHtml = '<div class="wpdjot-embed" data-djot-src="' . $escapedDjotSrc . '">' . $embedHtml . '</div>';
         }
 
         $event->setHtml($embedHtml);

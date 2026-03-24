@@ -502,7 +502,9 @@ figure.wpdjot-embed figcaption {
 /* Div containers with classes */
 .djot-content .note,
 .djot-content .warning,
-.djot-content .tip {
+.djot-content .tip,
+.djot-content .danger,
+.djot-content .info {
     padding: 1em;
     border-radius: 6px;
     margin: 1em 0;
@@ -521,6 +523,16 @@ figure.wpdjot-embed figcaption {
 .djot-content .tip {
     background-color: #dafbe1;
     border-left: 4px solid #1a7f37;
+}
+
+.djot-content .danger {
+    background-color: #ffebe9;
+    border-left: 4px solid #cf222e;
+}
+
+.djot-content .info {
+    background-color: #f6f8fa;
+    border-left: 4px solid #57606a;
 }
 
 /* Emphasis and Strong */
@@ -797,6 +809,14 @@ figure.wpdjot-embed figcaption {
 
     .djot-content .tip {
         background-color: rgba(46, 160, 67, 0.15);
+    }
+
+    .djot-content .danger {
+        background-color: rgba(248, 81, 73, 0.15);
+    }
+
+    .djot-content .info {
+        background-color: rgba(139, 148, 158, 0.15);
     }
 
     .djot-content mark {

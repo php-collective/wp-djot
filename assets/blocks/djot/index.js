@@ -133,6 +133,8 @@
             const [ videoUrl, setVideoUrl ] = useState( '' );
             const [ videoCaption, setVideoCaption ] = useState( '' );
             const [ videoWidth, setVideoWidth ] = useState( '' );
+            const [ showDivModal, setShowDivModal ] = useState( false );
+            const [ divClass, setDivClass ] = useState( 'note' );
             const textareaRef = useRef( null );
             const previewRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
@@ -684,12 +686,19 @@
                 }
             }
             function onDiv() {
+                console.log( 'onDiv called, showing modal' );
+                setDivClass( 'note' );
+                setShowDivModal( true );
+            }
+            function onInsertDiv() {
+                var className = divClass.trim() || 'note';
                 var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
                 if ( visualEditor ) {
-                    visualEditor.commands.djotDiv( 'note' );
+                    visualEditor.commands.djotDiv( className );
                 } else {
-                    insertMultiLineBlock( '::: note', ':::', '' );
+                    insertMultiLineBlock( '::: ' + className, ':::', '' );
                 }
+                setShowDivModal( false );
             }
             function onFootnote() {
                 var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
@@ -1573,9 +1582,10 @@
                             htmlContent = response.html || '<p></p>';
                         }
 
-                        // Load the visual editor module
+                        // Load the visual editor module (cache-bust with version)
                         var baseUrl = window.wpdjotBlockData ? window.wpdjotBlockData.assetsUrl : '/wp-content/plugins/djot-markup/assets/';
-                        var module = await import( baseUrl + 'js/tiptap/visual-editor.js' );
+                        var cacheBust = '?v=' + ( window.wpdjotBlockData?.version || Date.now() );
+                        var module = await import( baseUrl + 'js/tiptap/visual-editor.js' + cacheBust );
 
                         // Initialize the editor
                         var instance = await module.initVisualEditor(
@@ -2276,6 +2286,50 @@
                         wp.element.createElement( Button, {
                             variant: 'secondary',
                             onClick: function() { setShowVideoModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup' ) )
+                    )
+                ),
+                // Div container modal
+                showDivModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Container', 'djot-markup' ),
+                        onRequestClose: function() { setShowDivModal( false ); },
+                    },
+                    wp.element.createElement( 'div', { className: 'wpdjot-container-options', style: { marginBottom: '16px' } },
+                        wp.element.createElement( 'p', { style: { marginBottom: '8px', fontWeight: '600' } }, __( 'Container Type', 'djot-markup' ) ),
+                        [ 'note', 'tip', 'warning', 'danger', 'info' ].map( function( type ) {
+                            var labels = { note: 'Note (blue)', tip: 'Tip (green)', warning: 'Warning (yellow)', danger: 'Danger (red)', info: 'Info (gray)' };
+                            return wp.element.createElement( 'label', { key: type, style: { display: 'block', marginBottom: '6px', cursor: 'pointer' } },
+                                wp.element.createElement( 'input', {
+                                    type: 'radio',
+                                    name: 'divClass',
+                                    value: type,
+                                    checked: divClass === type,
+                                    onChange: function() { setDivClass( type ); },
+                                    style: { marginRight: '8px' },
+                                } ),
+                                labels[ type ]
+                            );
+                        } )
+                    ),
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Or custom class', 'djot-markup' ),
+                        value: divClass,
+                        onChange: setDivClass,
+                        placeholder: 'custom-class',
+                    } ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertDiv,
+                        }, __( 'Insert Container', 'djot-markup' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowDivModal( false ); },
                             style: { marginLeft: '8px' },
                         }, __( 'Cancel', 'djot-markup' ) )
                     )

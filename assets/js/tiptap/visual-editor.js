@@ -3,6 +3,8 @@
  *
  * A Tiptap-based WYSIWYG editor for Djot markup.
  * Loaded as ES module with dynamic imports from esm.sh CDN.
+ *
+ * @version 2026-03-24-v3
  */
 
 // Import from local modules

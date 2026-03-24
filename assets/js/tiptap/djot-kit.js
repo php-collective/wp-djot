@@ -6,6 +6,7 @@
 
 import { Extension } from 'https://esm.sh/@tiptap/core@2';
 import StarterKit from 'https://esm.sh/@tiptap/starter-kit@2';
+import CodeBlock from 'https://esm.sh/@tiptap/extension-code-block@2';
 import Highlight from 'https://esm.sh/@tiptap/extension-highlight@2';
 import Subscript from 'https://esm.sh/@tiptap/extension-subscript@2';
 import Superscript from 'https://esm.sh/@tiptap/extension-superscript@2';
@@ -17,12 +18,15 @@ import TableCell from 'https://esm.sh/@tiptap/extension-table-cell@2';
 import TableHeader from 'https://esm.sh/@tiptap/extension-table-header@2';
 import TaskList from 'https://esm.sh/@tiptap/extension-task-list@2';
 import TaskItem from 'https://esm.sh/@tiptap/extension-task-item@2';
+import BulletList from 'https://esm.sh/@tiptap/extension-bullet-list@2';
+import ListItem from 'https://esm.sh/@tiptap/extension-list-item@2';
 
 import { DjotInsert } from './extensions/djot-insert.js';
 import { DjotDelete } from './extensions/djot-delete.js';
 import { DjotDiv } from './extensions/djot-div.js';
 import { DjotSpan } from './extensions/djot-span.js';
 import { DjotFootnote } from './extensions/djot-footnote.js';
+import { DjotEmbed } from './extensions/djot-embed.js';
 
 /**
  * DjotKit - A Tiptap extension bundle for Djot markup
@@ -43,13 +47,85 @@ export const DjotKit = Extension.create({
         // HardBreak, HorizontalRule, Dropcursor, Gapcursor, History
         if (this.options.starterKit !== false) {
             extensions.push(StarterKit.configure({
-                codeBlock: this.options.codeBlock ?? {
-                    HTMLAttributes: {
-                        spellcheck: 'false',
-                    },
-                },
+                // Disable CodeBlock from StarterKit, we add a custom one below
+                codeBlock: false,
+                // Disable default lists - we add custom ones that handle task-list
+                bulletList: false,
+                listItem: false,
                 ...this.options.starterKit,
             }));
+        }
+
+        // Custom CodeBlock that preserves data-language-raw for Torchlight options
+        if (this.options.codeBlock !== false) {
+            const CustomCodeBlock = CodeBlock.extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        languageRaw: {
+                            default: null,
+                            parseHTML: element => {
+                                // Check parent <pre> for data-language-raw
+                                const pre = element.closest('pre');
+                                return pre?.getAttribute('data-language-raw') || null;
+                            },
+                            renderHTML: attributes => {
+                                if (!attributes.languageRaw) return {};
+                                return { 'data-language-raw': attributes.languageRaw };
+                            },
+                        },
+                    };
+                },
+            });
+            extensions.push(CustomCodeBlock.configure({
+                HTMLAttributes: {
+                    spellcheck: 'false',
+                },
+                ...this.options.codeBlock,
+            }));
+        }
+
+        // Custom BulletList that excludes task-list class
+        if (this.options.bulletList !== false) {
+            const CustomBulletList = BulletList.extend({
+                parseHTML() {
+                    return [
+                        {
+                            tag: 'ul',
+                            getAttrs: element => {
+                                // Don't match task-list - let TaskList handle those
+                                if (element.classList.contains('task-list')) {
+                                    return false;
+                                }
+                                return {};
+                            },
+                        },
+                    ];
+                },
+            });
+            extensions.push(CustomBulletList.configure(this.options.bulletList ?? {}));
+        }
+
+        // Custom ListItem that excludes task items (those with checkboxes)
+        if (this.options.listItem !== false) {
+            const CustomListItem = ListItem.extend({
+                parseHTML() {
+                    return [
+                        {
+                            tag: 'li',
+                            getAttrs: element => {
+                                // Don't match list items with checkboxes - let TaskItem handle those
+                                const checkbox = element.querySelector('input[type="checkbox"]');
+                                if (checkbox) {
+                                    return false;
+                                }
+                                return {};
+                            },
+                        },
+                    ];
+                },
+            });
+            extensions.push(CustomListItem.configure(this.options.listItem ?? {}));
         }
 
         // Highlight mark (built-in, maps to {=text=})
@@ -108,10 +184,60 @@ export const DjotKit = Extension.create({
             extensions.push(TableHeader.configure(this.options.tableHeader ?? {}));
         }
 
-        // Task list extensions
+        // Task list extensions - extend to match PHP output format
         if (this.options.taskList !== false) {
-            extensions.push(TaskList.configure(this.options.taskList ?? {}));
-            extensions.push(TaskItem.configure({
+            // Extend TaskList to also match ul.task-list with high priority
+            const CustomTaskList = TaskList.extend({
+                parseHTML() {
+                    return [
+                        { tag: 'ul[data-type="taskList"]', priority: 60 },
+                        { tag: 'ul.task-list', priority: 60 },
+                    ];
+                },
+            });
+            extensions.push(CustomTaskList.configure(this.options.taskList ?? {}));
+
+            // Extend TaskItem to also match li with checkbox input with high priority
+            const CustomTaskItem = TaskItem.extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        checked: {
+                            default: false,
+                            keepOnSplit: false,
+                            parseHTML: element => {
+                                // First check data-checked attribute
+                                const dataChecked = element.getAttribute('data-checked');
+                                if (dataChecked !== null) {
+                                    return dataChecked === 'true';
+                                }
+                                // Then check for checkbox input
+                                const checkbox = element.querySelector('input[type="checkbox"]');
+                                return checkbox?.hasAttribute('checked') || false;
+                            },
+                            renderHTML: attributes => ({
+                                'data-checked': attributes.checked,
+                            }),
+                        },
+                    };
+                },
+                parseHTML() {
+                    return [
+                        { tag: 'li[data-type="taskItem"]', priority: 60 },
+                        // Match list items that contain a checkbox input
+                        {
+                            tag: 'li',
+                            priority: 60,
+                            getAttrs: element => {
+                                const checkbox = element.querySelector('input[type="checkbox"]');
+                                if (checkbox) return {};
+                                return false;
+                            },
+                        },
+                    ];
+                },
+            });
+            extensions.push(CustomTaskItem.configure({
                 nested: true,
                 ...this.options.taskItem,
             }));
@@ -138,6 +264,11 @@ export const DjotKit = Extension.create({
         // Footnote reference node (maps to [^label])
         if (this.options.djotFootnote !== false) {
             extensions.push(DjotFootnote.configure(this.options.djotFootnote ?? {}));
+        }
+
+        // Embed node (preserves videos, oEmbed content)
+        if (this.options.djotEmbed !== false) {
+            extensions.push(DjotEmbed.configure(this.options.djotEmbed ?? {}));
         }
 
         return extensions;

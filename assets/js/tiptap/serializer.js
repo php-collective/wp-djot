@@ -86,11 +86,19 @@ export function serializeToDjot(doc) {
                 break;
 
             case 'codeBlock':
-                const lang = node.attrs?.language || '';
+                // Use languageRaw (with Torchlight options) if available, otherwise language
+                const lang = node.attrs?.languageRaw || node.attrs?.language || '';
                 // Djot uses space between ``` and language
                 output += '```' + (lang ? ' ' + lang : '') + '\n';
                 output += (node.content || []).map(c => c.text || '').join('') + '\n';
                 output += '```\n';
+                break;
+
+            case 'djotEmbed':
+                // Output the original Djot source directly
+                if (node.attrs?.djotSrc) {
+                    output += node.attrs.djotSrc + '\n';
+                }
                 break;
 
             case 'horizontalRule':
@@ -116,6 +124,15 @@ export function serializeToDjot(doc) {
                 output += ':::' + (divClass ? ' ' + divClass : '') + '\n';
                 (node.content || []).forEach(child => serializeNode(child, depth));
                 output += ':::\n';
+                break;
+
+            default:
+                // Log unknown node types for debugging
+                console.warn('Serializer: Unknown node type:', node.type, node);
+                // Try to serialize children if present
+                if (node.content) {
+                    (node.content || []).forEach(child => serializeNode(child, depth));
+                }
                 break;
         }
     }

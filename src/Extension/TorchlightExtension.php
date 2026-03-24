@@ -95,6 +95,11 @@ class TorchlightExtension implements ExtensionInterface
         try {
             $html = $this->engine->codeToHtml($code, $language, $this->theme, withGutter: $showLineNumbers);
 
+            // Add data-language-raw attribute to preserve full language string for visual editor
+            if ($rawLanguage !== $language) {
+                $html = $this->addLanguageRawAttribute($html, $rawLanguage);
+            }
+
             // Add data-filename attribute to the pre element if filename is specified
             if ($filename !== null) {
                 $html = $this->addFilenameAttribute($html, $filename);
@@ -106,7 +111,8 @@ class TorchlightExtension implements ExtensionInterface
             $escapedCode = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
             $langClass = $language ? ' class="language-' . htmlspecialchars($language, ENT_QUOTES, 'UTF-8') . '"' : '';
             $filenameAttr = $filename !== null ? ' data-filename="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '"' : '';
-            $event->setHtml('<pre' . $filenameAttr . '><code' . $langClass . '>' . $escapedCode . '</code></pre>' . "\n");
+            $langRawAttr = $rawLanguage !== $language ? ' data-language-raw="' . htmlspecialchars($rawLanguage, ENT_QUOTES, 'UTF-8') . '"' : '';
+            $event->setHtml('<pre' . $filenameAttr . $langRawAttr . '><code' . $langClass . '>' . $escapedCode . '</code></pre>' . "\n");
         }
     }
 
@@ -121,6 +127,21 @@ class TorchlightExtension implements ExtensionInterface
         return preg_replace(
             '/^<pre\b/',
             '<pre data-filename="' . $escapedFilename . '"',
+            $html,
+        ) ?? $html;
+    }
+
+    /**
+     * Add data-language-raw attribute to preserve full language string for visual editor.
+     */
+    private function addLanguageRawAttribute(string $html, string $rawLanguage): string
+    {
+        $escapedLang = htmlspecialchars($rawLanguage, ENT_QUOTES, 'UTF-8');
+
+        // Add data-language-raw to the opening <pre> tag
+        return preg_replace(
+            '/^<pre\b/',
+            '<pre data-language-raw="' . $escapedLang . '"',
             $html,
         ) ?? $html;
     }

@@ -863,11 +863,6 @@
             }
 
             function onVideo() {
-                // Video uses Djot-specific syntax, only available in write mode
-                if ( editorMode === 'visual' ) {
-                    alert( __( 'Video insertion is only available in Write mode. Please switch to Write mode first.', 'djot-markup' ) );
-                    return;
-                }
                 setVideoUrl( '' );
                 setVideoCaption( '' );
                 setVideoWidth( '' );
@@ -885,9 +880,31 @@
                 if ( videoWidth.trim() ) {
                     attrs += ' width=' + videoWidth.trim();
                 }
-                var videoText = '![' + videoCaption + '](' + videoUrl.trim() + '){' + attrs + '}\n';
+                var videoText = '![' + videoCaption + '](' + videoUrl.trim() + '){' + attrs + '}';
 
-                insertMultiLineBlock( '', '', videoText );
+                // Visual mode: convert to HTML and insert
+                if ( editorMode === 'visual' ) {
+                    apiFetch( {
+                        path: '/wpdjot/v1/render',
+                        method: 'POST',
+                        data: { content: videoText },
+                    } ).then( function( response ) {
+                        var visualEditor = getVisualEditor();
+                        if ( visualEditor && visualEditor.editor ) {
+                            visualEditor.editor.chain().focus().insertContent( response.html || '' ).run();
+                        }
+                        setShowVideoModal( false );
+                        setVideoUrl( '' );
+                        setVideoCaption( '' );
+                        setVideoWidth( '' );
+                    } ).catch( function() {
+                        alert( __( 'Error inserting video', 'djot-markup' ) );
+                    } );
+                    return;
+                }
+
+                // Write mode: insert Djot syntax
+                insertMultiLineBlock( '', '', videoText + '\n' );
                 setShowVideoModal( false );
             }
 

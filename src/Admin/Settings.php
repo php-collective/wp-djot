@@ -195,7 +195,7 @@ class Settings
             [$this, 'renderSoftBreakSelect'],
             self::PAGE_SLUG,
             'wpdjot_rendering',
-            ['field' => 'post_soft_break', 'description' => __('How single line breaks are rendered in posts and pages. Overridden by Markdown Compatibility when enabled.', 'djot-markup')],
+            ['field' => 'post_soft_break', 'description' => __('How single line breaks are rendered in posts and pages.', 'djot-markup')],
         );
 
         add_settings_field(
@@ -204,7 +204,7 @@ class Settings
             [$this, 'renderSoftBreakSelect'],
             self::PAGE_SLUG,
             'wpdjot_rendering',
-            ['field' => 'comment_soft_break', 'description' => __('How single line breaks are rendered in comments. Overridden by Markdown Compatibility when enabled.', 'djot-markup')],
+            ['field' => 'comment_soft_break', 'description' => __('How single line breaks are rendered in comments.', 'djot-markup')],
         );
 
         add_settings_field(

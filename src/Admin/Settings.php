@@ -294,6 +294,23 @@ class Settings
             'wpdjot_toc',
             ['field' => 'permalinks_enabled', 'description' => __('Add clickable # symbols to headings. Shown on hover, clicking copies the heading URL to clipboard.', 'djot-markup')],
         );
+
+        // Experimental Settings Section
+        add_settings_section(
+            'wpdjot_experimental',
+            __('Experimental', 'djot-markup'),
+            [$this, 'renderExperimentalSectionDescription'],
+            self::PAGE_SLUG,
+        );
+
+        add_settings_field(
+            'visual_editor_mode',
+            __('Visual Editor', 'djot-markup'),
+            [$this, 'renderVisualEditorModeSelect'],
+            self::PAGE_SLUG,
+            'wpdjot_experimental',
+            ['field' => 'visual_editor_mode', 'description' => __('Enable the WYSIWYG visual editor for Djot blocks.', 'djot-markup') . '<br><em>' . __('Note: Some edge cases may not round-trip perfectly. Verify in Write mode for critical content.', 'djot-markup') . '</em>'],
+        );
     }
 
     /**
@@ -348,6 +365,9 @@ class Settings
                 ? $input['toc_list_type']
                 : 'ul',
             'permalinks_enabled' => !empty($input['permalinks_enabled']),
+            'visual_editor_mode' => in_array($input['visual_editor_mode'] ?? '', ['disabled', 'enabled', 'enabled_default'], true)
+                ? $input['visual_editor_mode']
+                : 'disabled',
         ];
     }
 
@@ -740,5 +760,69 @@ class Settings
         if (!empty($args['description'])) {
             printf('<p class="description">%s</p>', esc_html($args['description']));
         }
+    }
+
+    public function renderExperimentalSectionDescription(): void
+    {
+        echo '<p>' . esc_html__('These features are not yet fully stable and may change in future versions.', 'djot-markup') . '</p>';
+    }
+
+    /**
+     * Render visual editor mode select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
+    public function renderVisualEditorModeSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $current = $options[$field] ?? 'disabled';
+
+        $modes = [
+            'disabled' => [
+                'label' => __('Disabled', 'djot-markup'),
+                'description' => __('Visual editor tab is hidden. Only Write and Preview modes available.', 'djot-markup'),
+            ],
+            'enabled' => [
+                'label' => __('Enabled (Write default)', 'djot-markup'),
+                'description' => __('Visual editor available. Write mode is selected by default.', 'djot-markup'),
+            ],
+            'enabled_default' => [
+                'label' => __('Enabled (Visual default)', 'djot-markup'),
+                'description' => __('Visual editor available and selected by default when opening documents.', 'djot-markup'),
+            ],
+        ];
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+
+        foreach ($modes as $value => $mode) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr($value),
+                selected($current, $value, false),
+                esc_html($mode['label']),
+            );
+        }
+
+        echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', wp_kses($args['description'], ['br' => [], 'em' => [], 'strong' => [], 'code' => []]));
+        }
+
+        // Show mode details
+        echo '<ul class="description" style="margin-top: 5px; font-size: 12px;">';
+        foreach ($modes as $value => $mode) {
+            printf(
+                '<li><strong>%s:</strong> %s</li>',
+                esc_html($mode['label']),
+                esc_html($mode['description']),
+            );
+        }
+        echo '</ul>';
     }
 }

@@ -102,8 +102,17 @@
             const { content } = attributes;
             const { __unstableMarkLastChangeAsPersistent: markUndoBoundary } = useDispatch( 'core/block-editor' );
             const [ preview, setPreview ] = useState( '' );
-            const [ isPreviewMode, setIsPreviewMode ] = useState( false );
+            // Visual editor mode from settings: 'disabled' | 'enabled' | 'enabled_default'
+            const visualEditorSetting = window.wpdjotBlockData?.visualEditorMode || 'disabled';
+            const visualEditorEnabled = visualEditorSetting !== 'disabled';
+            const initialMode = visualEditorSetting === 'enabled_default' ? 'visual' : 'write';
+            const [ editorMode, setEditorMode ] = useState( initialMode ); // 'write' | 'visual' | 'preview'
+            const previousModeRef = useRef( initialMode ); // Track mode before preview (ref avoids closure issues)
             const [ isLoading, setIsLoading ] = useState( false );
+            const [ visualEditorInstance, setVisualEditorInstance ] = useState( null );
+            const [ isVisualLoading, setIsVisualLoading ] = useState( false );
+            const visualEditorRef = useRef( null );
+            const pendingDjotContent = useRef( null );
             const [ showLinkModal, setShowLinkModal ] = useState( false );
             const [ showImageModal, setShowImageModal ] = useState( false );
             const [ showTableModal, setShowTableModal ] = useState( false );
@@ -128,6 +137,8 @@
             const [ videoUrl, setVideoUrl ] = useState( '' );
             const [ videoCaption, setVideoCaption ] = useState( '' );
             const [ videoWidth, setVideoWidth ] = useState( '' );
+            const [ showDivModal, setShowDivModal ] = useState( false );
+            const [ divClass, setDivClass ] = useState( 'note' );
             const textareaRef = useRef( null );
             const previewRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
@@ -136,6 +147,46 @@
             const blockProps = useBlockProps( {
                 className: 'wpdjot-block',
             } );
+
+            // Helper to get visual editor instance reliably
+            // Uses React state if available, falls back to global instance
+            function getVisualEditor() {
+                if ( visualEditorInstance ) {
+                    return visualEditorInstance;
+                }
+                // Fallback to global instance if React state is stale
+                if ( window.WpDjotVisualEditor && window.WpDjotVisualEditor.getEditor() ) {
+                    var editor = window.WpDjotVisualEditor.getEditor();
+                    // Return a compatible interface
+                    return {
+                        commands: {
+                            bold: function() { return editor.chain().focus().toggleBold().run(); },
+                            italic: function() { return editor.chain().focus().toggleItalic().run(); },
+                            code: function() { return editor.chain().focus().toggleCode().run(); },
+                            highlight: function() { return editor.chain().focus().toggleHighlight().run(); },
+                            strikethrough: function() { return editor.chain().focus().toggleStrike().run(); },
+                            superscript: function() { return editor.chain().focus().toggleSuperscript().run(); },
+                            subscript: function() { return editor.chain().focus().toggleSubscript().run(); },
+                            djotInsert: function() { return editor.chain().focus().toggleDjotInsert().run(); },
+                            djotDelete: function() { return editor.chain().focus().toggleDjotDelete().run(); },
+                            heading: function( level ) { return editor.chain().focus().toggleHeading( { level: level } ).run(); },
+                            blockquote: function() { return editor.chain().focus().toggleBlockquote().run(); },
+                            bulletList: function() { return editor.chain().focus().toggleBulletList().run(); },
+                            orderedList: function() { return editor.chain().focus().toggleOrderedList().run(); },
+                            taskList: function() { return editor.chain().focus().toggleTaskList().run(); },
+                            codeBlock: function() { return editor.chain().focus().toggleCodeBlock().run(); },
+                            horizontalRule: function() { return editor.chain().focus().setHorizontalRule().run(); },
+                            link: function( href ) { return href ? editor.chain().focus().setLink( { href: href } ).run() : editor.chain().focus().unsetLink().run(); },
+                            image: function( src, alt ) { return editor.chain().focus().setImage( { src: src, alt: alt } ).run(); },
+                            table: function( rows, cols ) { return editor.chain().focus().insertTable( { rows: rows, cols: cols, withHeaderRow: true } ).run(); },
+                            djotDiv: function( className ) { return editor.chain().focus().setDjotDiv( { class: className } ).run(); },
+                            djotSpan: function( className ) { return editor.chain().focus().setDjotSpan( { class: className } ).run(); },
+                            djotFootnote: function( label ) { return editor.chain().focus().insertDjotFootnote( { label: label } ).run(); },
+                        },
+                    };
+                }
+                return null;
+            }
 
             // Track selection in textarea and check if in table
             function updateSelection() {
@@ -189,7 +240,7 @@
                 }
 
                 // External content change (undo/redo)
-                if ( ! isPreviewMode ) {
+                if ( editorMode === 'write' ) {
                     var textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                     if ( textarea ) {
                         var oldContent = previousContent.current;
@@ -369,16 +420,86 @@
             }
 
             // Toolbar button handlers
-            function onBold() { insertMarkup( '*', '*' ); }
-            function onItalic() { insertMarkup( '_', '_' ); }
-            function onCode() { insertMarkup( '`', '`' ); }
-            function onSuperscript() { insertMarkup( '^', '^' ); }
-            function onSubscript() { insertMarkup( '~', '~' ); }
-            function onHighlight() { insertMarkup( '{=', '=}' ); }
-            function onInsert() { insertMarkup( '{+', '+}' ); }
-            function onDelete() { insertMarkup( '{-', '-}' ); }
-            function onStrikethrough() { insertMarkup( '{~', '~}' ); }
-            function onSpan() { insertMarkup( '[', ']{.class}' ); }
+            function onBold() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.bold();
+                } else {
+                    insertMarkup( '*', '*' );
+                }
+            }
+            function onItalic() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.italic();
+                } else {
+                    insertMarkup( '_', '_' );
+                }
+            }
+            function onCode() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.code();
+                } else {
+                    insertMarkup( '`', '`' );
+                }
+            }
+            function onSuperscript() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.superscript();
+                } else {
+                    insertMarkup( '^', '^' );
+                }
+            }
+            function onSubscript() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.subscript();
+                } else {
+                    insertMarkup( '~', '~' );
+                }
+            }
+            function onHighlight() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.highlight();
+                } else {
+                    insertMarkup( '{=', '=}' );
+                }
+            }
+            function onInsert() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotInsert();
+                } else {
+                    insertMarkup( '{+', '+}' );
+                }
+            }
+            function onDelete() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotDelete();
+                } else {
+                    insertMarkup( '{-', '-}' );
+                }
+            }
+            function onStrikethrough() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.strikethrough();
+                } else {
+                    insertMarkup( '{~', '~}' );
+                }
+            }
+            function onSpan() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotSpan( 'class' );
+                } else {
+                    insertMarkup( '[', ']{.class}' );
+                }
+            }
 
             function onLink() {
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
@@ -391,6 +512,16 @@
             }
 
             function onInsertLink() {
+                // Visual mode: use Tiptap link command
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.link( linkUrl );
+                    setShowLinkModal( false );
+                    setLinkUrl( '' );
+                    setLinkText( '' );
+                    return;
+                }
+
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
@@ -430,6 +561,16 @@
             }
 
             function onInsertImage() {
+                // Visual mode: use Tiptap image command
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.image( imageUrl, imageAlt );
+                    setShowImageModal( false );
+                    setImageUrl( '' );
+                    setImageAlt( '' );
+                    return;
+                }
+
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
@@ -457,6 +598,12 @@
             }
 
             function onHeading( level ) {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.heading( level );
+                    return;
+                }
+
                 const textarea = textareaRef.current ? textareaRef.current.querySelector( 'textarea' ) : null;
                 if ( ! textarea ) return;
 
@@ -502,13 +649,69 @@
                 }
             }
 
-            function onBlockquote() { insertBlockMarkup( '> ', '' ); }
-            function onListUl() { insertBlockMarkup( '- ', '' ); }
-            function onListOl() { insertBlockMarkup( '1. ', '' ); }
-            function onHorizontalRule() { insertMultiLineBlock( '---', '', '' ); }
-            function onCodeBlock() { insertMultiLineBlock( '```', '```', '' ); }
-            function onDiv() { insertMultiLineBlock( '::: note', ':::', '' ); }
-            function onFootnote() { insertMarkup( '[^', ']' ); }
+            function onBlockquote() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.blockquote();
+                } else {
+                    insertBlockMarkup( '> ', '' );
+                }
+            }
+            function onListUl() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.bulletList();
+                } else {
+                    insertBlockMarkup( '- ', '' );
+                }
+            }
+            function onListOl() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.orderedList();
+                } else {
+                    insertBlockMarkup( '1. ', '' );
+                }
+            }
+            function onHorizontalRule() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.horizontalRule();
+                } else {
+                    insertMultiLineBlock( '---', '', '' );
+                }
+            }
+            function onCodeBlock() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.codeBlock();
+                } else {
+                    insertMultiLineBlock( '```', '```', '' );
+                }
+            }
+            function onDiv() {
+                console.log( 'onDiv called, showing modal' );
+                setDivClass( 'note' );
+                setShowDivModal( true );
+            }
+            function onInsertDiv() {
+                var className = divClass.trim() || 'note';
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotDiv( className );
+                } else {
+                    insertMultiLineBlock( '::: ' + className, ':::', '' );
+                }
+                setShowDivModal( false );
+            }
+            function onFootnote() {
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.djotFootnote( 'note' );
+                } else {
+                    insertMarkup( '[^', ']' );
+                }
+            }
 
             function onTable() {
                 setTableCols( 3 );
@@ -519,6 +722,14 @@
             function onInsertTable() {
                 var cols = Math.max( 1, Math.min( 10, tableCols ) );
                 var rows = Math.max( 1, Math.min( 20, tableRows ) );
+
+                // Visual mode: use Tiptap table command
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.table( rows, cols );
+                    setShowTableModal( false );
+                    return;
+                }
 
                 // Build header row
                 var headerCells = [];
@@ -546,6 +757,12 @@
             }
 
             function onTaskList() {
+                // Visual mode: toggle task list directly
+                var visualEditor = editorMode === 'visual' ? getVisualEditor() : null;
+                if ( visualEditor ) {
+                    visualEditor.commands.taskList();
+                    return;
+                }
                 setTaskListItems( [ { text: '', checked: false } ] );
                 setShowTaskListModal( true );
             }
@@ -613,9 +830,30 @@
                     return ': +\n\n' + indentedDef;
                 } ).join( '\n\n' );
 
-                var defListText = termsText + '\n\n' + defsText + '\n';
+                var defListText = termsText + '\n\n' + defsText;
 
-                insertMultiLineBlock( '', '', defListText );
+                // Visual mode: convert to HTML and insert
+                if ( editorMode === 'visual' ) {
+                    apiFetch( {
+                        path: '/wpdjot/v1/render',
+                        method: 'POST',
+                        data: { content: defListText },
+                    } ).then( function( response ) {
+                        var visualEditor = getVisualEditor();
+                        if ( visualEditor && visualEditor.editor ) {
+                            visualEditor.editor.chain().focus().insertContent( response.html || '' ).run();
+                        }
+                        setShowDefListModal( false );
+                        setDefListTerms( [ '' ] );
+                        setDefListDefinitions( [ '' ] );
+                    } ).catch( function() {
+                        alert( __( 'Error inserting definition list', 'djot-markup' ) );
+                    } );
+                    return;
+                }
+
+                // Write mode: insert Djot syntax
+                insertMultiLineBlock( '', '', defListText + '\n' );
                 setShowDefListModal( false );
             }
 
@@ -671,9 +909,31 @@
                 if ( videoWidth.trim() ) {
                     attrs += ' width=' + videoWidth.trim();
                 }
-                var videoText = '![' + videoCaption + '](' + videoUrl.trim() + '){' + attrs + '}\n';
+                var videoText = '![' + videoCaption + '](' + videoUrl.trim() + '){' + attrs + '}';
 
-                insertMultiLineBlock( '', '', videoText );
+                // Visual mode: convert to HTML and insert
+                if ( editorMode === 'visual' ) {
+                    apiFetch( {
+                        path: '/wpdjot/v1/render',
+                        method: 'POST',
+                        data: { content: videoText },
+                    } ).then( function( response ) {
+                        var visualEditor = getVisualEditor();
+                        if ( visualEditor && visualEditor.editor ) {
+                            visualEditor.editor.chain().focus().insertContent( response.html || '' ).run();
+                        }
+                        setShowVideoModal( false );
+                        setVideoUrl( '' );
+                        setVideoCaption( '' );
+                        setVideoWidth( '' );
+                    } ).catch( function() {
+                        alert( __( 'Error inserting video', 'djot-markup' ) );
+                    } );
+                    return;
+                }
+
+                // Write mode: insert Djot syntax
+                insertMultiLineBlock( '', '', videoText + '\n' );
                 setShowVideoModal( false );
             }
 
@@ -935,6 +1195,27 @@
                     return;
                 }
 
+                // Visual mode: convert Djot to HTML and insert into editor
+                if ( editorMode === 'visual' ) {
+                    apiFetch( {
+                        path: '/wpdjot/v1/render',
+                        method: 'POST',
+                        data: { content: djotPreview },
+                    } ).then( function( response ) {
+                        var visualEditor = getVisualEditor();
+                        if ( visualEditor && visualEditor.editor ) {
+                            visualEditor.editor.chain().focus().insertContent( response.html || '' ).run();
+                        }
+                        setShowImportModal( false );
+                        setImportInput( '' );
+                        setDjotPreview( '' );
+                    } ).catch( function() {
+                        alert( __( 'Error converting content', 'djot-markup' ) );
+                    } );
+                    return;
+                }
+
+                // Write mode: insert Djot text at cursor
                 // Create undo boundary so this change is a separate undo step
                 if ( markUndoBoundary ) {
                     markUndoBoundary();
@@ -964,7 +1245,7 @@
 
                 setAttributes( { content: newText } );
                 setShowImportModal( false );
-                setMarkdownInput( '' );
+                setImportInput( '' );
                 setDjotPreview( '' );
 
                 if ( textarea ) {
@@ -1158,19 +1439,30 @@
             );
 
             useEffect( function() {
-                if ( isPreviewMode && content ) {
+                if ( editorMode === 'preview' && content ) {
                     fetchPreview( content );
                 }
-            }, [ content, isPreviewMode ] );
+            }, [ content, editorMode ] );
 
-            // ESC key exits preview mode
+            // ESC key exits preview mode back to previous mode, or visual mode back to write
             useEffect( function() {
-                if ( ! isPreviewMode ) return;
+                if ( editorMode === 'write' ) return;
 
                 function handleKeyDown( e ) {
                     if ( e.key === 'Escape' ) {
                         e.preventDefault();
-                        setIsPreviewMode( false );
+                        if ( editorMode === 'preview' ) {
+                            // Return to previous mode (read from ref to get current value)
+                            if ( previousModeRef.current === 'visual' ) {
+                                setEditorMode( 'visual' );
+                                setIsVisualLoading( true );
+                            } else {
+                                setEditorMode( 'write' );
+                            }
+                        } else {
+                            // From visual mode, go to write
+                            setEditorMode( 'write' );
+                        }
                     }
                 }
 
@@ -1178,7 +1470,156 @@
                 return function() {
                     document.removeEventListener( 'keydown', handleKeyDown );
                 };
-            }, [ isPreviewMode ] );
+            }, [ editorMode ] );
+
+            // Keyboard shortcuts for visual mode
+            // Tiptap has different default shortcuts, so we add custom ones to match write mode
+            useEffect( function() {
+                if ( editorMode !== 'visual' ) return;
+
+                function handleVisualKeyDown( e ) {
+                    var visualEditor = getVisualEditor();
+                    if ( ! visualEditor ) return;
+                    if ( ! visualEditor.commands ) return;
+
+                    var isMod = e.ctrlKey || e.metaKey;
+                    if ( ! isMod ) return;
+
+                    var handled = false;
+
+                    if ( e.shiftKey ) {
+                        switch ( e.key.toLowerCase() ) {
+                            case 'x': visualEditor.commands.strikethrough(); handled = true; break;
+                            case 'e': visualEditor.commands.codeBlock(); handled = true; break;
+                            case 'h': visualEditor.commands.highlight(); handled = true; break;
+                            case 'i': onImage(); handled = true; break;
+                            case '.': visualEditor.commands.blockquote(); handled = true; break;
+                            case '8': visualEditor.commands.bulletList(); handled = true; break;
+                            case '7': visualEditor.commands.orderedList(); handled = true; break;
+                        }
+                    } else {
+                        switch ( e.key.toLowerCase() ) {
+                            case 'k': onLink(); handled = true; break;
+                            case '.': visualEditor.commands.superscript(); handled = true; break;
+                            case ',': visualEditor.commands.subscript(); handled = true; break;
+                            case '1': visualEditor.commands.heading( 1 ); handled = true; break;
+                            case '2': visualEditor.commands.heading( 2 ); handled = true; break;
+                            case '3': visualEditor.commands.heading( 3 ); handled = true; break;
+                            case '4': visualEditor.commands.heading( 4 ); handled = true; break;
+                            case '5': visualEditor.commands.heading( 5 ); handled = true; break;
+                            case '6': visualEditor.commands.heading( 6 ); handled = true; break;
+                            // Bold, Italic, Code handled by Tiptap natively (Mod-b, Mod-i, Mod-e)
+                        }
+                    }
+
+                    if ( handled ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }
+
+                document.addEventListener( 'keydown', handleVisualKeyDown );
+                return function() {
+                    document.removeEventListener( 'keydown', handleVisualKeyDown );
+                };
+            }, [ editorMode ] );
+
+            // Switch to write mode, syncing content from visual editor if needed
+            function switchToWriteMode() {
+                if ( editorMode === 'visual' && visualEditorInstance ) {
+                    // Get Djot content from visual editor before switching
+                    var djotContent = visualEditorInstance.getDjot();
+                    if ( djotContent !== content ) {
+                        setAttributes( { content: djotContent } );
+                    }
+                }
+                setEditorMode( 'write' );
+            }
+
+            // Switch to visual mode
+            function switchToVisualMode() {
+                setEditorMode( 'visual' );
+                setIsVisualLoading( true );
+            }
+
+            // Switch to preview mode
+            function switchToPreviewMode() {
+                // If coming from visual mode, sync content first
+                if ( editorMode === 'visual' && visualEditorInstance ) {
+                    var djotContent = visualEditorInstance.getDjot();
+                    if ( djotContent !== content ) {
+                        setAttributes( { content: djotContent } );
+                    }
+                }
+                // Save current mode before switching to preview
+                if ( editorMode !== 'preview' ) {
+                    previousModeRef.current = editorMode;
+                }
+                setEditorMode( 'preview' );
+            }
+
+            // Exit preview mode, return to previous mode (write or visual)
+            function exitPreviewMode() {
+                if ( previousModeRef.current === 'visual' ) {
+                    switchToVisualMode();
+                } else {
+                    switchToWriteMode();
+                }
+            }
+
+            // Initialize visual editor when switching to visual mode
+            useEffect( function() {
+                if ( editorMode !== 'visual' ) return;
+                if ( ! visualEditorRef.current ) return;
+
+                // Load the visual editor module
+                async function loadVisualEditor() {
+                    try {
+                        // First, render the content as HTML via the API
+                        var htmlContent = '<p></p>';
+                        if ( content ) {
+                            var response = await apiFetch( {
+                                path: '/wpdjot/v1/render',
+                                method: 'POST',
+                                data: { content: content },
+                            } );
+                            htmlContent = response.html || '<p></p>';
+                        }
+
+                        // Load the visual editor module (cache-bust with version)
+                        var baseUrl = window.wpdjotBlockData ? window.wpdjotBlockData.assetsUrl : '/wp-content/plugins/djot-markup/assets/';
+                        var cacheBust = '?v=' + ( window.wpdjotBlockData?.version || Date.now() );
+                        var module = await import( baseUrl + 'js/tiptap/visual-editor.js' + cacheBust );
+
+                        // Initialize the editor
+                        var instance = await module.initVisualEditor(
+                            visualEditorRef.current,
+                            htmlContent,
+                            function( djotContent ) {
+                                // Store pending content update (debounced sync)
+                                pendingDjotContent.current = djotContent;
+                            }
+                        );
+
+                        setVisualEditorInstance( instance );
+                        setIsVisualLoading( false );
+                    } catch ( error ) {
+                        console.error( 'Failed to load visual editor:', error );
+                        setIsVisualLoading( false );
+                        setEditorMode( 'write' ); // Fall back to write mode
+                    }
+                }
+
+                loadVisualEditor();
+
+                return function() {
+                    // Cleanup visual editor when leaving visual mode
+                    if ( visualEditorInstance ) {
+                        visualEditorInstance.destroy();
+                        setVisualEditorInstance( null );
+                    }
+                };
+            }, [ editorMode ] );
 
             function onChangeContent( newContent ) {
                 isInternalChange.current = true;
@@ -1208,10 +1649,10 @@
 
             // Sync scroll when entering preview mode
             useEffect( function() {
-                if ( isPreviewMode && preview && ! isLoading ) {
+                if ( editorMode === 'preview' && preview && ! isLoading ) {
                     syncPreviewScroll();
                 }
-            }, [ isPreviewMode, preview, isLoading ] );
+            }, [ editorMode, preview, isLoading ] );
 
             // Heading dropdown controls
             const headingControls = [
@@ -1226,8 +1667,8 @@
             return wp.element.createElement(
                 'div',
                 blockProps,
-                // Block Controls (Toolbar)
-                wp.element.createElement(
+                // Block Controls (Toolbar) - only show for write/visual modes, not preview
+                editorMode !== 'preview' && wp.element.createElement(
                     BlockControls,
                     null,
                     // Inline formatting group
@@ -1255,6 +1696,16 @@
                             onClick: onStrikethrough,
                         } )
                     ),
+                    // Headings dropdown
+                    wp.element.createElement(
+                        ToolbarGroup,
+                        null,
+                        wp.element.createElement( ToolbarDropdownMenu, {
+                            icon: icons.heading,
+                            label: __( 'Headings', 'djot-markup' ),
+                            controls: headingControls,
+                        } )
+                    ),
                     // Links and media group
                     wp.element.createElement(
                         ToolbarGroup,
@@ -1268,16 +1719,6 @@
                             icon: icons.image,
                             label: __( 'Image (![alt](url))', 'djot-markup' ),
                             onClick: onImage,
-                        } )
-                    ),
-                    // Headings dropdown
-                    wp.element.createElement(
-                        ToolbarGroup,
-                        null,
-                        wp.element.createElement( ToolbarDropdownMenu, {
-                            icon: icons.heading,
-                            label: __( 'Headings', 'djot-markup' ),
-                            controls: headingControls,
                         } )
                     ),
                     // Block elements group
@@ -1383,12 +1824,28 @@
                     wp.element.createElement(
                         PanelBody,
                         { title: __( 'Djot Settings', 'djot-markup' ) },
-                        wp.element.createElement( ToggleControl, {
-                            label: __( 'Show Preview', 'djot-markup' ),
-                            checked: isPreviewMode,
-                            onChange: setIsPreviewMode,
-                            __nextHasNoMarginBottom: true,
-                        } )
+                        wp.element.createElement( 'div', { style: { marginBottom: '16px' } },
+                            wp.element.createElement( 'label', { style: { display: 'block', marginBottom: '8px', fontWeight: 500 } },
+                                __( 'Editor Mode', 'djot-markup' )
+                            ),
+                            wp.element.createElement( 'div', { style: { display: 'flex', gap: '8px' } },
+                                wp.element.createElement( Button, {
+                                    variant: editorMode === 'write' ? 'primary' : 'secondary',
+                                    onClick: switchToWriteMode,
+                                    style: { flex: 1 },
+                                }, __( 'Write', 'djot-markup' ) ),
+                                wp.element.createElement( Button, {
+                                    variant: editorMode === 'visual' ? 'primary' : 'secondary',
+                                    onClick: switchToVisualMode,
+                                    style: { flex: 1 },
+                                }, __( 'Visual', 'djot-markup' ) ),
+                                wp.element.createElement( Button, {
+                                    variant: editorMode === 'preview' ? 'primary' : 'secondary',
+                                    onClick: switchToPreviewMode,
+                                    style: { flex: 1 },
+                                }, __( 'Preview', 'djot-markup' ) )
+                            )
+                        )
                     ),
                     wp.element.createElement(
                         PanelBody,
@@ -1837,71 +2294,129 @@
                         }, __( 'Cancel', 'djot-markup' ) )
                     )
                 ),
+                // Div container modal
+                showDivModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Insert Container', 'djot-markup' ),
+                        onRequestClose: function() { setShowDivModal( false ); },
+                    },
+                    wp.element.createElement( 'div', { className: 'wpdjot-container-options', style: { marginBottom: '16px' } },
+                        wp.element.createElement( 'p', { style: { marginBottom: '8px', fontWeight: '600' } }, __( 'Container Type', 'djot-markup' ) ),
+                        [ 'note', 'tip', 'warning', 'danger', 'info' ].map( function( type ) {
+                            var labels = { note: 'Note (blue)', tip: 'Tip (green)', warning: 'Warning (yellow)', danger: 'Danger (red)', info: 'Info (gray)' };
+                            return wp.element.createElement( 'label', { key: type, style: { display: 'block', marginBottom: '6px', cursor: 'pointer' } },
+                                wp.element.createElement( 'input', {
+                                    type: 'radio',
+                                    name: 'divClass',
+                                    value: type,
+                                    checked: divClass === type,
+                                    onChange: function() { setDivClass( type ); },
+                                    style: { marginRight: '8px' },
+                                } ),
+                                labels[ type ]
+                            );
+                        } )
+                    ),
+                    wp.element.createElement( TextControl, {
+                        label: __( 'Or custom class', 'djot-markup' ),
+                        value: divClass,
+                        onChange: setDivClass,
+                        placeholder: 'custom-class',
+                    } ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { marginTop: '16px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: onInsertDiv,
+                        }, __( 'Insert Container', 'djot-markup' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() { setShowDivModal( false ); },
+                            style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup' ) )
+                    )
+                ),
+                // Mode tabs
+                wp.element.createElement(
+                    'div',
+                    { className: 'wpdjot-mode-tabs' },
+                    wp.element.createElement( 'button', {
+                        className: editorMode === 'write' ? 'active' : '',
+                        onClick: switchToWriteMode,
+                    }, __( 'Write', 'djot-markup' ) ),
+                    // Visual tab only shown when enabled in settings
+                    visualEditorEnabled && wp.element.createElement( 'button', {
+                        className: editorMode === 'visual' ? 'active' : '',
+                        onClick: switchToVisualMode,
+                    }, __( 'Visual', 'djot-markup' ) ),
+                    wp.element.createElement( 'button', {
+                        className: editorMode === 'preview' ? 'active' : '',
+                        onClick: switchToPreviewMode,
+                    }, __( 'Preview', 'djot-markup' ) )
+                ),
                 // Main content area
-                content || isPreviewMode
-                    ? wp.element.createElement(
-                          'div',
-                          { className: 'wpdjot-block-wrapper', ref: textareaRef },
-                          ! isPreviewMode &&
-                              wp.element.createElement( PlainText, {
-                                  value: content,
-                                  onChange: onChangeContent,
-                                  onSelect: updateSelection,
-                                  onClick: updateSelection,
-                                  onKeyUp: updateSelection,
-                                  onKeyDown: handleTextareaKeyDown,
-                                  className: 'wpdjot-editor',
-                                  placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'djot-markup' ),
-                              } ),
-                          isPreviewMode &&
-                              wp.element.createElement(
-                                  'div',
-                                  { className: 'wpdjot-preview-wrapper' },
-                                  wp.element.createElement(
-                                      'div',
-                                      { className: 'wpdjot-preview-header' },
-                                      wp.element.createElement( 'span', null, __( 'Preview', 'djot-markup' ) ),
-                                      wp.element.createElement(
-                                          'button',
-                                          {
-                                              className: 'wpdjot-edit-button',
-                                              onClick: function() { setIsPreviewMode( false ); },
-                                              title: __( 'Press ESC to exit preview', 'djot-markup' ),
-                                          },
-                                          __( 'Edit (ESC)', 'djot-markup' )
-                                      )
-                                  ),
-                                  isLoading
-                                      ? wp.element.createElement( Spinner, null )
-                                      : wp.element.createElement( 'div', {
-                                            ref: previewRef,
-                                            className: 'wpdjot-preview djot-content',
-                                            dangerouslySetInnerHTML: { __html: preview },
-                                        } )
-                              )
-                      )
-                    : wp.element.createElement(
-                          Placeholder,
-                          {
-                              icon: 'editor-code',
-                              label: __( 'Djot', 'djot-markup' ),
-                              instructions: __( 'Write content using Djot markup language. Use the toolbar above for formatting.', 'djot-markup' ),
-                          },
-                          wp.element.createElement(
-                              'div',
-                              { ref: textareaRef, style: { width: '100%' } },
-                              wp.element.createElement( PlainText, {
-                                  value: content,
-                                  onChange: onChangeContent,
-                                  onSelect: updateSelection,
-                                  onClick: updateSelection,
-                                  onKeyUp: updateSelection,
-                                  onKeyDown: handleTextareaKeyDown,
-                                  className: 'wpdjot-editor',
-                                  placeholder: __( '# Hello World\n\nThis is _emphasized_ and *strong* text.', 'djot-markup' ),
+                wp.element.createElement(
+                    'div',
+                    { className: 'wpdjot-block-wrapper' },
+                    // Write mode (textarea)
+                    editorMode === 'write' && wp.element.createElement(
+                        'div',
+                        { ref: textareaRef },
+                        wp.element.createElement( PlainText, {
+                            value: content,
+                            onChange: onChangeContent,
+                            onSelect: updateSelection,
+                            onClick: updateSelection,
+                            onKeyUp: updateSelection,
+                            onKeyDown: handleTextareaKeyDown,
+                            className: 'wpdjot-editor',
+                            placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'djot-markup' ),
+                        } )
+                    ),
+                    // Visual mode (Tiptap editor) - only when enabled in settings
+                    visualEditorEnabled && editorMode === 'visual' && wp.element.createElement(
+                        'div',
+                        { className: 'wpdjot-visual-wrapper' },
+                        // Always render the container so the ref is available for useEffect
+                        wp.element.createElement( 'div', {
+                            ref: visualEditorRef,
+                            className: 'wpdjot-visual-container',
+                            style: isVisualLoading ? { display: 'none' } : {},
+                        } ),
+                        // Show loading indicator while loading
+                        isVisualLoading && wp.element.createElement( 'div', { className: 'wpdjot-visual-loading' },
+                            __( 'Loading visual editor...', 'djot-markup' )
+                        )
+                    ),
+                    // Preview mode
+                    editorMode === 'preview' && wp.element.createElement(
+                        'div',
+                        { className: 'wpdjot-preview-wrapper' },
+                        wp.element.createElement(
+                            'div',
+                            { className: 'wpdjot-preview-header' },
+                            wp.element.createElement( 'span', null, __( 'Preview', 'djot-markup' ) ),
+                            wp.element.createElement(
+                                'button',
+                                {
+                                    className: 'wpdjot-edit-button',
+                                    onClick: exitPreviewMode,
+                                    title: __( 'Press ESC to exit preview', 'djot-markup' ),
+                                },
+                                __( 'Edit (ESC)', 'djot-markup' )
+                            )
+                        ),
+                        isLoading
+                            ? wp.element.createElement( Spinner, null )
+                            : wp.element.createElement( 'div', {
+                                  ref: previewRef,
+                                  className: 'wpdjot-preview djot-content',
+                                  dangerouslySetInnerHTML: { __html: preview },
                               } )
-                          )
-                      )
+                    )
+                )
             );
         },
 

@@ -149,20 +149,22 @@ class Converter
                 default => Profile::article(),
             };
 
-            // Use significantNewlines mode for markdown compatibility
-            if ($this->markdownMode) {
-                $converter = DjotConverter::withSignificantNewlines(safeMode: $safeMode, profile: $profile);
-            } else {
-                $converter = new DjotConverter(safeMode: $safeMode, profile: $profile);
+            // Determine soft break mode
+            $softBreakMode = match ($softBreakSetting) {
+                'space' => SoftBreakMode::Space,
+                'br' => SoftBreakMode::Break,
+                default => SoftBreakMode::Newline,
+            };
 
-                // Apply soft break mode (only when not in markdown mode, which handles it automatically)
-                $softBreakMode = match ($softBreakSetting) {
-                    'space' => SoftBreakMode::Space,
-                    'br' => SoftBreakMode::Break,
-                    default => SoftBreakMode::Newline,
-                };
-                $converter->getRenderer()->setSoftBreakMode($softBreakMode);
-            }
+            // Create converter with appropriate settings
+            // significantNewlines = markdown compatibility (single newlines become soft breaks)
+            // softBreakMode = how soft breaks render (now controllable separately)
+            $converter = new DjotConverter(
+                safeMode: $safeMode,
+                profile: $profile,
+                significantNewlines: $this->markdownMode,
+                softBreakMode: $softBreakMode,
+            );
 
             // Convert tabs to 4 spaces in code blocks for consistent display
             $converter->getRenderer()->setCodeBlockTabWidth(4);

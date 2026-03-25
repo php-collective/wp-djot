@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.7] - 2026-03-25
+
+### Added
+
+- Experimental visual editor (WYSIWYG) for Djot blocks powered by Tiptap
+- Experimental settings section with visual editor mode options (disabled/enabled/enabled as default)
+
+### Fixed
+
+- Visual editor round-trip preservation for all Djot elements
+- Different list types (bullet/ordered/task) colliding without blank lines between them
+
 ## [1.5.6] - 2026-03-22
 
 ### Fixed
@@ -271,7 +283,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.5.4...HEAD
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.5.7...HEAD
+[1.5.7]: https://github.com/php-collective/wp-djot/compare/1.5.6...1.5.7
+[1.5.6]: https://github.com/php-collective/wp-djot/compare/1.5.5...1.5.6
+[1.5.5]: https://github.com/php-collective/wp-djot/compare/1.5.4...1.5.5
 [1.5.4]: https://github.com/php-collective/wp-djot/compare/1.5.3...1.5.4
 [1.5.3]: https://github.com/php-collective/wp-djot/compare/1.5.2...1.5.3
 [1.5.2]: https://github.com/php-collective/wp-djot/compare/1.5.1...1.5.2

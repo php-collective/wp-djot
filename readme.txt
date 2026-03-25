@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.5.6
+Stable tag: 1.5.7
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -90,6 +90,12 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 == Changelog ==
 
+= 1.5.7 =
+* Added experimental visual editor (WYSIWYG) for Djot blocks powered by Tiptap
+* Added Experimental settings section with visual editor mode options
+* Fixed visual editor round-trip preservation for all Djot elements
+* Fixed different list types (bullet/ordered/task) colliding without blank lines
+
 = 1.5.6 =
 * Fixed task list checkboxes stripped by wp_kses_post
 * Fixed dark mode TOC text color
@@ -173,6 +179,9 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 * Template tags for theme developers
 
 == Upgrade Notice ==
+
+= 1.5.7 =
+Adds experimental visual editor (WYSIWYG) for Djot blocks. Enable in Settings → Djot Markup → Experimental.
 
 = 1.5.4 =
 Fixes Torchlight line highlighting CSS selectors and removes opinionated styling to let themes handle visual presentation.

@@ -104,6 +104,24 @@ Enable heading permalinks to add clickable `#` symbols to headings. The symbols 
 
 Permalinks are only added to posts and pages (article context), not comments. The setting is located in the Table of Contents section of the admin settings.
 
+### Experimental
+
+These features are not yet fully stable and may change in future versions.
+
+#### Visual Editor
+
+The visual editor provides a WYSIWYG editing experience for Djot blocks, powered by Tiptap.
+
+| Setting | Description |
+|---------|-------------|
+| Disabled | Visual editor tab is hidden. Only Write and Preview modes available. (Default) |
+| Enabled (Write default) | Visual editor available. Write mode is selected by default when opening documents. |
+| Enabled (Visual default) | Visual editor available and selected by default when opening documents. |
+
+The visual editor supports most Djot formatting including headings, bold, italic, links, images, lists, tables, code blocks, and more. Some advanced features (like raw HTML) are only available in Write mode.
+
+> **Note**: The visual editor converts Djot to an internal format and back. Some edge cases or custom formatting may not round-trip perfectly. For critical content, verify in Write mode before saving.
+
 ### Rendering Settings
 
 #### Markdown Compatibility Mode

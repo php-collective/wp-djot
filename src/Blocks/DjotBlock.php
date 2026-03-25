@@ -88,12 +88,14 @@ class DjotBlock
         // Register the block - this auto-registers wpdjot-djot-editor-style from block.json
         register_block_type(WPDJOT_PLUGIN_DIR . 'assets/blocks/djot');
 
-        // Localize script with assets URL for dynamic module loading (visual editor)
+        // Localize script with assets URL and settings for dynamic module loading (visual editor)
+        $options = get_option('wpdjot_settings', []);
         wp_localize_script(
             'wpdjot-djot-editor-script',
             'wpdjotBlockData',
             [
                 'assetsUrl' => WPDJOT_PLUGIN_URL . 'assets/',
+                'visualEditorMode' => $options['visual_editor_mode'] ?? 'disabled',
             ],
         );
 

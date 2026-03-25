@@ -539,6 +539,7 @@ class Plugin
             'toc_list_type' => 'ul',
             'permalinks_enabled' => false,
             'smart_quotes_locale' => 'en',
+            'visual_editor_mode' => 'disabled',
         ];
 
         $options = get_option('wpdjot_settings', []);

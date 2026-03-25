@@ -33,9 +33,9 @@ export function serializeToDjot(doc) {
                     if (i < (node.content || []).length - 1) {
                         const curr = child.type;
                         const next = node.content[i + 1]?.type;
-                        // Don't add extra blank line between list items
-                        if (!['bulletList', 'orderedList', 'taskList'].includes(curr) ||
-                            !['bulletList', 'orderedList', 'taskList'].includes(next)) {
+                        // Only skip blank line between consecutive same-type lists
+                        const bothSameList = curr === next && ['bulletList', 'orderedList', 'taskList'].includes(curr);
+                        if (!bothSameList) {
                             output += '\n';
                         }
                     }
@@ -51,38 +51,45 @@ export function serializeToDjot(doc) {
                 break;
 
             case 'bulletList':
-                (node.content || []).forEach(item => {
-                    output += '  '.repeat(depth) + '- ';
-                    serializeListItem(item, depth);
-                });
-                break;
-
             case 'orderedList':
-                let num = node.attrs?.start || 1;
-                (node.content || []).forEach(item => {
-                    output += '  '.repeat(depth) + num + '. ';
-                    serializeListItem(item, depth);
-                    num++;
-                });
-                break;
-
             case 'taskList':
-                (node.content || []).forEach(item => {
-                    const checked = item.attrs?.checked ? 'x' : ' ';
-                    output += '  '.repeat(depth) + '- [' + checked + '] ';
+                // Check if list is "loose" (any item has multiple blocks)
+                const isLoose = (node.content || []).some(item =>
+                    (item.content || []).length > 1
+                );
+                let num = node.attrs?.start || 1;
+                (node.content || []).forEach((item, i) => {
+                    const indent = '  '.repeat(depth);
+                    if (node.type === 'bulletList') {
+                        output += indent + '- ';
+                    } else if (node.type === 'orderedList') {
+                        output += indent + num + '. ';
+                        num++;
+                    } else if (node.type === 'taskList') {
+                        const checked = item.attrs?.checked ? 'x' : ' ';
+                        output += indent + '- [' + checked + '] ';
+                    }
                     serializeListItem(item, depth);
+                    // Add blank line between items in loose lists
+                    if (isLoose && i < (node.content || []).length - 1) {
+                        output += '\n';
+                    }
                 });
                 break;
 
             case 'blockquote':
-                const bqLines = [];
-                (node.content || []).forEach(child => {
+                // Serialize each child block with proper blank line separation
+                (node.content || []).forEach((child, i) => {
                     const childText = serializeNodeToString(child);
-                    childText.split('\n').filter(l => l).forEach(line => {
-                        bqLines.push('> ' + line);
+                    // Prefix each line with >
+                    childText.split('\n').forEach(line => {
+                        output += '> ' + line + '\n';
                     });
+                    // Add blank line between blocks (> followed by empty line)
+                    if (i < (node.content || []).length - 1) {
+                        output += '>\n';
+                    }
                 });
-                output += bqLines.join('\n') + '\n';
                 break;
 
             case 'codeBlock':
@@ -119,10 +126,26 @@ export function serializeToDjot(doc) {
                 serializeTable(node);
                 break;
 
+            case 'definitionList':
+                serializeDefinitionList(node);
+                break;
+
             case 'djotDiv':
                 const divClass = node.attrs?.class || '';
                 output += ':::' + (divClass ? ' ' + divClass : '') + '\n';
-                (node.content || []).forEach(child => serializeNode(child, depth));
+                // Serialize children with blank line separation (like doc level)
+                (node.content || []).forEach((child, i) => {
+                    serializeNode(child, depth);
+                    if (i < (node.content || []).length - 1) {
+                        const curr = child.type;
+                        const next = node.content[i + 1]?.type;
+                        // Only skip blank line between consecutive same-type lists
+                        const bothSameList = curr === next && ['bulletList', 'orderedList', 'taskList'].includes(curr);
+                        if (!bothSameList) {
+                            output += '\n';
+                        }
+                    }
+                });
                 output += ':::\n';
                 break;
 
@@ -159,6 +182,35 @@ export function serializeToDjot(doc) {
         });
     }
 
+    function serializeDefinitionList(dl) {
+        const children = dl.content || [];
+        let afterDescription = false;
+        children.forEach(child => {
+            if (child.type === 'definitionTerm') {
+                // Add blank line before term if we just finished a description
+                if (afterDescription) {
+                    output += '\n';
+                }
+                output += ': ' + serializeInline(child.content) + '\n';
+                afterDescription = false;
+            } else if (child.type === 'definitionDescription') {
+                output += '\n';
+                (child.content || []).forEach(block => {
+                    if (block.type === 'paragraph') {
+                        output += '  ' + serializeInline(block.content) + '\n';
+                    } else {
+                        // For other block types, serialize with indentation
+                        const blockText = serializeNodeToString(block);
+                        blockText.split('\n').filter(l => l).forEach(line => {
+                            output += '  ' + line + '\n';
+                        });
+                    }
+                });
+                afterDescription = true;
+            }
+        });
+    }
+
     function serializeNodeToString(node) {
         const oldOutput = output;
         output = '';
@@ -170,11 +222,19 @@ export function serializeToDjot(doc) {
 
     function serializeListItem(item, depth) {
         const content = item.content || [];
-        content.forEach((child) => {
+        content.forEach((child, i) => {
             if (child.type === 'paragraph') {
                 output += serializeInline(child.content) + '\n';
+                // Add blank line after paragraph if followed by more content (nested list, etc.)
+                if (i < content.length - 1) {
+                    output += '\n';
+                }
             } else if (['bulletList', 'orderedList', 'taskList'].includes(child.type)) {
                 serializeNode(child, depth + 1);
+                // Add blank line after nested list if followed by more content
+                if (i < content.length - 1) {
+                    output += '\n';
+                }
             }
         });
     }
@@ -200,6 +260,7 @@ export function serializeToDjot(doc) {
                 const hasStrike = marks.some(m => m.type === 'strike');
                 const link = marks.find(m => m.type === 'link');
                 const djotSpan = marks.find(m => m.type === 'djotSpan');
+                const abbr = marks.find(m => m.type === 'djotAbbreviation');
 
                 // Apply marks from innermost to outermost
                 let t = text;
@@ -214,6 +275,7 @@ export function serializeToDjot(doc) {
                 if (hasBold) t = '*' + t + '*';
                 if (link) t = '[' + t + '](' + link.attrs.href + ')';
                 if (djotSpan) t = '[' + t + ']{.' + (djotSpan.attrs?.class || 'class') + '}';
+                if (abbr) t = '[' + t + ']{abbr="' + (abbr.attrs?.title || '') + '"}';
 
                 result += t;
             } else if (node.type === 'hardBreak') {

@@ -102,8 +102,12 @@
             const { content } = attributes;
             const { __unstableMarkLastChangeAsPersistent: markUndoBoundary } = useDispatch( 'core/block-editor' );
             const [ preview, setPreview ] = useState( '' );
-            const [ editorMode, setEditorMode ] = useState( 'write' ); // 'write' | 'visual' | 'preview'
-            const previousModeRef = useRef( 'write' ); // Track mode before preview (ref avoids closure issues)
+            // Visual editor mode from settings: 'disabled' | 'enabled' | 'enabled_default'
+            const visualEditorSetting = window.wpdjotBlockData?.visualEditorMode || 'disabled';
+            const visualEditorEnabled = visualEditorSetting !== 'disabled';
+            const initialMode = visualEditorSetting === 'enabled_default' ? 'visual' : 'write';
+            const [ editorMode, setEditorMode ] = useState( initialMode ); // 'write' | 'visual' | 'preview'
+            const previousModeRef = useRef( initialMode ); // Track mode before preview (ref avoids closure issues)
             const [ isLoading, setIsLoading ] = useState( false );
             const [ visualEditorInstance, setVisualEditorInstance ] = useState( null );
             const [ isVisualLoading, setIsVisualLoading ] = useState( false );
@@ -2342,7 +2346,8 @@
                         className: editorMode === 'write' ? 'active' : '',
                         onClick: switchToWriteMode,
                     }, __( 'Write', 'djot-markup' ) ),
-                    wp.element.createElement( 'button', {
+                    // Visual tab only shown when enabled in settings
+                    visualEditorEnabled && wp.element.createElement( 'button', {
                         className: editorMode === 'visual' ? 'active' : '',
                         onClick: switchToVisualMode,
                     }, __( 'Visual', 'djot-markup' ) ),
@@ -2370,8 +2375,8 @@
                             placeholder: __( 'Write your Djot markup here...\n\n# Heading\n\nThis is _emphasized_ and *strong* text.\n\n- List item 1\n- List item 2', 'djot-markup' ),
                         } )
                     ),
-                    // Visual mode (Tiptap editor)
-                    editorMode === 'visual' && wp.element.createElement(
+                    // Visual mode (Tiptap editor) - only when enabled in settings
+                    visualEditorEnabled && editorMode === 'visual' && wp.element.createElement(
                         'div',
                         { className: 'wpdjot-visual-wrapper' },
                         // Always render the container so the ref is available for useEffect

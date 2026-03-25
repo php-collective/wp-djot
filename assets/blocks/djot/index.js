@@ -1601,6 +1601,39 @@
                             }
                         );
 
+                        // Check for round-trip data loss before proceeding
+                        if ( content ) {
+                            var roundTrippedContent = instance.getDjot();
+
+                            // Normalize both for comparison (ignore whitespace differences)
+                            function normalizeForComparison( djot ) {
+                                if ( ! djot ) return '';
+                                return djot
+                                    .trim()
+                                    .replace( /\r\n/g, '\n' )
+                                    .replace( /[ \t]+$/gm, '' )      // trailing whitespace
+                                    .replace( /\n{3,}/g, '\n\n' );   // multiple blank lines
+                            }
+
+                            var originalNormalized = normalizeForComparison( content );
+                            var roundTrippedNormalized = normalizeForComparison( roundTrippedContent );
+
+                            if ( originalNormalized !== roundTrippedNormalized ) {
+                                var proceed = window.confirm(
+                                    __( 'Warning: The visual editor may not preserve all formatting in your content.', 'djot-markup' ) + '\n\n' +
+                                    __( 'Some elements or formatting may be simplified or changed.', 'djot-markup' ) + '\n\n' +
+                                    __( 'Do you want to continue to visual mode?', 'djot-markup' )
+                                );
+
+                                if ( ! proceed ) {
+                                    instance.destroy();
+                                    setIsVisualLoading( false );
+                                    setEditorMode( 'write' );
+                                    return;
+                                }
+                            }
+                        }
+
                         setVisualEditorInstance( instance );
                         setIsVisualLoading( false );
                     } catch ( error ) {

@@ -159,6 +159,7 @@
                     var editor = window.WpDjotVisualEditor.getEditor();
                     // Return a compatible interface
                     return {
+                        editor: editor,
                         commands: {
                             bold: function() { return editor.chain().focus().toggleBold().run(); },
                             italic: function() { return editor.chain().focus().toggleItalic().run(); },
@@ -1581,7 +1582,7 @@
                             var response = await apiFetch( {
                                 path: '/wpdjot/v1/render',
                                 method: 'POST',
-                                data: { content: content },
+                                data: { content: content, context: 'editor' },
                             } );
                             htmlContent = response.html || '<p></p>';
                         }

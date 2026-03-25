@@ -30,14 +30,9 @@ export function serializeToDjot(doc) {
             case 'doc':
                 (node.content || []).forEach((child, i) => {
                     serializeNode(child, depth);
+                    // Add blank line between all blocks to keep them separate
                     if (i < (node.content || []).length - 1) {
-                        const curr = child.type;
-                        const next = node.content[i + 1]?.type;
-                        // Only skip blank line between consecutive same-type lists
-                        const bothSameList = curr === next && ['bulletList', 'orderedList', 'taskList'].includes(curr);
-                        if (!bothSameList) {
-                            output += '\n';
-                        }
+                        output += '\n';
                     }
                 });
                 break;
@@ -53,10 +48,9 @@ export function serializeToDjot(doc) {
             case 'bulletList':
             case 'orderedList':
             case 'taskList':
-                // Check if list is "loose" (any item has multiple blocks)
-                const isLoose = (node.content || []).some(item =>
-                    (item.content || []).length > 1
-                );
+                // Check if list is "loose" - only from the parsed attribute
+                // Having nested lists does NOT make a list loose in Djot
+                const isLoose = node.attrs?.loose || false;
                 let num = node.attrs?.start || 1;
                 (node.content || []).forEach((item, i) => {
                     const indent = '  '.repeat(depth);
@@ -69,7 +63,7 @@ export function serializeToDjot(doc) {
                         const checked = item.attrs?.checked ? 'x' : ' ';
                         output += indent + '- [' + checked + '] ';
                     }
-                    serializeListItem(item, depth);
+                    serializeListItem(item, depth, isLoose);
                     // Add blank line between items in loose lists
                     if (isLoose && i < (node.content || []).length - 1) {
                         output += '\n';
@@ -136,14 +130,9 @@ export function serializeToDjot(doc) {
                 // Serialize children with blank line separation (like doc level)
                 (node.content || []).forEach((child, i) => {
                     serializeNode(child, depth);
+                    // Add blank line between all blocks to keep them separate
                     if (i < (node.content || []).length - 1) {
-                        const curr = child.type;
-                        const next = node.content[i + 1]?.type;
-                        // Only skip blank line between consecutive same-type lists
-                        const bothSameList = curr === next && ['bulletList', 'orderedList', 'taskList'].includes(curr);
-                        if (!bothSameList) {
-                            output += '\n';
-                        }
+                        output += '\n';
                     }
                 });
                 output += ':::\n';
@@ -220,14 +209,23 @@ export function serializeToDjot(doc) {
         return result.trim();
     }
 
-    function serializeListItem(item, depth) {
+    function serializeListItem(item, depth, parentIsLoose) {
         const content = item.content || [];
         content.forEach((child, i) => {
             if (child.type === 'paragraph') {
                 output += serializeInline(child.content) + '\n';
-                // Add blank line after paragraph if followed by more content (nested list, etc.)
-                if (i < content.length - 1) {
-                    output += '\n';
+                // Check what follows this paragraph
+                const nextChild = content[i + 1];
+                if (nextChild) {
+                    const nextIsList = ['bulletList', 'orderedList', 'taskList'].includes(nextChild.type);
+                    if (nextIsList) {
+                        // Always add blank line before nested list (required by Djot syntax)
+                        // This doesn't make it loose since the following content is a list marker
+                        output += '\n';
+                    } else if (parentIsLoose) {
+                        // Add blank line between paragraphs only if parent list is loose
+                        output += '\n';
+                    }
                 }
             } else if (['bulletList', 'orderedList', 'taskList'].includes(child.type)) {
                 serializeNode(child, depth + 1);

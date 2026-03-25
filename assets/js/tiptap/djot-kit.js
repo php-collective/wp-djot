@@ -19,6 +19,7 @@ import TableHeader from 'https://esm.sh/@tiptap/extension-table-header@2';
 import TaskList from 'https://esm.sh/@tiptap/extension-task-list@2';
 import TaskItem from 'https://esm.sh/@tiptap/extension-task-item@2';
 import BulletList from 'https://esm.sh/@tiptap/extension-bullet-list@2';
+import OrderedList from 'https://esm.sh/@tiptap/extension-ordered-list@2';
 import ListItem from 'https://esm.sh/@tiptap/extension-list-item@2';
 
 import { DjotInsert } from './extensions/djot-insert.js';
@@ -49,8 +50,9 @@ export const DjotKit = Extension.create({
             extensions.push(StarterKit.configure({
                 // Disable CodeBlock from StarterKit, we add a custom one below
                 codeBlock: false,
-                // Disable default lists - we add custom ones that handle task-list
+                // Disable default lists - we add custom ones that handle task-list and loose detection
                 bulletList: false,
+                orderedList: false,
                 listItem: false,
                 ...this.options.starterKit,
             }));
@@ -85,9 +87,31 @@ export const DjotKit = Extension.create({
             }));
         }
 
-        // Custom BulletList that excludes task-list class
+        // Custom BulletList that excludes task-list class and detects loose lists
         if (this.options.bulletList !== false) {
             const CustomBulletList = BulletList.extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        loose: {
+                            default: false,
+                            parseHTML: element => {
+                                // Check if list is loose (items have <p> tags)
+                                // Loose lists render as <li><p>text</p></li>
+                                // Tight lists render as <li>text</li>
+                                for (const li of element.children) {
+                                    if (li.tagName !== 'LI') continue;
+                                    const firstEl = li.firstElementChild;
+                                    if (firstEl && firstEl.tagName === 'P') {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            },
+                            renderHTML: () => ({}), // Don't render this attribute
+                        },
+                    };
+                },
                 parseHTML() {
                     return [
                         {
@@ -104,6 +128,35 @@ export const DjotKit = Extension.create({
                 },
             });
             extensions.push(CustomBulletList.configure(this.options.bulletList ?? {}));
+        }
+
+        // Custom OrderedList that detects loose lists
+        if (this.options.orderedList !== false) {
+            const CustomOrderedList = OrderedList.extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        loose: {
+                            default: false,
+                            parseHTML: element => {
+                                // Check if list is loose (items have <p> tags)
+                                // Loose lists render as <li><p>text</p></li>
+                                // Tight lists render as <li>text</li>
+                                for (const li of element.children) {
+                                    if (li.tagName !== 'LI') continue;
+                                    const firstEl = li.firstElementChild;
+                                    if (firstEl && firstEl.tagName === 'P') {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            },
+                            renderHTML: () => ({}), // Don't render this attribute
+                        },
+                    };
+                },
+            });
+            extensions.push(CustomOrderedList.configure(this.options.orderedList ?? {}));
         }
 
         // Custom ListItem that excludes task items (those with checkboxes)
@@ -186,8 +239,34 @@ export const DjotKit = Extension.create({
 
         // Task list extensions - extend to match PHP output format
         if (this.options.taskList !== false) {
-            // Extend TaskList to also match ul.task-list with high priority
+            // Extend TaskList to also match ul.task-list with high priority and detect loose
             const CustomTaskList = TaskList.extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        loose: {
+                            default: false,
+                            parseHTML: element => {
+                                // Check if list is loose (items have <p> tags)
+                                // Loose lists render as <li><p>text</p></li>
+                                // Tight lists render as <li>text</li>
+                                for (const li of element.children) {
+                                    if (li.tagName !== 'LI') continue;
+                                    const firstEl = li.firstElementChild;
+                                    // Skip the checkbox input, check next sibling
+                                    const contentEl = firstEl?.tagName === 'INPUT'
+                                        ? firstEl.nextElementSibling
+                                        : firstEl;
+                                    if (contentEl && contentEl.tagName === 'P') {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            },
+                            renderHTML: () => ({}),
+                        },
+                    };
+                },
                 parseHTML() {
                     return [
                         { tag: 'ul[data-type="taskList"]', priority: 60 },

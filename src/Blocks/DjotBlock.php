@@ -151,6 +151,12 @@ class DjotBlock
                     // Note: No sanitization needed - apiFetch sends JSON which
                     // doesn't have WordPress magic quotes issues
                 ],
+                'context' => [
+                    'required' => false,
+                    'type' => 'string',
+                    'default' => 'preview',
+                    'enum' => ['preview', 'editor'],
+                ],
             ],
         ]);
 
@@ -243,6 +249,9 @@ class DjotBlock
 
     /**
      * Render Djot content for preview.
+     *
+     * @param WP_REST_Request $request Request with 'content' and optional 'context' params.
+     *        context='editor' returns clean HTML without TOC/permalinks for visual editor.
      */
     public function renderPreview(WP_REST_Request $request): WP_REST_Response
     {
@@ -252,7 +261,14 @@ class DjotBlock
             return new WP_REST_Response(['html' => ''], 200);
         }
 
-        $html = $this->converter->convertArticle($content);
+        $context = $request->get_param('context') ?? 'preview';
+
+        // Use convertExcerpt for visual editor (no TOC or permalinks)
+        if ($context === 'editor') {
+            $html = $this->converter->convertExcerpt($content);
+        } else {
+            $html = $this->converter->convertArticle($content);
+        }
 
         // Remove the wrapper div for preview (it's added by the block itself)
         $html = preg_replace('/^<div class="djot-content">(.*)<\/div>$/s', '$1', $html) ?? $html;

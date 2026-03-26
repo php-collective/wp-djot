@@ -58,6 +58,8 @@ class Converter
 
     private int $headingShift;
 
+    private bool $mermaidEnabled;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
@@ -78,6 +80,7 @@ class Converter
         bool $permalinksEnabled = false,
         string $smartQuotesLocale = 'en',
         int $headingShift = 0,
+        bool $mermaidEnabled = false,
     ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
@@ -93,6 +96,7 @@ class Converter
         $this->permalinksEnabled = $permalinksEnabled;
         $this->smartQuotesLocale = $smartQuotesLocale;
         $this->headingShift = $headingShift;
+        $this->mermaidEnabled = $mermaidEnabled;
         $this->converter = new DjotConverter(safeMode: false);
         $this->converter->getRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
@@ -123,6 +127,7 @@ class Converter
             permalinksEnabled: !empty($options['permalinks_enabled']),
             smartQuotesLocale: $options['smart_quotes_locale'] ?? 'en',
             headingShift: (int) ($options['heading_shift'] ?? 0),
+            mermaidEnabled: !empty($options['mermaid_enabled']),
         );
     }
 
@@ -142,7 +147,8 @@ class Converter
         $permalinksKey = ($this->permalinksEnabled && $context === 'article') ? '_permalinks' : '';
         $smartQuotesKey = $this->smartQuotesLocale !== 'en' ? '_sq_' . $this->smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey;
+        $mermaidKey = $this->mermaidEnabled ? '_mermaid' : '';
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey . $mermaidKey;
 
         if (!isset($this->profileConverters[$key])) {
             // 'none' means no profile restrictions at all
@@ -215,6 +221,8 @@ class Converter
             }
 
             // Apply heading level shift (h1 → h2, etc.)
+            // TODO: Switch to HeadingLevelShiftExtension when djot-php 0.1.21+ is released
+            // $converter->addExtension(new HeadingLevelShiftExtension(shift: $this->headingShift));
             if ($this->headingShift > 0) {
                 $shift = $this->headingShift;
                 $converter->addOutputTransformer(function (string $html) use ($shift): string {
@@ -234,6 +242,12 @@ class Converter
                     return $html;
                 });
             }
+
+            // Add Mermaid diagram support
+            // TODO: Switch to MermaidExtension when djot-php 0.1.21+ is released
+            // if ($this->mermaidEnabled) {
+            //     $converter->addExtension(new MermaidExtension());
+            // }
 
             // Add Torchlight syntax highlighting
             $converter->addExtension(new TorchlightExtension(

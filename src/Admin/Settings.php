@@ -233,6 +233,15 @@ class Settings
             ['field' => 'shortcode_tag', 'description' => __('The shortcode tag to use (default: djot).', 'djot-markup')],
         );
 
+        add_settings_field(
+            'heading_shift',
+            __('Heading Level Shift', 'djot-markup'),
+            [$this, 'renderHeadingShiftSelect'],
+            self::PAGE_SLUG,
+            'wpdjot_advanced',
+            ['field' => 'heading_shift', 'description' => __('Shift heading levels down. Useful when h1 is reserved for page title.', 'djot-markup')],
+        );
+
         // Table of Contents Section
         add_settings_section(
             'wpdjot_toc',
@@ -341,6 +350,9 @@ class Settings
                 ? $input['comment_profile']
                 : 'comment',
             'shortcode_tag' => sanitize_key($input['shortcode_tag'] ?? 'djot'),
+            'heading_shift' => in_array((int) ($input['heading_shift'] ?? 0), [0, 1, 2], true)
+                ? (int) $input['heading_shift']
+                : 0,
             'markdown_mode' => !empty($input['markdown_mode']),
             'post_soft_break' => in_array($input['post_soft_break'] ?? '', ['newline', 'space', 'br'], true)
                 ? $input['post_soft_break']
@@ -588,6 +600,45 @@ class Settings
             );
         }
         echo '</ul>';
+    }
+
+    /**
+     * Render heading shift select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
+    public function renderHeadingShiftSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $current = (int) ($options[$field] ?? 0);
+
+        $shifts = [
+            0 => __('None (h1 stays h1)', 'djot-markup'),
+            1 => __('Shift +1 (h1 → h2, h2 → h3, ...)', 'djot-markup'),
+            2 => __('Shift +2 (h1 → h3, h2 → h4, ...)', 'djot-markup'),
+        ];
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+
+        foreach ($shifts as $value => $label) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr((string) $value),
+                selected($current, $value, false),
+                esc_html($label),
+            );
+        }
+
+        echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
     }
 
     /**

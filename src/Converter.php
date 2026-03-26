@@ -56,6 +56,8 @@ class Converter
 
     private string $smartQuotesLocale;
 
+    private int $headingShift;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
@@ -75,6 +77,7 @@ class Converter
         string $tocListType = 'ul',
         bool $permalinksEnabled = false,
         string $smartQuotesLocale = 'en',
+        int $headingShift = 0,
     ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
@@ -89,6 +92,7 @@ class Converter
         $this->tocListType = $tocListType;
         $this->permalinksEnabled = $permalinksEnabled;
         $this->smartQuotesLocale = $smartQuotesLocale;
+        $this->headingShift = $headingShift;
         $this->converter = new DjotConverter(safeMode: false);
         $this->converter->getRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
@@ -118,6 +122,7 @@ class Converter
             tocListType: $options['toc_list_type'] ?? 'ul',
             permalinksEnabled: !empty($options['permalinks_enabled']),
             smartQuotesLocale: $options['smart_quotes_locale'] ?? 'en',
+            headingShift: (int) ($options['heading_shift'] ?? 0),
         );
     }
 
@@ -136,7 +141,8 @@ class Converter
             : '';
         $permalinksKey = ($this->permalinksEnabled && $context === 'article') ? '_permalinks' : '';
         $smartQuotesKey = $this->smartQuotesLocale !== 'en' ? '_sq_' . $this->smartQuotesLocale : '';
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey;
+        $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey;
 
         if (!isset($this->profileConverters[$key])) {
             // 'none' means no profile restrictions at all
@@ -206,6 +212,27 @@ class Converter
             if ($this->smartQuotesLocale !== 'en') {
                 $locale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
                 $converter->addExtension(new SmartQuotesExtension(locale: $locale));
+            }
+
+            // Apply heading level shift (h1 → h2, etc.)
+            if ($this->headingShift > 0) {
+                $shift = $this->headingShift;
+                $converter->addOutputTransformer(function (string $html) use ($shift): string {
+                    // Shift heading levels down (h1 → h2, h2 → h3, etc.)
+                    // Process in reverse order to avoid double-shifting (h6 first, then h5, etc.)
+                    for ($level = 6; $level >= 1; $level--) {
+                        $newLevel = min($level + $shift, 6); // Cap at h6
+                        if ($newLevel !== $level) {
+                            $html = (string) preg_replace(
+                                '#<(/?)(h' . $level . ')(\s|>)#i',
+                                '<$1h' . $newLevel . '$3',
+                                $html,
+                            );
+                        }
+                    }
+
+                    return $html;
+                });
             }
 
             // Add Torchlight syntax highlighting

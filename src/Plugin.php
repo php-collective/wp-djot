@@ -532,6 +532,7 @@ class Plugin
             'post_soft_break' => 'newline',
             'comment_soft_break' => 'newline',
             'shortcode_tag' => 'djot',
+            'heading_shift' => 0,
             'toc_enabled' => false,
             'toc_position' => 'top',
             'toc_min_level' => 2,

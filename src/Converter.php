@@ -497,8 +497,14 @@ class Converter
         $allowedHtml = array_merge($allowedHtml, [
             'input' => [
                 'type' => true,
+                'id' => true,
+                'name' => true,
                 'checked' => true,
                 'disabled' => true,
+                'class' => true,
+            ],
+            'label' => [
+                'for' => true,
                 'class' => true,
             ],
             'ul' => [

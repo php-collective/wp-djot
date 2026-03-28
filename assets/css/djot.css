@@ -861,3 +861,176 @@ figure.wpdjot-embed figcaption {
         color: #58a6ff;
     }
 }
+
+/* ==========================================================================
+   Code Groups (Tabbed Code Blocks)
+   ========================================================================== */
+
+.djot-content .code-group {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 1em 0;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.djot-content .code-group-radio {
+    display: none;
+}
+
+.djot-content .code-group-label {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    background: #f6f8fa;
+    border-bottom: 2px solid transparent;
+    font-size: 0.875em;
+    font-weight: 500;
+    color: #57606a;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.djot-content .code-group-label:hover {
+    color: #24292f;
+    background: #f3f4f6;
+}
+
+.djot-content .code-group-radio:checked + .code-group-label {
+    color: #24292f;
+    border-bottom-color: #fd8c73;
+    background: #fff;
+}
+
+.djot-content .code-group-panel {
+    display: none;
+    width: 100%;
+    order: 1;
+}
+
+.djot-content .code-group-panel pre {
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid #d0d7de;
+}
+
+.djot-content .code-group-radio:nth-of-type(1):checked ~ .code-group-panel:nth-of-type(1),
+.djot-content .code-group-radio:nth-of-type(2):checked ~ .code-group-panel:nth-of-type(2),
+.djot-content .code-group-radio:nth-of-type(3):checked ~ .code-group-panel:nth-of-type(3),
+.djot-content .code-group-radio:nth-of-type(4):checked ~ .code-group-panel:nth-of-type(4),
+.djot-content .code-group-radio:nth-of-type(5):checked ~ .code-group-panel:nth-of-type(5) {
+    display: block;
+}
+
+/* ==========================================================================
+   Tabs (General Tabbed Content)
+   ========================================================================== */
+
+.djot-content .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 1em 0;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.djot-content .tabs-radio {
+    display: none;
+}
+
+.djot-content .tabs-label {
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    background: #f6f8fa;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+    color: #57606a;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.djot-content .tabs-label:hover {
+    color: #24292f;
+    background: #f3f4f6;
+}
+
+.djot-content .tabs-radio:checked + .tabs-label {
+    color: #24292f;
+    border-bottom-color: #fd8c73;
+    background: #fff;
+}
+
+.djot-content .tabs-panel {
+    display: none;
+    width: 100%;
+    order: 1;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #d0d7de;
+    background: #fff;
+}
+
+.djot-content .tabs-panel > :first-child {
+    margin-top: 0;
+}
+
+.djot-content .tabs-panel > :last-child {
+    margin-bottom: 0;
+}
+
+.djot-content .tabs-radio:nth-of-type(1):checked ~ .tabs-panel:nth-of-type(1),
+.djot-content .tabs-radio:nth-of-type(2):checked ~ .tabs-panel:nth-of-type(2),
+.djot-content .tabs-radio:nth-of-type(3):checked ~ .tabs-panel:nth-of-type(3),
+.djot-content .tabs-radio:nth-of-type(4):checked ~ .tabs-panel:nth-of-type(4),
+.djot-content .tabs-radio:nth-of-type(5):checked ~ .tabs-panel:nth-of-type(5) {
+    display: block;
+}
+
+/* Dark mode for code groups and tabs */
+@media (prefers-color-scheme: dark) {
+    .djot-content .code-group {
+        border-color: #30363d;
+    }
+
+    .djot-content .code-group-label {
+        background: #161b22;
+        color: #8b949e;
+    }
+
+    .djot-content .code-group-label:hover {
+        color: #c9d1d9;
+        background: #21262d;
+    }
+
+    .djot-content .code-group-radio:checked + .code-group-label {
+        color: #c9d1d9;
+        background: #0d1117;
+    }
+
+    .djot-content .code-group-panel pre {
+        border-top-color: #30363d;
+    }
+
+    .djot-content .tabs {
+        border-color: #30363d;
+    }
+
+    .djot-content .tabs-label {
+        background: #161b22;
+        color: #8b949e;
+    }
+
+    .djot-content .tabs-label:hover {
+        color: #c9d1d9;
+        background: #21262d;
+    }
+
+    .djot-content .tabs-radio:checked + .tabs-label {
+        color: #c9d1d9;
+        background: #0d1117;
+    }
+
+    .djot-content .tabs-panel {
+        border-top-color: #30363d;
+        background: #0d1117;
+    }
+}

@@ -10,9 +10,14 @@ if (!defined('ABSPATH')) {
 }
 
 use Djot\DjotConverter;
+use Djot\Extension\CodeGroupExtension;
+use Djot\Extension\HeadingLevelShiftExtension;
 use Djot\Extension\HeadingPermalinksExtension;
+use Djot\Extension\MermaidExtension;
+use Djot\Extension\SemanticSpanExtension;
 use Djot\Extension\SmartQuotesExtension;
 use Djot\Extension\TableOfContentsExtension;
+use Djot\Extension\TabsExtension;
 use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
@@ -221,33 +226,23 @@ class Converter
             }
 
             // Apply heading level shift (h1 → h2, etc.)
-            // TODO: Switch to HeadingLevelShiftExtension when djot-php 0.1.21+ is released
-            // $converter->addExtension(new HeadingLevelShiftExtension(shift: $this->headingShift));
             if ($this->headingShift > 0) {
-                $shift = $this->headingShift;
-                $converter->addOutputTransformer(function (string $html) use ($shift): string {
-                    // Shift heading levels down (h1 → h2, h2 → h3, etc.)
-                    // Process in reverse order to avoid double-shifting (h6 first, then h5, etc.)
-                    for ($level = 6; $level >= 1; $level--) {
-                        $newLevel = min($level + $shift, 6); // Cap at h6
-                        if ($newLevel !== $level) {
-                            $html = (string) preg_replace(
-                                '#<(/?)(h' . $level . ')(\s|>)#i',
-                                '<$1h' . $newLevel . '$3',
-                                $html,
-                            );
-                        }
-                    }
-
-                    return $html;
-                });
+                $converter->addExtension(new HeadingLevelShiftExtension(shift: $this->headingShift));
             }
 
             // Add Mermaid diagram support
-            // TODO: Switch to MermaidExtension when djot-php 0.1.21+ is released
-            // if ($this->mermaidEnabled) {
-            //     $converter->addExtension(new MermaidExtension());
-            // }
+            if ($this->mermaidEnabled) {
+                $converter->addExtension(new MermaidExtension());
+            }
+
+            // Add semantic span support (kbd, abbr, dfn attributes)
+            $converter->addExtension(new SemanticSpanExtension());
+
+            // Add code group support (tabbed code blocks)
+            $converter->addExtension(new CodeGroupExtension());
+
+            // Add tabs support (tabbed content sections)
+            $converter->addExtension(new TabsExtension());
 
             // Add Torchlight syntax highlighting
             $converter->addExtension(new TorchlightExtension(

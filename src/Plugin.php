@@ -11,7 +11,6 @@ if (!defined('ABSPATH')) {
 
 use Djot\DjotConverter;
 use Djot\Event\RenderEvent;
-use Djot\Node\Inline\Text;
 use WP_CLI;
 use WpDjot\Admin\Settings;
 use WpDjot\Blocks\DjotBlock;
@@ -86,7 +85,7 @@ class Plugin
     /**
      * Register converter customizations via WordPress filters.
      *
-     * Adds support for special attribute handling like abbreviations.
+     * Adds support for video embeds via oEmbed.
      */
     private function registerConverterFilters(): void
     {
@@ -104,76 +103,6 @@ class Plugin
         // Video embed support - convert image syntax with video URLs to oEmbed
         $converter->getRenderer()->on('render.image', function (RenderEvent $event): void {
             $this->handleVideoEmbed($event);
-        });
-
-        $converter->getRenderer()->on('render.span', function (RenderEvent $event): void {
-            /** @var \Djot\Node\Inline\Span $node */
-            $node = $event->getNode();
-
-            // Get semantic attributes
-            $abbr = $node->getAttribute('abbr');
-            $kbd = $node->getAttribute('kbd');
-            $dfn = $node->getAttribute('dfn');
-
-            // Track which attributes to exclude from passthrough
-            $excludeAttrs = [];
-
-            // Render children first
-            $children = '';
-            foreach ($node->getChildren() as $child) {
-                if ($child instanceof Text) {
-                    $children .= htmlspecialchars($child->getContent(), ENT_NOQUOTES, 'UTF-8');
-                }
-            }
-
-            $content = $children;
-
-            // Build inner element (abbr or kbd) - these are mutually exclusive
-            if ($abbr !== null) {
-                $abbrTitle = ' title="' . htmlspecialchars((string)$abbr, ENT_QUOTES, 'UTF-8') . '"';
-                $content = '<abbr' . $abbrTitle . '>' . $children . '</abbr>';
-                $excludeAttrs[] = 'abbr';
-            } elseif ($kbd !== null) {
-                $content = '<kbd>' . $children . '</kbd>';
-                $excludeAttrs[] = 'kbd';
-            }
-
-            // Wrap in dfn if present (can combine with abbr/kbd)
-            if ($dfn !== null) {
-                $dfnAttr = '';
-                if ($dfn !== '') {
-                    $dfnAttr = ' title="' . htmlspecialchars((string)$dfn, ENT_QUOTES, 'UTF-8') . '"';
-                }
-                $content = '<dfn' . $dfnAttr . '>' . $content . '</dfn>';
-                $excludeAttrs[] = 'dfn';
-            }
-
-            // If no semantic attributes found, use default rendering
-            if (!$excludeAttrs) {
-                return;
-            }
-
-            // Add remaining attributes (class, id, etc.) to outermost element if any
-            $remainingAttrs = [];
-            foreach ($node->getAttributes() as $key => $value) {
-                if (in_array($key, $excludeAttrs, true)) {
-                    continue;
-                }
-                $remainingAttrs[$key] = $value;
-            }
-
-            // If there are extra attributes, wrap in span
-            if ($remainingAttrs) {
-                $attrStr = '';
-                foreach ($remainingAttrs as $key => $value) {
-                    $attrStr .= ' ' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8')
-                        . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
-                }
-                $content = '<span' . $attrStr . '>' . $content . '</span>';
-            }
-
-            $event->setHtml($content);
-            $event->preventDefault();
         });
 
         return $converter;

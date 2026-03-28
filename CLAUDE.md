@@ -30,6 +30,12 @@ ddev exec 'cd /var/www/html/wordpress && wp post update POST_ID --post_content="
 <!-- /wp:wpdjot/djot -->
 ```
 
+**IMPORTANT:** Do NOT HTML-encode special characters in the djot content. Use raw characters:
+- Mermaid arrows: `-->` NOT `--&gt;`
+- Less/greater than: `<` and `>` NOT `&lt;` and `&gt;`
+
+If content is HTML-encoded before storage, it will be double-encoded during rendering, causing syntax errors (e.g., mermaid sees `--&gt;` instead of `-->`).
+
 ## Release Checklist
 
 Before publishing a release:

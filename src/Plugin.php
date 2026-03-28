@@ -423,10 +423,11 @@ class Plugin
             wp_add_inline_script('wpdjot-permalink', $copyJs);
         }
 
-        // Mermaid.js for diagram rendering (lazy-loaded only when diagrams are present)
+        // Mermaid.js for diagram rendering
+        // Always enqueue when enabled - lazy-loading via filter doesn't work reliably
+        // because block rendering happens after wp_enqueue_scripts
         if ($this->options['mermaid_enabled']) {
-            // Register but don't enqueue - will be enqueued via filter if content has mermaid
-            wp_register_script(
+            wp_enqueue_script(
                 'mermaid',
                 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js',
                 [],
@@ -441,9 +442,6 @@ class Plugin
                 . '}'
                 . '});';
             wp_add_inline_script('mermaid', $mermaidInit);
-
-            // Hook into post_convert to conditionally enqueue if mermaid diagrams exist
-            add_filter('wpdjot_post_convert', [$this, 'maybeEnqueueMermaid']);
         }
 
         // Comment toolbar (when comments are enabled in settings)
@@ -462,25 +460,6 @@ class Plugin
                 'nonce' => wp_create_nonce('wp_rest'),
             ]);
         }
-    }
-
-    /**
-     * Conditionally enqueue Mermaid.js if content contains mermaid diagrams.
-     *
-     * The MermaidExtension renders diagrams with class="mermaid" which Mermaid.js
-     * automatically processes on page load.
-     *
-     * @param string $html The converted HTML content.
-     */
-    public function maybeEnqueueMermaid(string $html): string
-    {
-        // Check if content contains mermaid diagram markers
-        // MermaidExtension renders: <pre class="mermaid">...</pre>
-        if (str_contains($html, 'class="mermaid"')) {
-            wp_enqueue_script('mermaid');
-        }
-
-        return $html;
     }
 
     /**

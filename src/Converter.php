@@ -10,9 +10,14 @@ if (!defined('ABSPATH')) {
 }
 
 use Djot\DjotConverter;
+use Djot\Extension\CodeGroupExtension;
+use Djot\Extension\HeadingLevelShiftExtension;
 use Djot\Extension\HeadingPermalinksExtension;
+use Djot\Extension\MermaidExtension;
+use Djot\Extension\SemanticSpanExtension;
 use Djot\Extension\SmartQuotesExtension;
 use Djot\Extension\TableOfContentsExtension;
+use Djot\Extension\TabsExtension;
 use Djot\Profile;
 use Djot\Renderer\SoftBreakMode;
 use HTMLPurifier;
@@ -58,6 +63,8 @@ class Converter
 
     private int $headingShift;
 
+    private bool $mermaidEnabled;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
@@ -78,6 +85,7 @@ class Converter
         bool $permalinksEnabled = false,
         string $smartQuotesLocale = 'en',
         int $headingShift = 0,
+        bool $mermaidEnabled = false,
     ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
@@ -93,6 +101,7 @@ class Converter
         $this->permalinksEnabled = $permalinksEnabled;
         $this->smartQuotesLocale = $smartQuotesLocale;
         $this->headingShift = $headingShift;
+        $this->mermaidEnabled = $mermaidEnabled;
         $this->converter = new DjotConverter(safeMode: false);
         $this->converter->getRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
@@ -123,6 +132,7 @@ class Converter
             permalinksEnabled: !empty($options['permalinks_enabled']),
             smartQuotesLocale: $options['smart_quotes_locale'] ?? 'en',
             headingShift: (int) ($options['heading_shift'] ?? 0),
+            mermaidEnabled: !empty($options['mermaid_enabled']),
         );
     }
 
@@ -142,7 +152,8 @@ class Converter
         $permalinksKey = ($this->permalinksEnabled && $context === 'article') ? '_permalinks' : '';
         $smartQuotesKey = $this->smartQuotesLocale !== 'en' ? '_sq_' . $this->smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey;
+        $mermaidKey = $this->mermaidEnabled ? '_mermaid' : '';
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey . $mermaidKey;
 
         if (!isset($this->profileConverters[$key])) {
             // 'none' means no profile restrictions at all
@@ -216,24 +227,22 @@ class Converter
 
             // Apply heading level shift (h1 → h2, etc.)
             if ($this->headingShift > 0) {
-                $shift = $this->headingShift;
-                $converter->addOutputTransformer(function (string $html) use ($shift): string {
-                    // Shift heading levels down (h1 → h2, h2 → h3, etc.)
-                    // Process in reverse order to avoid double-shifting (h6 first, then h5, etc.)
-                    for ($level = 6; $level >= 1; $level--) {
-                        $newLevel = min($level + $shift, 6); // Cap at h6
-                        if ($newLevel !== $level) {
-                            $html = (string) preg_replace(
-                                '#<(/?)(h' . $level . ')(\s|>)#i',
-                                '<$1h' . $newLevel . '$3',
-                                $html,
-                            );
-                        }
-                    }
-
-                    return $html;
-                });
+                $converter->addExtension(new HeadingLevelShiftExtension(shift: $this->headingShift));
             }
+
+            // Add Mermaid diagram support
+            if ($this->mermaidEnabled) {
+                $converter->addExtension(new MermaidExtension());
+            }
+
+            // Add semantic span support (kbd, abbr, dfn attributes)
+            $converter->addExtension(new SemanticSpanExtension());
+
+            // Add code group support (tabbed code blocks)
+            $converter->addExtension(new CodeGroupExtension());
+
+            // Add tabs support (tabbed content sections)
+            $converter->addExtension(new TabsExtension());
 
             // Add Torchlight syntax highlighting
             $converter->addExtension(new TorchlightExtension(

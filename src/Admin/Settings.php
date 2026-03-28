@@ -242,6 +242,15 @@ class Settings
             ['field' => 'heading_shift', 'description' => __('Shift heading levels down. Useful when h1 is reserved for page title.', 'djot-markup')],
         );
 
+        add_settings_field(
+            'mermaid_enabled',
+            __('Mermaid Diagrams', 'djot-markup'),
+            [$this, 'renderCheckboxField'],
+            self::PAGE_SLUG,
+            'wpdjot_advanced',
+            ['field' => 'mermaid_enabled', 'description' => __('Enable Mermaid.js diagram rendering from code blocks.', 'djot-markup') . '<br><code>``` mermaid</code> ' . __('blocks will be rendered as diagrams.', 'djot-markup')],
+        );
+
         // Table of Contents Section
         add_settings_section(
             'wpdjot_toc',
@@ -353,6 +362,7 @@ class Settings
             'heading_shift' => in_array((int) ($input['heading_shift'] ?? 0), [0, 1, 2], true)
                 ? (int) $input['heading_shift']
                 : 0,
+            'mermaid_enabled' => !empty($input['mermaid_enabled']),
             'markdown_mode' => !empty($input['markdown_mode']),
             'post_soft_break' => in_array($input['post_soft_break'] ?? '', ['newline', 'space', 'br'], true)
                 ? $input['post_soft_break']

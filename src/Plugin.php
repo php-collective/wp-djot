@@ -11,7 +11,6 @@ if (!defined('ABSPATH')) {
 
 use Djot\DjotConverter;
 use Djot\Event\RenderEvent;
-use Djot\Node\Inline\Text;
 use WP_CLI;
 use WpDjot\Admin\Settings;
 use WpDjot\Blocks\DjotBlock;
@@ -86,7 +85,7 @@ class Plugin
     /**
      * Register converter customizations via WordPress filters.
      *
-     * Adds support for special attribute handling like abbreviations.
+     * Adds support for video embeds via oEmbed.
      */
     private function registerConverterFilters(): void
     {
@@ -104,76 +103,6 @@ class Plugin
         // Video embed support - convert image syntax with video URLs to oEmbed
         $converter->getRenderer()->on('render.image', function (RenderEvent $event): void {
             $this->handleVideoEmbed($event);
-        });
-
-        $converter->getRenderer()->on('render.span', function (RenderEvent $event): void {
-            /** @var \Djot\Node\Inline\Span $node */
-            $node = $event->getNode();
-
-            // Get semantic attributes
-            $abbr = $node->getAttribute('abbr');
-            $kbd = $node->getAttribute('kbd');
-            $dfn = $node->getAttribute('dfn');
-
-            // Track which attributes to exclude from passthrough
-            $excludeAttrs = [];
-
-            // Render children first
-            $children = '';
-            foreach ($node->getChildren() as $child) {
-                if ($child instanceof Text) {
-                    $children .= htmlspecialchars($child->getContent(), ENT_NOQUOTES, 'UTF-8');
-                }
-            }
-
-            $content = $children;
-
-            // Build inner element (abbr or kbd) - these are mutually exclusive
-            if ($abbr !== null) {
-                $abbrTitle = ' title="' . htmlspecialchars((string)$abbr, ENT_QUOTES, 'UTF-8') . '"';
-                $content = '<abbr' . $abbrTitle . '>' . $children . '</abbr>';
-                $excludeAttrs[] = 'abbr';
-            } elseif ($kbd !== null) {
-                $content = '<kbd>' . $children . '</kbd>';
-                $excludeAttrs[] = 'kbd';
-            }
-
-            // Wrap in dfn if present (can combine with abbr/kbd)
-            if ($dfn !== null) {
-                $dfnAttr = '';
-                if ($dfn !== '') {
-                    $dfnAttr = ' title="' . htmlspecialchars((string)$dfn, ENT_QUOTES, 'UTF-8') . '"';
-                }
-                $content = '<dfn' . $dfnAttr . '>' . $content . '</dfn>';
-                $excludeAttrs[] = 'dfn';
-            }
-
-            // If no semantic attributes found, use default rendering
-            if (!$excludeAttrs) {
-                return;
-            }
-
-            // Add remaining attributes (class, id, etc.) to outermost element if any
-            $remainingAttrs = [];
-            foreach ($node->getAttributes() as $key => $value) {
-                if (in_array($key, $excludeAttrs, true)) {
-                    continue;
-                }
-                $remainingAttrs[$key] = $value;
-            }
-
-            // If there are extra attributes, wrap in span
-            if ($remainingAttrs) {
-                $attrStr = '';
-                foreach ($remainingAttrs as $key => $value) {
-                    $attrStr .= ' ' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8')
-                        . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
-                }
-                $content = '<span' . $attrStr . '>' . $content . '</span>';
-            }
-
-            $event->setHtml($content);
-            $event->preventDefault();
         });
 
         return $converter;
@@ -494,6 +423,29 @@ class Plugin
             wp_add_inline_script('wpdjot-permalink', $copyJs);
         }
 
+        // Mermaid.js for diagram rendering (lazy-loaded only when diagrams are present)
+        if ($this->options['mermaid_enabled']) {
+            // Register but don't enqueue - will be enqueued via filter if content has mermaid
+            wp_register_script(
+                'mermaid',
+                'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js',
+                [],
+                '11',
+                ['in_footer' => true, 'strategy' => 'defer'],
+            );
+
+            // Initialize mermaid when loaded
+            $mermaidInit = 'document.addEventListener("DOMContentLoaded",function(){'
+                . 'if(typeof mermaid!=="undefined"){'
+                . 'mermaid.initialize({startOnLoad:true,theme:"default"});'
+                . '}'
+                . '});';
+            wp_add_inline_script('mermaid', $mermaidInit);
+
+            // Hook into post_convert to conditionally enqueue if mermaid diagrams exist
+            add_filter('wpdjot_post_convert', [$this, 'maybeEnqueueMermaid']);
+        }
+
         // Comment toolbar (when comments are enabled in settings)
         if ($this->options['enable_comments']) {
             wp_enqueue_script(
@@ -510,6 +462,25 @@ class Plugin
                 'nonce' => wp_create_nonce('wp_rest'),
             ]);
         }
+    }
+
+    /**
+     * Conditionally enqueue Mermaid.js if content contains mermaid diagrams.
+     *
+     * The MermaidExtension renders diagrams with class="mermaid" which Mermaid.js
+     * automatically processes on page load.
+     *
+     * @param string $html The converted HTML content.
+     */
+    public function maybeEnqueueMermaid(string $html): string
+    {
+        // Check if content contains mermaid diagram markers
+        // MermaidExtension renders: <pre class="mermaid">...</pre>
+        if (str_contains($html, 'class="mermaid"')) {
+            wp_enqueue_script('mermaid');
+        }
+
+        return $html;
     }
 
     /**
@@ -533,6 +504,7 @@ class Plugin
             'comment_soft_break' => 'newline',
             'shortcode_tag' => 'djot',
             'heading_shift' => 0,
+            'mermaid_enabled' => false,
             'toc_enabled' => false,
             'toc_position' => 'top',
             'toc_min_level' => 2,

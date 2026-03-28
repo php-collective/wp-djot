@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.8] - 2026-03-28
+
+### Added
+
+- Mermaid diagram support via `mermaid_enabled` setting
+- CodeGroupExtension for tabbed code blocks (`::: code-group`)
+- TabsExtension for tabbed content sections (`:::: tabs`)
+- HeadingReferenceExtension for `[[Heading Text]]` intra-document links
+
+### Changed
+
+- Upgraded to djot-php 0.1.22
+- Switched to upstream HeadingLevelShiftExtension (replaces custom output transformer)
+- Switched to upstream SemanticSpanExtension for `kbd`/`abbr`/`dfn` attributes
+- Simplified mermaid script loading (always enqueue when enabled)
+
+### Fixed
+
+- wp_kses now allows `id`/`name` on radio inputs and `for` on labels (required for tabs/code-groups)
+
 ## [1.5.7] - 2026-03-25
 
 ### Added
@@ -283,7 +303,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.5.7...HEAD
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.5.8...HEAD
+[1.5.8]: https://github.com/php-collective/wp-djot/compare/1.5.7...1.5.8
 [1.5.7]: https://github.com/php-collective/wp-djot/compare/1.5.6...1.5.7
 [1.5.6]: https://github.com/php-collective/wp-djot/compare/1.5.5...1.5.6
 [1.5.5]: https://github.com/php-collective/wp-djot/compare/1.5.4...1.5.5

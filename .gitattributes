@@ -48,5 +48,6 @@
 /stubs export-ignore
 /tests export-ignore
 /CHANGELOG.md export-ignore
+/CLAUDE.md export-ignore
 /scripts
 /build.sh

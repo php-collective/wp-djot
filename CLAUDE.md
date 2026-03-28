@@ -60,6 +60,7 @@ Before publishing a release:
    - Ensure tag matches version (e.g., `1.5.8`)
 
 6. **Publish release:**
+   Important: Do NOT do this without explicit command to do so!
    ```bash
    gh release edit X.X.X --repo php-collective/wp-djot --draft=false
    ```

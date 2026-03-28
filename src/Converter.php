@@ -13,6 +13,7 @@ use Djot\DjotConverter;
 use Djot\Extension\CodeGroupExtension;
 use Djot\Extension\HeadingLevelShiftExtension;
 use Djot\Extension\HeadingPermalinksExtension;
+use Djot\Extension\HeadingReferenceExtension;
 use Djot\Extension\MermaidExtension;
 use Djot\Extension\SemanticSpanExtension;
 use Djot\Extension\SmartQuotesExtension;
@@ -243,6 +244,9 @@ class Converter
 
             // Add tabs support (tabbed content sections)
             $converter->addExtension(new TabsExtension());
+
+            // Add heading reference support ([[Heading Text]] links)
+            $converter->addExtension(new HeadingReferenceExtension());
 
             // Add Torchlight syntax highlighting
             $converter->addExtension(new TorchlightExtension(

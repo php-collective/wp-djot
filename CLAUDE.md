@@ -36,6 +36,19 @@ ddev exec 'cd /var/www/html/wordpress && wp post update POST_ID --post_content="
 
 If content is HTML-encoded before storage, it will be double-encoded during rendering, causing syntax errors (e.g., mermaid sees `--&gt;` instead of `-->`).
 
+## Release Rules
+
+**CRITICAL - Never modify published releases:**
+- NEVER edit release notes of a published (non-draft) release
+- NEVER push commits to main after a release is published without bumping the version first
+- Only create/edit DRAFT releases
+- If you need to add features after a release, create a NEW draft release with the next version number
+
+**After publishing a release:**
+1. Immediately bump version to next patch (e.g., 1.5.9 → 1.5.10)
+2. Any new commits go toward the next release
+3. Create a new draft for the next version
+
 ## Release Checklist
 
 Before publishing a release:

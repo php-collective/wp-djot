@@ -7,22 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.5.9] - 2026-03-29
+## [1.5.10] - 2026-03-29
 
 ### Added
 
-- Mermaid diagram preview rendering in block editor
 - Visual diff modal shows exactly what changes when entering visual mode (replaces generic warning)
 
 ### Fixed
 
-- Visual editor round-trip for `kbd`, `abbr`, `dfn` semantic spans
-- Visual editor round-trip for definition lists
 - Visual editor round-trip for `[[Heading]]` references
 - Visual editor round-trip for mermaid code blocks
 - Visual editor round-trip for code groups (`::: code-group`)
 - Visual editor round-trip for tabs (`:::: tabs`)
 - Combined `{dfn abbr="..."}` attributes now serialize correctly
+
+## [1.5.9] - 2026-03-29
+
+### Added
+
+- Mermaid diagram preview rendering in block editor
+
+### Fixed
+
+- Visual editor round-trip for `kbd`, `abbr`, `dfn` semantic spans
+- Visual editor round-trip for definition lists
 
 ## [1.5.8] - 2026-03-28
 

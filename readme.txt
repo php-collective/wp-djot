@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.5.9
+Stable tag: 1.5.10
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 

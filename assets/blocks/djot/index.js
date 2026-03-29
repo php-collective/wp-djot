@@ -139,6 +139,9 @@
             const [ videoWidth, setVideoWidth ] = useState( '' );
             const [ showDivModal, setShowDivModal ] = useState( false );
             const [ divClass, setDivClass ] = useState( 'note' );
+            const [ showDiffModal, setShowDiffModal ] = useState( false );
+            const [ diffData, setDiffData ] = useState( null );
+            const pendingVisualEditorInstance = useRef( null );
             const textareaRef = useRef( null );
             const previewRef = useRef( null );
             const [ selectionStart, setSelectionStart ] = useState( 0 );
@@ -230,6 +233,52 @@
                 }
                 // Strings are identical up to minLen, diff is at the end of shorter string
                 return minLen;
+            }
+
+            // Compute line-by-line diff between two strings
+            function computeLineDiff( original, modified ) {
+                var oldLines = ( original || '' ).split( '\n' );
+                var newLines = ( modified || '' ).split( '\n' );
+                var diff = [];
+
+                // Simple LCS-based diff
+                var m = oldLines.length;
+                var n = newLines.length;
+
+                // Build LCS table
+                var lcs = [];
+                for ( var i = 0; i <= m; i++ ) {
+                    lcs[ i ] = [];
+                    for ( var j = 0; j <= n; j++ ) {
+                        if ( i === 0 || j === 0 ) {
+                            lcs[ i ][ j ] = 0;
+                        } else if ( oldLines[ i - 1 ] === newLines[ j - 1 ] ) {
+                            lcs[ i ][ j ] = lcs[ i - 1 ][ j - 1 ] + 1;
+                        } else {
+                            lcs[ i ][ j ] = Math.max( lcs[ i - 1 ][ j ], lcs[ i ][ j - 1 ] );
+                        }
+                    }
+                }
+
+                // Backtrack to build diff
+                var result = [];
+                i = m;
+                var j = n;
+                while ( i > 0 || j > 0 ) {
+                    if ( i > 0 && j > 0 && oldLines[ i - 1 ] === newLines[ j - 1 ] ) {
+                        result.unshift( { type: 'equal', line: oldLines[ i - 1 ] } );
+                        i--;
+                        j--;
+                    } else if ( j > 0 && ( i === 0 || lcs[ i ][ j - 1 ] >= lcs[ i - 1 ][ j ] ) ) {
+                        result.unshift( { type: 'add', line: newLines[ j - 1 ] } );
+                        j--;
+                    } else {
+                        result.unshift( { type: 'remove', line: oldLines[ i - 1 ] } );
+                        i--;
+                    }
+                }
+
+                return result;
             }
 
             // Handle external content changes (undo/redo) - position cursor at change location
@@ -1655,18 +1704,13 @@
                             var roundTrippedNormalized = normalizeForComparison( roundTrippedContent );
 
                             if ( originalNormalized !== roundTrippedNormalized ) {
-                                var proceed = window.confirm(
-                                    __( 'Warning: The visual editor may not preserve all formatting in your content.', 'djot-markup' ) + '\n\n' +
-                                    __( 'Some elements or formatting may be simplified or changed.', 'djot-markup' ) + '\n\n' +
-                                    __( 'Do you want to continue to visual mode?', 'djot-markup' )
-                                );
-
-                                if ( ! proceed ) {
-                                    instance.destroy();
-                                    setIsVisualLoading( false );
-                                    setEditorMode( 'write' );
-                                    return;
-                                }
+                                // Compute diff and show modal
+                                var diff = computeLineDiff( originalNormalized, roundTrippedNormalized );
+                                pendingVisualEditorInstance.current = instance;
+                                setDiffData( diff );
+                                setShowDiffModal( true );
+                                // Don't set loading to false yet - modal will handle it
+                                return;
                             }
                         }
 
@@ -2404,6 +2448,94 @@
                             variant: 'secondary',
                             onClick: function() { setShowDivModal( false ); },
                             style: { marginLeft: '8px' },
+                        }, __( 'Cancel', 'djot-markup' ) )
+                    )
+                ),
+                // Round-trip diff warning modal
+                showDiffModal && wp.element.createElement(
+                    Modal,
+                    {
+                        title: __( 'Visual Editor Warning', 'djot-markup' ),
+                        onRequestClose: function() {
+                            // Cancel - destroy pending instance and go back to write mode
+                            if ( pendingVisualEditorInstance.current ) {
+                                pendingVisualEditorInstance.current.destroy();
+                                pendingVisualEditorInstance.current = null;
+                            }
+                            setShowDiffModal( false );
+                            setDiffData( null );
+                            setIsVisualLoading( false );
+                            setEditorMode( 'write' );
+                        },
+                        className: 'wpdjot-diff-modal',
+                    },
+                    wp.element.createElement( 'p', { style: { marginBottom: '12px' } },
+                        __( 'The visual editor may not preserve all formatting. The following changes will occur:', 'djot-markup' )
+                    ),
+                    wp.element.createElement( 'div', {
+                        className: 'wpdjot-diff-view',
+                        style: {
+                            maxHeight: '300px',
+                            overflow: 'auto',
+                            fontFamily: 'monospace',
+                            fontSize: '12px',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            padding: '8px',
+                            backgroundColor: '#f9f9f9',
+                            marginBottom: '16px',
+                        },
+                    },
+                        diffData && diffData.map( function( item, index ) {
+                            var style = {
+                                padding: '1px 4px',
+                                whiteSpace: 'pre',
+                                display: 'block',
+                            };
+                            var prefix = '  ';
+                            if ( item.type === 'remove' ) {
+                                style.backgroundColor = '#ffecec';
+                                style.color = '#c00';
+                                prefix = '- ';
+                            } else if ( item.type === 'add' ) {
+                                style.backgroundColor = '#eaffea';
+                                style.color = '#060';
+                                prefix = '+ ';
+                            }
+                            return wp.element.createElement( 'span', { key: index, style: style },
+                                prefix + ( item.line || '' )
+                            );
+                        } )
+                    ),
+                    wp.element.createElement(
+                        'div',
+                        { style: { display: 'flex', gap: '8px' } },
+                        wp.element.createElement( Button, {
+                            variant: 'primary',
+                            onClick: function() {
+                                // Proceed - activate the pending editor
+                                if ( pendingVisualEditorInstance.current ) {
+                                    setVisualEditorInstance( pendingVisualEditorInstance.current );
+                                    pendingVisualEditorInstance.current = null;
+                                }
+                                setShowDiffModal( false );
+                                setDiffData( null );
+                                setIsVisualLoading( false );
+                            },
+                        }, __( 'Continue Anyway', 'djot-markup' ) ),
+                        wp.element.createElement( Button, {
+                            variant: 'secondary',
+                            onClick: function() {
+                                // Cancel - destroy pending instance and go back to write mode
+                                if ( pendingVisualEditorInstance.current ) {
+                                    pendingVisualEditorInstance.current.destroy();
+                                    pendingVisualEditorInstance.current = null;
+                                }
+                                setShowDiffModal( false );
+                                setDiffData( null );
+                                setIsVisualLoading( false );
+                                setEditorMode( 'write' );
+                            },
                         }, __( 'Cancel', 'djot-markup' ) )
                     )
                 ),

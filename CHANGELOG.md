@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.9] - 2026-03-29
+
+### Added
+
+- Mermaid diagram preview rendering in block editor
+
+### Fixed
+
+- Visual editor round-trip for `kbd`, `abbr`, `dfn` semantic spans
+- Visual editor round-trip for definition lists
+
 ## [1.5.8] - 2026-03-28
 
 ### Added

@@ -1445,6 +1445,41 @@
                 }
             }, [ content, editorMode ] );
 
+            // Re-initialize mermaid diagrams after preview updates
+            useEffect( function() {
+                if ( editorMode === 'preview' && preview && typeof window.mermaid !== 'undefined' ) {
+                    // Delay to ensure DOM is fully rendered and painted
+                    var timer = setTimeout( function() {
+                        var container = previewRef.current;
+                        if ( ! container ) return;
+
+                        // Find unprocessed mermaid elements
+                        var mermaidElements = container.querySelectorAll( 'pre.mermaid:not([data-processed])' );
+                        if ( mermaidElements.length === 0 ) return;
+
+                        // Ensure mermaid is initialized
+                        window.mermaid.initialize( { startOnLoad: false, theme: 'default' } );
+
+                        // Process each mermaid element individually using render API
+                        mermaidElements.forEach( function( el, index ) {
+                            var id = 'mermaid-preview-' + Date.now() + '-' + index;
+                            var code = el.textContent || '';
+                            if ( ! code.trim() ) return;
+
+                            window.mermaid.render( id, code ).then( function( result ) {
+                                el.innerHTML = result.svg;
+                                el.setAttribute( 'data-processed', 'true' );
+                            } ).catch( function() {
+                                // Silently ignore syntax errors
+                            } );
+                        } );
+                    }, 300 );
+                    return function() {
+                        clearTimeout( timer );
+                    };
+                }
+            }, [ preview, editorMode ] );
+
             // ESC key exits preview mode back to previous mode, or visual mode back to write
             useEffect( function() {
                 if ( editorMode === 'write' ) return;

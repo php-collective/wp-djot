@@ -72,7 +72,6 @@ export async function initVisualEditor(container, initialContent, onChange) {
             italic: () => editorInstance.chain().focus().toggleItalic().run(),
             code: () => editorInstance.chain().focus().toggleCode().run(),
             highlight: () => editorInstance.chain().focus().toggleHighlight().run(),
-            strikethrough: () => editorInstance.chain().focus().toggleStrike().run(),
             superscript: () => editorInstance.chain().focus().toggleSuperscript().run(),
             subscript: () => editorInstance.chain().focus().toggleSubscript().run(),
             djotInsert: () => editorInstance.chain().focus().toggleDjotInsert().run(),

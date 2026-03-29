@@ -128,6 +128,24 @@ class DjotBlock
             WPDJOT_VERSION,
             true,
         );
+
+        // Mermaid.js for diagram rendering in editor preview
+        $options = get_option('wpdjot_settings', []);
+        if (!empty($options['mermaid_enabled'])) {
+            wp_enqueue_script(
+                'mermaid',
+                'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js',
+                [],
+                '11',
+                true,
+            );
+
+            // Initialize mermaid - the block JS will call mermaid.run() after preview updates
+            $mermaidInit = 'if(typeof mermaid!=="undefined"){'
+                . 'mermaid.initialize({startOnLoad:false,theme:"default"});'
+                . '}';
+            wp_add_inline_script('mermaid', $mermaidInit);
+        }
     }
 
     /**

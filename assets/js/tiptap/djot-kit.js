@@ -28,6 +28,10 @@ import { DjotDiv } from './extensions/djot-div.js';
 import { DjotSpan } from './extensions/djot-span.js';
 import { DjotFootnote } from './extensions/djot-footnote.js';
 import { DjotEmbed } from './extensions/djot-embed.js';
+import { DjotKbd } from './extensions/djot-kbd.js';
+import { DjotAbbreviation } from './extensions/djot-abbr.js';
+import { DjotDefinition } from './extensions/djot-dfn.js';
+import { DefinitionList, DefinitionTerm, DefinitionDescription } from './extensions/djot-definition-list.js';
 
 /**
  * DjotKit - A Tiptap extension bundle for Djot markup
@@ -348,6 +352,28 @@ export const DjotKit = Extension.create({
         // Embed node (preserves videos, oEmbed content)
         if (this.options.djotEmbed !== false) {
             extensions.push(DjotEmbed.configure(this.options.djotEmbed ?? {}));
+        }
+
+        // Keyboard mark (maps to [text]{kbd})
+        if (this.options.djotKbd !== false) {
+            extensions.push(DjotKbd.configure(this.options.djotKbd ?? {}));
+        }
+
+        // Abbreviation mark (maps to [text]{abbr="..."})
+        if (this.options.djotAbbreviation !== false) {
+            extensions.push(DjotAbbreviation.configure(this.options.djotAbbreviation ?? {}));
+        }
+
+        // Definition mark (maps to [text]{dfn} or [text]{dfn="..."})
+        if (this.options.djotDefinition !== false) {
+            extensions.push(DjotDefinition.configure(this.options.djotDefinition ?? {}));
+        }
+
+        // Definition list nodes (maps to : Term\n\n  Description)
+        if (this.options.definitionList !== false) {
+            extensions.push(DefinitionList.configure(this.options.definitionList ?? {}));
+            extensions.push(DefinitionTerm.configure(this.options.definitionTerm ?? {}));
+            extensions.push(DefinitionDescription.configure(this.options.definitionDescription ?? {}));
         }
 
         return extensions;

@@ -34,11 +34,7 @@ export const DjotMermaid = Node.create({
         return [
             {
                 tag: 'pre.mermaid',
-                getContent: (element, schema) => {
-                    // Return the text content as a text node
-                    const text = element.textContent || '';
-                    return schema.text(text) ? [schema.text(text)] : [];
-                },
+                priority: 60, // Higher priority than CodeBlock
             },
         ];
     },

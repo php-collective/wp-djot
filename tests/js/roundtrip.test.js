@@ -289,7 +289,6 @@ echo 1;
 \`\`\` js [JS]
 console.log(1);
 \`\`\`
-
 :::`
     );
   });
@@ -307,12 +306,60 @@ console.log(1);
       </div>`,
       `:::: tabs
 
-::: tab [Tab 1]
+::: tab
+### Tab 1
+
 Content 1
+
 :::
 
-::: tab [Tab 2]
+::: tab
+### Tab 2
+
 Content 2
+
+:::
+
+::::`
+    );
+
+    testRoundTrip(
+      'tabs with nested content',
+      `<div class="tabs">
+        <input type="radio" name="tabset-1" id="tabset-1-tab-1" class="tabs-radio" checked>
+        <label for="tabset-1-tab-1" class="tabs-label">Getting Started</label>
+        <input type="radio" name="tabset-1" id="tabset-1-tab-2" class="tabs-radio">
+        <label for="tabset-1-tab-2" class="tabs-label">Configuration</label>
+        <div class="tabs-panel">
+          <p>Welcome to the documentation!</p>
+          <ul><li>Step 1</li><li>Step 2</li></ul>
+        </div>
+        <div class="tabs-panel">
+          <p>Configuration options:</p>
+          <table><tr><th>Option</th><th>Default</th></tr><tr><td>enabled</td><td>true</td></tr></table>
+        </div>
+      </div>`,
+      `:::: tabs
+
+::: tab
+### Getting Started
+
+Welcome to the documentation!
+
+- Step 1
+- Step 2
+
+:::
+
+::: tab
+### Configuration
+
+Configuration options:
+
+| Option | Default |
+| --- | --- |
+| enabled | true |
+
 :::
 
 ::::`

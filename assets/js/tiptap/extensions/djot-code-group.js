@@ -54,9 +54,9 @@ export const DjotCodeGroup = Node.create({
             label.style.cssText = 'font-size: 11px; color: #666; padding: 4px 8px; background: #f0f0f0; border-radius: 3px 3px 0 0;';
             dom.appendChild(label);
 
-            // Content - render the original HTML
+            // Content - render the original HTML with djot-content class for CSS
             const content = document.createElement('div');
-            content.className = 'djot-code-group-content';
+            content.className = 'djot-code-group-content djot-content';
             content.innerHTML = node.attrs.htmlContent || '';
             content.style.cssText = 'border: 1px solid #ddd; border-top: none; border-radius: 0 0 3px 3px; overflow: hidden;';
             dom.appendChild(content);

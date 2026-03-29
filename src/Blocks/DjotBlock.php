@@ -120,6 +120,14 @@ class DjotBlock
      */
     public function enqueueEditorAssets(): void
     {
+        // Frontend CSS for visual editor (tabs, code-groups, etc.)
+        wp_enqueue_style(
+            'djot-markup',
+            WPDJOT_PLUGIN_URL . 'assets/css/djot.css',
+            [],
+            WPDJOT_VERSION,
+        );
+
         // Torchlight annotations in block inspector
         wp_enqueue_script(
             'wpdjot-editor-torchlight',

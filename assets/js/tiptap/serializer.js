@@ -382,7 +382,108 @@ export function serializeToDjot(doc) {
             result += '```\n\n';
         });
 
+        // Remove trailing blank line before closing
+        result = result.trimEnd() + '\n';
         result += ':::\n';
+        return result;
+    }
+
+    /**
+     * Convert HTML element to Djot markup
+     */
+    function htmlElementToDjot(element, indent = '') {
+        let result = '';
+
+        for (const child of element.childNodes) {
+            if (child.nodeType === Node.TEXT_NODE) {
+                const text = child.textContent.trim();
+                if (text) {
+                    result += indent + text + '\n';
+                }
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+                const tag = child.tagName.toLowerCase();
+
+                if (tag === 'p') {
+                    result += indent + (child.textContent || '').trim() + '\n\n';
+                } else if (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6') {
+                    const level = parseInt(tag.charAt(1));
+                    result += indent + '#'.repeat(level) + ' ' + (child.textContent || '').trim() + '\n\n';
+                } else if (tag === 'ul') {
+                    for (const li of child.querySelectorAll(':scope > li')) {
+                        result += indent + '- ' + (li.textContent || '').trim() + '\n';
+                    }
+                    result += '\n';
+                } else if (tag === 'ol') {
+                    let num = 1;
+                    for (const li of child.querySelectorAll(':scope > li')) {
+                        result += indent + num + '. ' + (li.textContent || '').trim() + '\n';
+                        num++;
+                    }
+                    result += '\n';
+                } else if (tag === 'table') {
+                    const rows = child.querySelectorAll('tr');
+                    rows.forEach((row, rowIndex) => {
+                        const cells = row.querySelectorAll('th, td');
+                        const cellTexts = Array.from(cells).map(c => {
+                            // Process inline elements in cells
+                            let cellContent = '';
+                            for (const node of c.childNodes) {
+                                if (node.nodeType === Node.TEXT_NODE) {
+                                    cellContent += node.textContent;
+                                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                                    const nodeName = node.tagName.toLowerCase();
+                                    if (nodeName === 'code') {
+                                        cellContent += '`' + node.textContent + '`';
+                                    } else if (nodeName === 'strong' || nodeName === 'b') {
+                                        cellContent += '*' + node.textContent + '*';
+                                    } else if (nodeName === 'em' || nodeName === 'i') {
+                                        cellContent += '_' + node.textContent + '_';
+                                    } else {
+                                        cellContent += node.textContent;
+                                    }
+                                }
+                            }
+                            return cellContent.trim();
+                        });
+                        result += indent + '| ' + cellTexts.join(' | ') + ' |\n';
+                        if (rowIndex === 0) {
+                            result += indent + '| ' + cellTexts.map(() => '---').join(' | ') + ' |\n';
+                        }
+                    });
+                    result += '\n';
+                } else if (tag === 'pre') {
+                    const code = child.querySelector('code');
+                    const langMatch = code ? (code.className || '').match(/language-(\w+)/) : null;
+                    const lang = langMatch ? langMatch[1] : '';
+                    result += indent + '```' + (lang ? ' ' + lang : '') + '\n';
+                    // Get code content, preserving newlines
+                    const codeEl = code || child;
+                    // Check for line spans (Torchlight format)
+                    const lineSpans = codeEl.querySelectorAll('.line');
+                    let codeContent;
+                    if (lineSpans.length > 0) {
+                        // Extract text from each line span
+                        codeContent = Array.from(lineSpans).map(span => span.textContent).join('\n');
+                    } else {
+                        // Use textContent directly - it preserves newlines
+                        codeContent = codeEl.textContent || '';
+                    }
+                    result += codeContent;
+                    if (!result.endsWith('\n')) result += '\n';
+                    result += indent + '```\n\n';
+                } else if (tag === 'blockquote') {
+                    const inner = htmlElementToDjot(child, '');
+                    inner.trim().split('\n').forEach(line => {
+                        result += indent + '> ' + line + '\n';
+                    });
+                    result += '\n';
+                } else {
+                    // Recurse for other elements (div, etc.)
+                    result += htmlElementToDjot(child, indent);
+                }
+            }
+        }
+
         return result;
     }
 
@@ -407,9 +508,11 @@ export function serializeToDjot(doc) {
         panels.forEach((panel, i) => {
             const tabLabel = labels[i] ? labels[i].textContent.trim() : 'Tab ' + (i + 1);
 
-            result += '::: tab [' + tabLabel + ']\n';
-            // Get text content, preserving some structure
-            result += (panel.textContent || '').trim() + '\n';
+            result += '::: tab\n';
+            // Add heading as the tab label (djot-php extracts this)
+            result += '### ' + tabLabel + '\n\n';
+            // Convert panel content to Djot
+            result += htmlElementToDjot(panel);
             result += ':::\n\n';
         });
 

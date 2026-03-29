@@ -36,6 +36,7 @@ export const DjotHeadingRef = Mark.create({
         return [
             {
                 tag: 'a.heading-ref[data-heading-ref]',
+                priority: 60, // Higher priority than Link extension
             },
         ];
     },

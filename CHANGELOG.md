@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Visual diff modal shows exactly what changes when entering visual mode (replaces generic warning)
+- Visual editor round-trip tests (vitest)
 
 ### Fixed
 

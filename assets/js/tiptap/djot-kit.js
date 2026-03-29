@@ -32,6 +32,10 @@ import { DjotKbd } from './extensions/djot-kbd.js';
 import { DjotAbbreviation } from './extensions/djot-abbr.js';
 import { DjotDefinition } from './extensions/djot-dfn.js';
 import { DefinitionList, DefinitionTerm, DefinitionDescription } from './extensions/djot-definition-list.js';
+import { DjotHeadingRef } from './extensions/djot-heading-ref.js';
+import { DjotMermaid } from './extensions/djot-mermaid.js';
+import { DjotCodeGroup } from './extensions/djot-code-group.js';
+import { DjotTabs } from './extensions/djot-tabs.js';
 
 /**
  * DjotKit - A Tiptap extension bundle for Djot markup
@@ -374,6 +378,26 @@ export const DjotKit = Extension.create({
             extensions.push(DefinitionList.configure(this.options.definitionList ?? {}));
             extensions.push(DefinitionTerm.configure(this.options.definitionTerm ?? {}));
             extensions.push(DefinitionDescription.configure(this.options.definitionDescription ?? {}));
+        }
+
+        // Heading reference mark (maps to [[Heading Text]] or [[Heading|display]])
+        if (this.options.djotHeadingRef !== false) {
+            extensions.push(DjotHeadingRef.configure(this.options.djotHeadingRef ?? {}));
+        }
+
+        // Mermaid diagram node (maps to ``` mermaid ... ```)
+        if (this.options.djotMermaid !== false) {
+            extensions.push(DjotMermaid.configure(this.options.djotMermaid ?? {}));
+        }
+
+        // Code group node (parses div.code-group, serializes to ::: code-group)
+        if (this.options.djotCodeGroup !== false) {
+            extensions.push(DjotCodeGroup.configure(this.options.djotCodeGroup ?? {}));
+        }
+
+        // Tabs node (parses div.tabs, serializes to :::: tabs)
+        if (this.options.djotTabs !== false) {
+            extensions.push(DjotTabs.configure(this.options.djotTabs ?? {}));
         }
 
         return extensions;

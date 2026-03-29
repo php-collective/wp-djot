@@ -95,6 +95,13 @@ export function serializeToDjot(doc) {
                 output += '```\n';
                 break;
 
+            case 'djotMermaid':
+                // Mermaid diagrams
+                output += '``` mermaid\n';
+                output += (node.content || []).map(c => c.text || '').join('') + '\n';
+                output += '```\n';
+                break;
+
             case 'djotEmbed':
                 // Output the original Djot source directly
                 if (node.attrs?.djotSrc) {
@@ -136,6 +143,26 @@ export function serializeToDjot(doc) {
                     }
                 });
                 output += ':::\n';
+                break;
+
+            case 'djotCodeGroup':
+                // If we have the original source, use it
+                if (node.attrs?.djotSrc) {
+                    output += node.attrs.djotSrc + '\n';
+                } else {
+                    // Try to reconstruct from HTML
+                    output += serializeCodeGroupFromHtml(node.attrs?.htmlContent || '');
+                }
+                break;
+
+            case 'djotTabs':
+                // If we have the original source, use it
+                if (node.attrs?.djotSrc) {
+                    output += node.attrs.djotSrc + '\n';
+                } else {
+                    // Try to reconstruct from HTML
+                    output += serializeTabsFromHtml(node.attrs?.htmlContent || '');
+                }
                 break;
 
             default:
@@ -260,6 +287,7 @@ export function serializeToDjot(doc) {
                 const abbr = marks.find(m => m.type === 'djotAbbreviation');
                 const kbd = marks.find(m => m.type === 'djotKbd');
                 const dfn = marks.find(m => m.type === 'djotDefinition');
+                const headingRef = marks.find(m => m.type === 'djotHeadingRef');
 
                 // Apply marks from innermost to outermost
                 let t = text;
@@ -271,11 +299,29 @@ export function serializeToDjot(doc) {
                 if (hasHighlight) t = '{=' + t + '=}';
                 if (hasItalic) t = '_' + t + '_';
                 if (hasBold) t = '*' + t + '*';
-                if (link) t = '[' + t + '](' + link.attrs.href + ')';
+                // Heading references take precedence over regular links
+                if (headingRef) {
+                    const ref = headingRef.attrs?.headingRef || '';
+                    // If display text differs from heading, use [[Heading|display]] syntax
+                    if (ref && ref !== text) {
+                        t = '[[' + ref + '|' + t + ']]';
+                    } else {
+                        t = '[[' + (ref || t) + ']]';
+                    }
+                } else if (link) {
+                    t = '[' + t + '](' + link.attrs.href + ')';
+                }
                 if (djotSpan) t = '[' + t + ']{.' + (djotSpan.attrs?.class || 'class') + '}';
-                if (abbr && abbr.attrs?.title) t = '[' + t + ']{abbr="' + abbr.attrs.title + '"}';
                 if (kbd) t = '[' + t + ']{kbd}';
-                if (dfn) {
+                // Handle dfn and abbr - combine them if both present
+                if (dfn && abbr && abbr.attrs?.title) {
+                    // Combined: [text]{dfn abbr="..."}
+                    const dfnTitle = dfn.attrs?.title || '';
+                    const attrs = dfnTitle ? 'dfn="' + dfnTitle + '"' : 'dfn';
+                    t = '[' + t + ']{' + attrs + ' abbr="' + abbr.attrs.title + '"}';
+                } else if (abbr && abbr.attrs?.title) {
+                    t = '[' + t + ']{abbr="' + abbr.attrs.title + '"}';
+                } else if (dfn) {
                     const dfnTitle = dfn.attrs?.title || '';
                     t = dfnTitle ? '[' + t + ']{dfn="' + dfnTitle + '"}' : '[' + t + ']{dfn}';
                 }
@@ -293,6 +339,81 @@ export function serializeToDjot(doc) {
             }
         });
 
+        return result;
+    }
+
+    /**
+     * Reconstruct code-group Djot from HTML
+     * HTML structure: <div class="code-group"><input><label>Tab</label>...<div class="code-group-panel"><pre><code>...</code></pre></div>...
+     */
+    function serializeCodeGroupFromHtml(html) {
+        if (!html) return '';
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const container = doc.querySelector('.code-group');
+        if (!container) return html; // Fallback to raw HTML
+
+        let result = '::: code-group\n';
+
+        // Get tab labels
+        const labels = container.querySelectorAll('label.code-group-label');
+        const panels = container.querySelectorAll('.code-group-panel');
+
+        panels.forEach((panel, i) => {
+            const pre = panel.querySelector('pre');
+            const code = panel.querySelector('code');
+            if (!code) return;
+
+            // Get language from class
+            const langMatch = (code.className || '').match(/language-(\w+)/);
+            const lang = langMatch ? langMatch[1] : '';
+
+            // Get tab label
+            const tabLabel = labels[i] ? labels[i].textContent.trim() : '';
+
+            // Build code fence
+            result += '``` ' + lang;
+            if (tabLabel) {
+                result += ' [' + tabLabel + ']';
+            }
+            result += '\n';
+            result += (code.textContent || '').trim() + '\n';
+            result += '```\n\n';
+        });
+
+        result += ':::\n';
+        return result;
+    }
+
+    /**
+     * Reconstruct tabs Djot from HTML
+     * HTML structure: <div class="tabs"><input><label>Tab</label>...<div class="tabs-panel">...</div>...
+     */
+    function serializeTabsFromHtml(html) {
+        if (!html) return '';
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const container = doc.querySelector('.tabs');
+        if (!container) return html; // Fallback to raw HTML
+
+        let result = ':::: tabs\n\n';
+
+        // Get tab labels and panels
+        const labels = container.querySelectorAll('label.tabs-label');
+        const panels = container.querySelectorAll('.tabs-panel');
+
+        panels.forEach((panel, i) => {
+            const tabLabel = labels[i] ? labels[i].textContent.trim() : 'Tab ' + (i + 1);
+
+            result += '::: tab [' + tabLabel + ']\n';
+            // Get text content, preserving some structure
+            result += (panel.textContent || '').trim() + '\n';
+            result += ':::\n\n';
+        });
+
+        result += '::::\n';
         return result;
     }
 

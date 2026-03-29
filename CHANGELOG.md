@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Visual editor round-trip for `kbd`, `abbr`, `dfn` semantic spans
 - Visual editor round-trip for definition lists
+- Visual editor round-trip for `[[Heading]]` references
+- Visual editor round-trip for mermaid code blocks
+- Visual editor round-trip for code groups (`::: code-group`)
+- Visual editor round-trip for tabs (`:::: tabs`)
+- Combined `{dfn abbr="..."}` attributes now serialize correctly
 
 ## [1.5.8] - 2026-03-28
 

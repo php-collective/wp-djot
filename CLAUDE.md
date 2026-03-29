@@ -49,6 +49,10 @@ If content is HTML-encoded before storage, it will be double-encoded during rend
 2. Any new commits go toward the next release
 3. Create a new draft for the next version
 
+**CHANGELOG format:**
+- Unreleased versions use `YYYY-MM-DD` as date placeholder: `## [1.5.10] - YYYY-MM-DD`
+- Only replace with actual date when publishing the release
+
 ## Release Checklist
 
 Before publishing a release:

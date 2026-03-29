@@ -825,3 +825,117 @@
 @keyframes wpdjot-spin {
     to { transform: rotate(360deg); }
 }
+
+/* Code Groups */
+.wpdjot-preview.djot-content .code-group {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 1em 0;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.wpdjot-preview.djot-content .code-group-radio {
+    display: none;
+}
+
+.wpdjot-preview.djot-content .code-group-label {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    background: #f6f8fa;
+    border-bottom: 2px solid transparent;
+    color: #57606a;
+    font-size: 0.875rem;
+}
+
+.wpdjot-preview.djot-content .code-group-label:hover {
+    color: #24292f;
+    background: #f3f4f6;
+}
+
+.wpdjot-preview.djot-content .code-group-radio:checked + .code-group-label {
+    color: #24292f;
+    border-bottom-color: #fd8c73;
+    background: #fff;
+}
+
+.wpdjot-preview.djot-content .code-group-panel {
+    display: none;
+    width: 100%;
+    order: 1;
+}
+
+.wpdjot-preview.djot-content .code-group-panel pre {
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid #d0d7de;
+}
+
+.wpdjot-preview.djot-content .code-group-radio:nth-of-type(1):checked ~ .code-group-panel:nth-of-type(1),
+.wpdjot-preview.djot-content .code-group-radio:nth-of-type(2):checked ~ .code-group-panel:nth-of-type(2),
+.wpdjot-preview.djot-content .code-group-radio:nth-of-type(3):checked ~ .code-group-panel:nth-of-type(3),
+.wpdjot-preview.djot-content .code-group-radio:nth-of-type(4):checked ~ .code-group-panel:nth-of-type(4),
+.wpdjot-preview.djot-content .code-group-radio:nth-of-type(5):checked ~ .code-group-panel:nth-of-type(5) {
+    display: block;
+}
+
+/* Tabs */
+.wpdjot-preview.djot-content .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 1em 0;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.wpdjot-preview.djot-content .tabs-radio {
+    display: none;
+}
+
+.wpdjot-preview.djot-content .tabs-label {
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    background: #f6f8fa;
+    border-bottom: 2px solid transparent;
+    color: #57606a;
+    font-weight: 500;
+}
+
+.wpdjot-preview.djot-content .tabs-label:hover {
+    color: #24292f;
+    background: #f3f4f6;
+}
+
+.wpdjot-preview.djot-content .tabs-radio:checked + .tabs-label {
+    color: #24292f;
+    border-bottom-color: #fd8c73;
+    background: #fff;
+}
+
+.wpdjot-preview.djot-content .tabs-panel {
+    display: none;
+    width: 100%;
+    order: 1;
+    padding: 1rem;
+    border-top: 1px solid #d0d7de;
+    background: #fff;
+}
+
+.wpdjot-preview.djot-content .tabs-panel > :first-child {
+    margin-top: 0;
+}
+
+.wpdjot-preview.djot-content .tabs-panel > :last-child {
+    margin-bottom: 0;
+}
+
+.wpdjot-preview.djot-content .tabs-radio:nth-of-type(1):checked ~ .tabs-panel:nth-of-type(1),
+.wpdjot-preview.djot-content .tabs-radio:nth-of-type(2):checked ~ .tabs-panel:nth-of-type(2),
+.wpdjot-preview.djot-content .tabs-radio:nth-of-type(3):checked ~ .tabs-panel:nth-of-type(3),
+.wpdjot-preview.djot-content .tabs-radio:nth-of-type(4):checked ~ .tabs-panel:nth-of-type(4),
+.wpdjot-preview.djot-content .tabs-radio:nth-of-type(5):checked ~ .tabs-panel:nth-of-type(5) {
+    display: block;
+}

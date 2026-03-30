@@ -939,3 +939,191 @@
 .wpdjot-preview.djot-content .tabs-radio:nth-of-type(5):checked ~ .tabs-panel:nth-of-type(5) {
     display: block;
 }
+
+/* ========================================
+   Visual Editor - Code Groups & Tabs
+   ======================================== */
+
+/* Code Group wrapper in visual editor */
+.wpdjot-visual-editor .djot-code-group-wrapper {
+    margin: 1em 0;
+}
+
+.wpdjot-visual-editor .djot-code-group-label,
+.wpdjot-visual-editor .djot-tabs-label {
+    font-size: 11px;
+    color: #666;
+    padding: 4px 8px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+}
+
+/* Code Groups in visual editor */
+.wpdjot-visual-editor .djot-content .code-group {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    border: 1px solid #d0d7de;
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+}
+
+.wpdjot-visual-editor .djot-content .code-group-radio {
+    display: none;
+}
+
+.wpdjot-visual-editor .djot-content .code-group-label {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    background: #f6f8fa;
+    border-bottom: 2px solid transparent;
+    color: #57606a;
+    font-size: 0.875rem;
+}
+
+.wpdjot-visual-editor .djot-content .code-group-label:hover {
+    color: #24292f;
+    background: #f3f4f6;
+}
+
+.wpdjot-visual-editor .djot-content .code-group-radio:checked + .code-group-label {
+    color: #24292f;
+    border-bottom-color: #fd8c73;
+    background: #fff;
+}
+
+.wpdjot-visual-editor .djot-content .code-group-panel {
+    display: none;
+    width: 100%;
+    order: 1;
+}
+
+.wpdjot-visual-editor .djot-content .code-group-panel pre {
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid #d0d7de;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 16px;
+    overflow-x: auto;
+}
+
+.wpdjot-visual-editor .djot-content .code-group-panel pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.875em;
+}
+
+.wpdjot-visual-editor .djot-content .code-group-radio:nth-of-type(1):checked ~ .code-group-panel:nth-of-type(1),
+.wpdjot-visual-editor .djot-content .code-group-radio:nth-of-type(2):checked ~ .code-group-panel:nth-of-type(2),
+.wpdjot-visual-editor .djot-content .code-group-radio:nth-of-type(3):checked ~ .code-group-panel:nth-of-type(3),
+.wpdjot-visual-editor .djot-content .code-group-radio:nth-of-type(4):checked ~ .code-group-panel:nth-of-type(4),
+.wpdjot-visual-editor .djot-content .code-group-radio:nth-of-type(5):checked ~ .code-group-panel:nth-of-type(5) {
+    display: block;
+}
+
+/* Tabs wrapper in visual editor */
+.wpdjot-visual-editor .djot-tabs-wrapper {
+    margin: 1em 0;
+}
+
+/* Tabs in visual editor */
+.wpdjot-visual-editor .djot-content .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    border: 1px solid #d0d7de;
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-radio {
+    display: none;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-label {
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    background: #f6f8fa;
+    border-bottom: 2px solid transparent;
+    color: #57606a;
+    font-weight: 500;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-label:hover {
+    color: #24292f;
+    background: #f3f4f6;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-radio:checked + .tabs-label {
+    color: #24292f;
+    border-bottom-color: #fd8c73;
+    background: #fff;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-panel {
+    display: none;
+    width: 100%;
+    order: 1;
+    padding: 1rem;
+    border-top: 1px solid #d0d7de;
+    background: #fff;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-panel > :first-child {
+    margin-top: 0;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-panel > :last-child {
+    margin-bottom: 0;
+}
+
+/* Tables inside tabs in visual editor */
+.wpdjot-visual-editor .djot-content .tabs-panel table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-panel th,
+.wpdjot-visual-editor .djot-content .tabs-panel td {
+    border: 1px solid #d0d7de;
+    padding: 0.5em 1em;
+    text-align: left;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-panel th {
+    background: #f6f8fa;
+    font-weight: 600;
+}
+
+/* Code blocks inside tabs in visual editor */
+.wpdjot-visual-editor .djot-content .tabs-panel pre {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-panel pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.875em;
+}
+
+.wpdjot-visual-editor .djot-content .tabs-radio:nth-of-type(1):checked ~ .tabs-panel:nth-of-type(1),
+.wpdjot-visual-editor .djot-content .tabs-radio:nth-of-type(2):checked ~ .tabs-panel:nth-of-type(2),
+.wpdjot-visual-editor .djot-content .tabs-radio:nth-of-type(3):checked ~ .tabs-panel:nth-of-type(3),
+.wpdjot-visual-editor .djot-content .tabs-radio:nth-of-type(4):checked ~ .tabs-panel:nth-of-type(4),
+.wpdjot-visual-editor .djot-content .tabs-radio:nth-of-type(5):checked ~ .tabs-panel:nth-of-type(5) {
+    display: block;
+}

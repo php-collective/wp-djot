@@ -212,9 +212,14 @@ export function serializeToDjot(doc) {
             // Add separator after header row - use preserved or calculated widths
             if (rowIndex === 0) {
                 const separator = colWidths.map((width, i) => {
-                    // Ensure at least 3 dashes, and at least as wide as calculated content
-                    const minWidth = Math.max(3, calculatedColWidths[i] || 3);
-                    return '-'.repeat(Math.max(minWidth, width || minWidth));
+                    // For round-trip: use preserved widths exactly as they were
+                    // For new tables: use calculated content widths (min 3)
+                    if (preservedColWidths) {
+                        // Preserved widths - use them directly for accurate round-trip
+                        return '-'.repeat(Math.max(3, width));
+                    }
+                    // No preserved widths - calculate from content
+                    return '-'.repeat(Math.max(3, calculatedColWidths[i] || 3));
                 }).join('|');
                 output += '|' + separator + '|\n';
             }

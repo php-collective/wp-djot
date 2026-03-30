@@ -239,7 +239,7 @@
             function computeLineDiff( original, modified ) {
                 var oldLines = ( original || '' ).split( '\n' );
                 var newLines = ( modified || '' ).split( '\n' );
-                var diff = [];
+                var contextLines = 3; // Lines of context before/after changes
 
                 // Simple LCS-based diff
                 var m = oldLines.length;
@@ -260,22 +260,62 @@
                     }
                 }
 
-                // Backtrack to build diff
-                var result = [];
+                // Backtrack to build full diff
+                var fullDiff = [];
                 i = m;
                 var j = n;
                 while ( i > 0 || j > 0 ) {
                     if ( i > 0 && j > 0 && oldLines[ i - 1 ] === newLines[ j - 1 ] ) {
-                        result.unshift( { type: 'equal', line: oldLines[ i - 1 ] } );
+                        fullDiff.unshift( { type: 'equal', line: oldLines[ i - 1 ] } );
                         i--;
                         j--;
                     } else if ( j > 0 && ( i === 0 || lcs[ i ][ j - 1 ] >= lcs[ i - 1 ][ j ] ) ) {
-                        result.unshift( { type: 'add', line: newLines[ j - 1 ] } );
+                        fullDiff.unshift( { type: 'add', line: newLines[ j - 1 ] } );
                         j--;
                     } else {
-                        result.unshift( { type: 'remove', line: oldLines[ i - 1 ] } );
+                        fullDiff.unshift( { type: 'remove', line: oldLines[ i - 1 ] } );
                         i--;
                     }
+                }
+
+                // Find indices of changed lines
+                var changeIndices = [];
+                for ( i = 0; i < fullDiff.length; i++ ) {
+                    if ( fullDiff[ i ].type !== 'equal' ) {
+                        changeIndices.push( i );
+                    }
+                }
+
+                if ( changeIndices.length === 0 ) {
+                    return [];
+                }
+
+                // Build condensed diff with context
+                var result = [];
+                var lastIncludedIndex = -1;
+
+                for ( var ci = 0; ci < changeIndices.length; ci++ ) {
+                    var changeIdx = changeIndices[ ci ];
+                    var startContext = Math.max( 0, changeIdx - contextLines );
+                    var endContext = Math.min( fullDiff.length - 1, changeIdx + contextLines );
+
+                    // Extend to include consecutive changes
+                    while ( ci + 1 < changeIndices.length && changeIndices[ ci + 1 ] <= endContext + contextLines ) {
+                        ci++;
+                        endContext = Math.min( fullDiff.length - 1, changeIndices[ ci ] + contextLines );
+                    }
+
+                    // Add separator if there's a gap
+                    if ( lastIncludedIndex >= 0 && startContext > lastIncludedIndex + 1 ) {
+                        result.push( { type: 'separator', line: '...' } );
+                    }
+
+                    // Add lines in this hunk
+                    for ( var k = Math.max( startContext, lastIncludedIndex + 1 ); k <= endContext; k++ ) {
+                        result.push( fullDiff[ k ] );
+                    }
+
+                    lastIncludedIndex = endContext;
                 }
 
                 return result;
@@ -2501,6 +2541,11 @@
                                 style.backgroundColor = '#eaffea';
                                 style.color = '#060';
                                 prefix = '+ ';
+                            } else if ( item.type === 'separator' ) {
+                                style.backgroundColor = '#f0f0f0';
+                                style.color = '#666';
+                                style.textAlign = 'center';
+                                prefix = '';
                             }
                             return wp.element.createElement( 'span', { key: index, style: style },
                                 prefix + ( item.line || '' )

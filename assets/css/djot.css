@@ -940,10 +940,11 @@ figure.wpdjot-embed figcaption {
 }
 
 .djot-content .tabs-label {
-    padding: 0.75rem 1.25rem;
+    padding: 0.5rem 1rem;
     cursor: pointer;
     background: #f6f8fa;
     border-bottom: 2px solid transparent;
+    font-size: 0.875em;
     font-weight: 500;
     color: #57606a;
     transition: color 0.15s, border-color 0.15s, background-color 0.15s;

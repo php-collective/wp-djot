@@ -180,20 +180,33 @@ export function serializeToDjot(doc) {
         const rows = table.content || [];
         if (rows.length === 0) return;
 
-        rows.forEach((row, rowIndex) => {
+        // First pass: collect all cell texts and find max widths per column
+        const allRowTexts = rows.map(row => {
             const cells = row.content || [];
-            const cellTexts = cells.map(cell => {
+            return cells.map(cell => {
                 const content = (cell.content || [])
                     .map(p => serializeInline(p.content))
                     .join(' ');
                 return content;
             });
+        });
+
+        // Calculate max width per column across all rows
+        const colWidths = [];
+        allRowTexts.forEach(rowTexts => {
+            rowTexts.forEach((text, colIndex) => {
+                colWidths[colIndex] = Math.max(colWidths[colIndex] || 3, text.length);
+            });
+        });
+
+        // Second pass: output rows with separator after header
+        allRowTexts.forEach((cellTexts, rowIndex) => {
             output += '| ' + cellTexts.join(' | ') + ' |\n';
 
-            // Add separator after header row
+            // Add separator after header row - use max column widths
             if (rowIndex === 0) {
-                const separator = cells.map(() => '---').join(' | ');
-                output += '| ' + separator + ' |\n';
+                const separator = colWidths.map(width => '-'.repeat(width)).join('|');
+                output += '|' + separator + '|\n';
             }
         });
     }
@@ -422,10 +435,12 @@ export function serializeToDjot(doc) {
                     result += '\n';
                 } else if (tag === 'table') {
                     const rows = child.querySelectorAll('tr');
-                    rows.forEach((row, rowIndex) => {
+                    // First pass: collect all cell texts and find max widths
+                    const allRowTexts = [];
+                    const colWidths = [];
+                    rows.forEach(row => {
                         const cells = row.querySelectorAll('th, td');
-                        const cellTexts = Array.from(cells).map(c => {
-                            // Process inline elements in cells
+                        const cellTexts = Array.from(cells).map((c, colIndex) => {
                             let cellContent = '';
                             for (const node of c.childNodes) {
                                 if (node.nodeType === Node.TEXT_NODE) {
@@ -443,11 +458,18 @@ export function serializeToDjot(doc) {
                                     }
                                 }
                             }
-                            return cellContent.trim();
+                            const text = cellContent.trim();
+                            colWidths[colIndex] = Math.max(colWidths[colIndex] || 3, text.length);
+                            return text;
                         });
+                        allRowTexts.push(cellTexts);
+                    });
+                    // Second pass: output with correct separator widths
+                    allRowTexts.forEach((cellTexts, rowIndex) => {
                         result += indent + '| ' + cellTexts.join(' | ') + ' |\n';
                         if (rowIndex === 0) {
-                            result += indent + '| ' + cellTexts.map(() => '---').join(' | ') + ' |\n';
+                            const separator = colWidths.map(width => '-'.repeat(width)).join('|');
+                            result += indent + '|' + separator + '|\n';
                         }
                     });
                     result += '\n';

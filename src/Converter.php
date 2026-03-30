@@ -187,6 +187,10 @@ class Converter
             // Convert tabs to 4 spaces in code blocks for consistent display
             $converter->getRenderer()->setCodeBlockTabWidth(4);
 
+            // Enable round-trip mode for visual editor compatibility
+            // This outputs data-djot-* attributes that preserve source syntax
+            $converter->getRenderer()->setRoundTripMode(true);
+
             // Add Table of Contents extension for articles when enabled
             if ($this->tocEnabled && $context === 'article') {
                 $tocExtension = new TableOfContentsExtension(

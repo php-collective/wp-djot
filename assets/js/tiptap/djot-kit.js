@@ -234,9 +234,29 @@ export const DjotKit = Extension.create({
             extensions.push(Image.configure(this.options.image ?? {}));
         }
 
-        // Table extensions
+        // Table extensions with round-trip column width support
         if (this.options.table !== false) {
-            extensions.push(Table.configure({
+            const CustomTable = Table.extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        colWidths: {
+                            default: null,
+                            parseHTML: element => {
+                                // Parse data-djot-col-widths attribute for round-trip preservation
+                                const widths = element.getAttribute('data-djot-col-widths');
+                                if (!widths) return null;
+                                return widths.split(',').map(w => parseInt(w.trim(), 10));
+                            },
+                            renderHTML: attributes => {
+                                if (!attributes.colWidths) return {};
+                                return { 'data-djot-col-widths': attributes.colWidths.join(',') };
+                            },
+                        },
+                    };
+                },
+            });
+            extensions.push(CustomTable.configure({
                 resizable: true,
                 ...this.options.table,
             }));

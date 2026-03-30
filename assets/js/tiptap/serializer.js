@@ -180,6 +180,9 @@ export function serializeToDjot(doc) {
         const rows = table.content || [];
         if (rows.length === 0) return;
 
+        // Check for preserved column widths from round-trip
+        const preservedColWidths = table.attrs?.colWidths || null;
+
         // First pass: collect all cell texts and find max widths per column
         const allRowTexts = rows.map(row => {
             const cells = row.content || [];
@@ -191,21 +194,28 @@ export function serializeToDjot(doc) {
             });
         });
 
-        // Calculate max width per column across all rows
-        const colWidths = [];
+        // Calculate max width per column across all rows (fallback)
+        const calculatedColWidths = [];
         allRowTexts.forEach(rowTexts => {
             rowTexts.forEach((text, colIndex) => {
-                colWidths[colIndex] = Math.max(colWidths[colIndex] || 3, text.length);
+                calculatedColWidths[colIndex] = Math.max(calculatedColWidths[colIndex] || 3, text.length);
             });
         });
+
+        // Use preserved widths if available, otherwise calculated
+        const colWidths = preservedColWidths || calculatedColWidths;
 
         // Second pass: output rows with separator after header
         allRowTexts.forEach((cellTexts, rowIndex) => {
             output += '| ' + cellTexts.join(' | ') + ' |\n';
 
-            // Add separator after header row - use max column widths
+            // Add separator after header row - use preserved or calculated widths
             if (rowIndex === 0) {
-                const separator = colWidths.map(width => '-'.repeat(width)).join('|');
+                const separator = colWidths.map((width, i) => {
+                    // Ensure at least 3 dashes, and at least as wide as calculated content
+                    const minWidth = Math.max(3, calculatedColWidths[i] || 3);
+                    return '-'.repeat(Math.max(minWidth, width || minWidth));
+                }).join('|');
                 output += '|' + separator + '|\n';
             }
         });

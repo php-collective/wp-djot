@@ -38,6 +38,11 @@ import { DjotSpan } from '../../assets/js/tiptap/extensions/djot-span.js';
 import { DjotKbd } from '../../assets/js/tiptap/extensions/djot-kbd.js';
 import { DjotAbbreviation } from '../../assets/js/tiptap/extensions/djot-abbr.js';
 import { DjotDefinition } from '../../assets/js/tiptap/extensions/djot-dfn.js';
+import {
+  DefinitionList,
+  DefinitionTerm,
+  DefinitionDescription,
+} from '../../assets/js/tiptap/extensions/djot-definition-list.js';
 import { DjotHeadingRef } from '../../assets/js/tiptap/extensions/djot-heading-ref.js';
 import { DjotMermaid } from '../../assets/js/tiptap/extensions/djot-mermaid.js';
 import { DjotCodeGroup } from '../../assets/js/tiptap/extensions/djot-code-group.js';
@@ -103,6 +108,9 @@ function createEditor(htmlContent) {
       DjotKbd,
       DjotAbbreviation,
       DjotDefinition,
+      DefinitionList,
+      DefinitionTerm,
+      DefinitionDescription,
       DjotHeadingRef,
       DjotMermaid,
       DjotCodeGroup,
@@ -229,6 +237,14 @@ describe('Visual Editor Round-Trip', () => {
       'combined dfn and abbr',
       '<p><dfn><abbr title="Cascading Style Sheets">CSS</abbr></dfn></p>',
       '[CSS]{dfn abbr="Cascading Style Sheets"}'
+    );
+  });
+
+  describe('Definition lists', () => {
+    testRoundTrip(
+      'definition list',
+      '<dl><dt>Term</dt><dd><p>Definition with <em>em</em></p></dd></dl>',
+      ': Term\n\n  Definition with _em_'
     );
   });
 

@@ -47,6 +47,32 @@ import { DjotTabs } from '../../assets/js/tiptap/extensions/djot-tabs.js';
  * Create a TipTap editor with all extensions for testing
  */
 function createEditor(htmlContent) {
+  const CustomCodeBlock = CodeBlock.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        languageRaw: {
+          default: null,
+          parseHTML: element => {
+            const pre = element.closest('pre');
+            return pre?.getAttribute('data-language-raw') || null;
+          },
+          renderHTML: attributes => {
+            if (!attributes.languageRaw) return {};
+            return { 'data-language-raw': attributes.languageRaw };
+          },
+        },
+        djotSrc: {
+          default: null,
+          parseHTML: element => {
+            const pre = element.closest('pre');
+            return pre?.getAttribute('data-djot-src') || null;
+          },
+        },
+      };
+    },
+  });
+
   const editor = new Editor({
     extensions: [
       StarterKit.configure({
@@ -55,7 +81,7 @@ function createEditor(htmlContent) {
         orderedList: false,
         listItem: false,
       }),
-      CodeBlock,
+      CustomCodeBlock,
       BulletList,
       OrderedList,
       ListItem,
@@ -217,6 +243,12 @@ describe('Visual Editor Round-Trip', () => {
       'code block with language',
       '<pre><code class="language-javascript">const x = 1;</code></pre>',
       '``` javascript\nconst x = 1;\n```'
+    );
+
+    testRoundTrip(
+      'safe fenced markdown code block with preserved djot source',
+      '<pre data-djot-src="```` markdown&#10;Here is how to write a code block in Markdown:&#10;&#10;```javascript&#10;console.log(&quot;Hello&quot;);&#10;```&#10;&#10;The triple backticks create a fenced code block.&#10;````&#10;"><code class="language-markdown">Here is how to write a code block in Markdown:\n\n```javascript\nconsole.log(&quot;Hello&quot;);\n```\n\nThe triple backticks create a fenced code block.</code></pre>',
+      '```` markdown\nHere is how to write a code block in Markdown:\n\n```javascript\nconsole.log("Hello");\n```\n\nThe triple backticks create a fenced code block.\n````'
     );
   });
 

@@ -52,7 +52,7 @@ class TorchlightExtension implements ExtensionInterface
         $this->showLineNumbers = $showLineNumbers;
         $this->engine = new Engine();
 
-        // Register djot grammar from djot-grammars package
+        // Register djot grammar from djot-grammars package for normal article rendering.
         $grammarPath = dirname(__DIR__, 2) . '/vendor/php-collective/djot-grammars/textmate/djot.tmLanguage.json';
         if (file_exists($grammarPath)) {
             $this->engine->getEnvironment()->getGrammarRepository()->register('djot', $grammarPath);
@@ -92,6 +92,15 @@ class TorchlightExtension implements ExtensionInterface
         $showLineNumbers = $parsed['lineNumbers'] || $this->showLineNumbers;
         $filename = $parsed['filename'];
         $djotSrc = $this->roundTripMode ? $this->reconstructCodeBlockSource($block, $rawLanguage) : null;
+
+        // The visual editor depends on a plain <pre><code> shape plus data-djot-src
+        // for lossless round-tripping. Torchlight/Phiki wraps code blocks in richer
+        // markup that is fine for article rendering but not safe for editor parsing.
+        if ($this->roundTripMode) {
+            $this->renderPlainCodeBlock($event, $code, $language, $rawLanguage, $filename, $djotSrc);
+
+            return;
+        }
 
         // Some TextMate grammars still trip PCRE lookbehind limitations in Phiki.
         // Fall back to plain code rendering for these languages to keep the editor stable.

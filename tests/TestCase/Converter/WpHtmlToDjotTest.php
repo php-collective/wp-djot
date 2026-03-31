@@ -100,4 +100,5 @@ class WpHtmlToDjotTest extends TestCase
         $this->assertStringContainsString('- Item 2', $djot);
         $this->assertStringContainsString('- Nested', $djot);
     }
+
 }

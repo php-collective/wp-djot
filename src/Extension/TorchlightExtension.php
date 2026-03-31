@@ -93,6 +93,14 @@ class TorchlightExtension implements ExtensionInterface
         $filename = $parsed['filename'];
         $djotSrc = $this->roundTripMode ? $this->reconstructCodeBlockSource($block, $rawLanguage) : null;
 
+        // Some TextMate grammars still trip PCRE lookbehind limitations in Phiki.
+        // Fall back to plain code rendering for these languages to keep the editor stable.
+        if ($this->shouldUsePlainCodeFallback($language)) {
+            $this->renderPlainCodeBlock($event, $code, $language, $rawLanguage, $filename, $djotSrc);
+
+            return;
+        }
+
         // Use inline torchlight options for custom start line
         // (API options are reset by Engine internally, but inline comments work)
         if ($parsed['startLine'] !== 1) {
@@ -157,6 +165,30 @@ class TorchlightExtension implements ExtensionInterface
             '<pre data-language-raw="' . $escapedLang . '"',
             $html,
         ) ?? $html;
+    }
+
+    private function shouldUsePlainCodeFallback(string $language): bool
+    {
+        $language = strtolower($language);
+
+        return in_array($language, ['markdown', 'md', 'djot', 'dj'], true);
+    }
+
+    private function renderPlainCodeBlock(
+        RenderEvent $event,
+        string $code,
+        string $language,
+        string $rawLanguage,
+        ?string $filename,
+        ?string $djotSrc,
+    ): void {
+        $escapedCode = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
+        $langClass = $language !== '' ? ' class="language-' . htmlspecialchars($language, ENT_QUOTES, 'UTF-8') . '"' : '';
+        $filenameAttr = $filename !== null ? ' data-filename="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '"' : '';
+        $langRawAttr = $rawLanguage !== $language ? ' data-language-raw="' . htmlspecialchars($rawLanguage, ENT_QUOTES, 'UTF-8') . '"' : '';
+        $djotSrcAttr = $djotSrc !== null ? ' data-djot-src="' . htmlspecialchars($djotSrc, ENT_QUOTES, 'UTF-8') . '"' : '';
+
+        $event->setHtml('<pre' . $filenameAttr . $langRawAttr . $djotSrcAttr . '><code' . $langClass . '>' . $escapedCode . '</code></pre>' . "\n");
     }
 
     /**

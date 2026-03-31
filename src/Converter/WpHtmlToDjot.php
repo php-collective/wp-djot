@@ -36,9 +36,6 @@ class WpHtmlToDjot extends HtmlToDjot
             'kbd' => $this->processSemanticElement($node, 'kbd'),
             'abbr' => $this->processAbbr($node),
             'dfn' => $this->processDfn($node),
-            'dl' => $this->processDefinitionList($node),
-            'dt' => $this->processDefinitionTerm($node),
-            'dd' => $this->processDefinitionDescription($node),
             default => parent::processNode($node),
         };
     }
@@ -102,72 +99,4 @@ class WpHtmlToDjot extends HtmlToDjot
         return str_replace(['\\', '"'], ['\\\\', '\\"'], $value);
     }
 
-    /**
-     * Process <dl> definition list.
-     */
-    protected function processDefinitionList(DOMElement $node): string
-    {
-        $result = '';
-        $afterDescription = false;
-
-        foreach ($node->childNodes as $child) {
-            if (!($child instanceof DOMElement)) {
-                continue;
-            }
-
-            $tagName = strtolower($child->tagName);
-
-            if ($tagName === 'dt') {
-                // Add blank line before term if we just finished a description
-                if ($afterDescription) {
-                    $result .= "\n";
-                }
-                $result .= $this->processDefinitionTerm($child);
-                $afterDescription = false;
-            } elseif ($tagName === 'dd') {
-                $result .= $this->processDefinitionDescription($child);
-                $afterDescription = true;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Process <dt> definition term.
-     */
-    protected function processDefinitionTerm(DOMElement $node): string
-    {
-        $content = trim($this->processChildren($node));
-        if ($content === '') {
-            return '';
-        }
-
-        return ': ' . $content . "\n";
-    }
-
-    /**
-     * Process <dd> definition description.
-     */
-    protected function processDefinitionDescription(DOMElement $node): string
-    {
-        $result = "\n";
-
-        foreach ($node->childNodes as $child) {
-            $content = $this->processNode($child);
-            if (trim($content) === '') {
-                continue;
-            }
-
-            // Indent each line with two spaces
-            $lines = explode("\n", trim($content));
-            foreach ($lines as $line) {
-                if ($line !== '') {
-                    $result .= '  ' . $line . "\n";
-                }
-            }
-        }
-
-        return $result;
-    }
 }

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.11] - 2026-03-31
 
+### Changed
+
+- Require djot-php ^0.1.24 with improved round-trip support
+
 ### Fixed
 
 - Visual editor code block round-trip with backticks in content (e.g., markdown examples)

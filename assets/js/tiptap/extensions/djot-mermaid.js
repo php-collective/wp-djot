@@ -27,6 +27,11 @@ export const DjotMermaid = Node.create({
                 default: '',
                 parseHTML: element => element.textContent || '',
             },
+            djotSrc: {
+                default: null,
+                parseHTML: element => element.getAttribute('data-djot-src'),
+                // Don't render to HTML - it's only for serialization
+            },
         };
     },
 

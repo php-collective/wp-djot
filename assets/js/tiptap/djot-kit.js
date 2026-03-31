@@ -67,6 +67,7 @@ export const DjotKit = Extension.create({
         }
 
         // Custom CodeBlock that preserves data-language-raw for Torchlight options
+        // and data-djot-src for round-trip support
         if (this.options.codeBlock !== false) {
             const CustomCodeBlock = CodeBlock.extend({
                 addAttributes() {
@@ -83,6 +84,15 @@ export const DjotKit = Extension.create({
                                 if (!attributes.languageRaw) return {};
                                 return { 'data-language-raw': attributes.languageRaw };
                             },
+                        },
+                        djotSrc: {
+                            default: null,
+                            parseHTML: element => {
+                                // Check parent <pre> for data-djot-src (round-trip support)
+                                const pre = element.closest('pre');
+                                return pre?.getAttribute('data-djot-src') || null;
+                            },
+                            // Don't render djotSrc to HTML - it's only for serialization
                         },
                     };
                 },

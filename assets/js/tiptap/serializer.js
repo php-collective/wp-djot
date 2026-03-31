@@ -87,19 +87,38 @@ export function serializeToDjot(doc) {
                 break;
 
             case 'codeBlock':
-                // Use languageRaw (with Torchlight options) if available, otherwise language
-                const lang = node.attrs?.languageRaw || node.attrs?.language || '';
-                // Djot uses space between ``` and language
-                output += '```' + (lang ? ' ' + lang : '') + '\n';
-                output += (node.content || []).map(c => c.text || '').join('') + '\n';
-                output += '```\n';
+                // If we have the original Djot source, use it (for round-trip support)
+                if (node.attrs?.djotSrc) {
+                    output += node.attrs.djotSrc;
+                    // Ensure it ends with newline
+                    if (!node.attrs.djotSrc.endsWith('\n')) {
+                        output += '\n';
+                    }
+                } else {
+                    // Use languageRaw (with Torchlight options) if available, otherwise language
+                    const lang = node.attrs?.languageRaw || node.attrs?.language || '';
+                    const codeContent = (node.content || []).map(c => c.text || '').join('');
+                    // Find a safe fence that doesn't conflict with the content
+                    const fence = findSafeCodeFence(codeContent);
+                    // Djot uses space between ``` and language
+                    output += fence + (lang ? ' ' + lang : '') + '\n';
+                    output += codeContent + '\n';
+                    output += fence + '\n';
+                }
                 break;
 
             case 'djotMermaid':
-                // Mermaid diagrams
-                output += '``` mermaid\n';
-                output += (node.content || []).map(c => c.text || '').join('') + '\n';
-                output += '```\n';
+                // Mermaid diagrams - use djotSrc if available
+                if (node.attrs?.djotSrc) {
+                    output += node.attrs.djotSrc;
+                    if (!node.attrs.djotSrc.endsWith('\n')) {
+                        output += '\n';
+                    }
+                } else {
+                    output += '``` mermaid\n';
+                    output += (node.content || []).map(c => c.text || '').join('') + '\n';
+                    output += '```\n';
+                }
                 break;
 
             case 'djotEmbed':
@@ -400,14 +419,18 @@ export function serializeToDjot(doc) {
             // Get tab label
             const tabLabel = labels[i] ? labels[i].textContent.trim() : '';
 
-            // Build code fence
-            result += '``` ' + lang;
+            // Get code content and find safe fence
+            const codeContent = (code.textContent || '').trim();
+            const fence = findSafeCodeFence(codeContent);
+
+            // Build code fence with safe marker
+            result += fence + ' ' + lang;
             if (tabLabel) {
                 result += ' [' + tabLabel + ']';
             }
             result += '\n';
-            result += (code.textContent || '').trim() + '\n';
-            result += '```\n\n';
+            result += codeContent + '\n';
+            result += fence + '\n\n';
         });
 
         // Remove trailing blank line before closing
@@ -492,7 +515,6 @@ export function serializeToDjot(doc) {
                     const code = child.querySelector('code');
                     const langMatch = code ? (code.className || '').match(/language-(\w+)/) : null;
                     const lang = langMatch ? langMatch[1] : '';
-                    result += indent + '```' + (lang ? ' ' + lang : '') + '\n';
                     // Get code content, preserving newlines
                     const codeEl = code || child;
                     // Check for line spans (Torchlight format)
@@ -505,9 +527,12 @@ export function serializeToDjot(doc) {
                         // Use textContent directly - it preserves newlines
                         codeContent = codeEl.textContent || '';
                     }
+                    // Use safe fence that doesn't conflict with content backticks
+                    const fence = findSafeCodeFence(codeContent);
+                    result += indent + fence + (lang ? ' ' + lang : '') + '\n';
                     result += codeContent;
-                    if (!result.endsWith('\n')) result += '\n';
-                    result += indent + '```\n\n';
+                    if (!codeContent.endsWith('\n')) result += '\n';
+                    result += indent + fence + '\n\n';
                 } else if (tag === 'blockquote') {
                     const inner = htmlElementToDjot(child, '');
                     inner.trim().split('\n').forEach(line => {
@@ -579,6 +604,27 @@ export function escapeDjot(text) {
         .replace(/\^/g, '\\^')
         .replace(/~/g, '\\~')
         .replace(/`/g, '\\`');
+}
+
+/**
+ * Find a safe code fence that doesn't conflict with content
+ *
+ * @param {string} content - The code content to check
+ * @param {number} minLength - Minimum fence length (default 3)
+ * @returns {string} A backtick fence that's safe to use
+ */
+function findSafeCodeFence(content, minLength = 3) {
+    // Find the longest sequence of backticks in the content
+    let maxBackticks = 0;
+    const matches = content.match(/`+/g);
+    if (matches) {
+        for (const match of matches) {
+            maxBackticks = Math.max(maxBackticks, match.length);
+        }
+    }
+    // Use a fence that's at least one backtick longer than the longest sequence
+    const fenceLength = Math.max(minLength, maxBackticks + 1);
+    return '`'.repeat(fenceLength);
 }
 
 export default serializeToDjot;

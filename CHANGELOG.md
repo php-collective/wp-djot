@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserve round-trip source for Torchlight-highlighted code blocks
 - Use plain code blocks in visual editor round-trip mode for consistency
 - Use plain code blocks for admin previews
+- Convert tabs to 4 spaces in code blocks (TorchlightExtension was bypassing djot-php's conversion)
 
 ## [1.5.10] - 2026-03-31
 

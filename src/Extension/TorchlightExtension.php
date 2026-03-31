@@ -117,6 +117,9 @@ class TorchlightExtension implements ExtensionInterface
             $code = '// torchlight! ' . json_encode($options) . "\n" . $code;
         }
 
+        // Convert tabs to 4 spaces (matches djot-php HtmlRenderer default)
+        $code = str_replace("\t", '    ', $code);
+
         try {
             $html = $this->engine->codeToHtml($code, $language, $this->theme, withGutter: $showLineNumbers);
 
@@ -137,6 +140,8 @@ class TorchlightExtension implements ExtensionInterface
             $event->setHtml($html);
         } catch (\Throwable $e) {
             // Fallback to basic rendering on error
+            // Convert tabs to 4 spaces (matches djot-php HtmlRenderer default)
+            $code = str_replace("\t", '    ', $code);
             $escapedCode = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
             $langClass = $language ? ' class="language-' . htmlspecialchars($language, ENT_QUOTES, 'UTF-8') . '"' : '';
             $filenameAttr = $filename !== null ? ' data-filename="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '"' : '';
@@ -204,6 +209,8 @@ class TorchlightExtension implements ExtensionInterface
         ?string $filename,
         ?string $djotSrc,
     ): void {
+        // Convert tabs to 4 spaces (matches djot-php HtmlRenderer default)
+        $code = str_replace("\t", '    ', $code);
         $escapedCode = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
         $langClass = $language !== '' ? ' class="language-' . htmlspecialchars($language, ENT_QUOTES, 'UTF-8') . '"' : '';
         $filenameAttr = $filename !== null ? ' data-filename="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '"' : '';

@@ -533,6 +533,37 @@ class ConverterTest extends TestCase
         $this->assertStringNotContainsString('data-filename', $html);
     }
 
+    public function testConvertExcerptPreservesRoundTripSourceForHighlightedSafeFenceCodeBlock(): void
+    {
+        $converter = new Converter(
+            safeMode: false,
+            mermaidEnabled: true,
+        );
+
+        $djot = <<<'DJOT'
+### Code Block with Backticks
+
+This tests the safe fence feature - content containing backticks:
+
+```` markdown
+Here is how to write a code block in Markdown:
+
+```javascript
+console.log("Hello");
+```
+
+The triple backticks create a fenced code block.
+````
+DJOT;
+
+        $html = $converter->convertExcerpt($djot);
+
+        $this->assertStringContainsString('<pre data-djot-src="', $html);
+        $this->assertStringContainsString('```` markdown', $html);
+        $this->assertStringContainsString('```javascript', $html);
+        $this->assertStringContainsString('The triple backticks create a fenced code block.', $html);
+    }
+
     /**
      * Add the semantic span handler (same logic as Plugin::customizeConverter)
      */

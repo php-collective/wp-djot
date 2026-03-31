@@ -13,6 +13,8 @@ use Djot\DjotConverter;
 use Djot\Event\RenderEvent;
 use Djot\Extension\ExtensionInterface;
 use Djot\Node\Block\CodeBlock;
+use Djot\Renderer\HtmlRenderer;
+use Djot\Util\StringUtil;
 use Torchlight\Engine\Engine;
 
 /**
@@ -35,6 +37,8 @@ class TorchlightExtension implements ExtensionInterface
     private string $theme;
 
     private bool $showLineNumbers;
+
+    private bool $roundTripMode = false;
 
     /**
      * @param string $theme Theme name (e.g., 'github-light', 'github-dark', 'synthwave-84')
@@ -61,6 +65,9 @@ class TorchlightExtension implements ExtensionInterface
      */
     public function register(DjotConverter $converter): void
     {
+        $renderer = $converter->getRenderer();
+        $this->roundTripMode = $renderer instanceof HtmlRenderer && $renderer->isRoundTripMode();
+
         $converter->on('render.code_block', function (RenderEvent $event): void {
             $this->renderCodeBlock($event);
         });
@@ -84,6 +91,7 @@ class TorchlightExtension implements ExtensionInterface
         $language = $parsed['language'];
         $showLineNumbers = $parsed['lineNumbers'] || $this->showLineNumbers;
         $filename = $parsed['filename'];
+        $djotSrc = $this->roundTripMode ? $this->reconstructCodeBlockSource($block, $rawLanguage) : null;
 
         // Use inline torchlight options for custom start line
         // (API options are reset by Engine internally, but inline comments work)
@@ -105,6 +113,10 @@ class TorchlightExtension implements ExtensionInterface
                 $html = $this->addFilenameAttribute($html, $filename);
             }
 
+            if ($djotSrc !== null) {
+                $html = $this->addDjotSrcAttribute($html, $djotSrc);
+            }
+
             $event->setHtml($html);
         } catch (\Throwable $e) {
             // Fallback to basic rendering on error
@@ -112,7 +124,8 @@ class TorchlightExtension implements ExtensionInterface
             $langClass = $language ? ' class="language-' . htmlspecialchars($language, ENT_QUOTES, 'UTF-8') . '"' : '';
             $filenameAttr = $filename !== null ? ' data-filename="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '"' : '';
             $langRawAttr = $rawLanguage !== $language ? ' data-language-raw="' . htmlspecialchars($rawLanguage, ENT_QUOTES, 'UTF-8') . '"' : '';
-            $event->setHtml('<pre' . $filenameAttr . $langRawAttr . '><code' . $langClass . '>' . $escapedCode . '</code></pre>' . "\n");
+            $djotSrcAttr = $djotSrc !== null ? ' data-djot-src="' . htmlspecialchars($djotSrc, ENT_QUOTES, 'UTF-8') . '"' : '';
+            $event->setHtml('<pre' . $filenameAttr . $langRawAttr . $djotSrcAttr . '><code' . $langClass . '>' . $escapedCode . '</code></pre>' . "\n");
         }
     }
 
@@ -144,6 +157,42 @@ class TorchlightExtension implements ExtensionInterface
             '<pre data-language-raw="' . $escapedLang . '"',
             $html,
         ) ?? $html;
+    }
+
+    /**
+     * Add data-djot-src attribute to the pre element in HTML output.
+     */
+    private function addDjotSrcAttribute(string $html, string $djotSrc): string
+    {
+        $escapedSrc = htmlspecialchars($djotSrc, ENT_QUOTES, 'UTF-8');
+
+        return preg_replace(
+            '/^<pre\b/',
+            '<pre data-djot-src="' . $escapedSrc . '"',
+            $html,
+        ) ?? $html;
+    }
+
+    /**
+     * Reconstruct the original Djot source for round-trip-safe code blocks.
+     */
+    private function reconstructCodeBlockSource(CodeBlock $block, string $rawLanguage): string
+    {
+        $content = $block->getContent();
+        $fence = StringUtil::findSafeCodeFence($content, 3);
+        $djot = $fence;
+
+        if ($rawLanguage !== '') {
+            $djot .= ' ' . $rawLanguage;
+        }
+
+        $djot .= "\n" . $content;
+
+        if (!str_ends_with($content, "\n")) {
+            $djot .= "\n";
+        }
+
+        return $djot . $fence . "\n";
     }
 
     /**

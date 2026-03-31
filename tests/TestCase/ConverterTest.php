@@ -562,6 +562,8 @@ DJOT;
         $this->assertStringContainsString('```` markdown', $html);
         $this->assertStringContainsString('```javascript', $html);
         $this->assertStringContainsString('The triple backticks create a fenced code block.', $html);
+        $this->assertStringNotContainsString('Syntax highlighted by Phiki and torchlight.dev', $html);
+        $this->assertStringNotContainsString('class=\'line\'', $html);
     }
 
     /**

@@ -38,6 +38,11 @@ import { DjotSpan } from '../../assets/js/tiptap/extensions/djot-span.js';
 import { DjotKbd } from '../../assets/js/tiptap/extensions/djot-kbd.js';
 import { DjotAbbreviation } from '../../assets/js/tiptap/extensions/djot-abbr.js';
 import { DjotDefinition } from '../../assets/js/tiptap/extensions/djot-dfn.js';
+import {
+  DefinitionList,
+  DefinitionTerm,
+  DefinitionDescription,
+} from '../../assets/js/tiptap/extensions/djot-definition-list.js';
 import { DjotHeadingRef } from '../../assets/js/tiptap/extensions/djot-heading-ref.js';
 import { DjotMermaid } from '../../assets/js/tiptap/extensions/djot-mermaid.js';
 import { DjotCodeGroup } from '../../assets/js/tiptap/extensions/djot-code-group.js';
@@ -47,6 +52,32 @@ import { DjotTabs } from '../../assets/js/tiptap/extensions/djot-tabs.js';
  * Create a TipTap editor with all extensions for testing
  */
 function createEditor(htmlContent) {
+  const CustomCodeBlock = CodeBlock.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        languageRaw: {
+          default: null,
+          parseHTML: element => {
+            const pre = element.closest('pre');
+            return pre?.getAttribute('data-language-raw') || null;
+          },
+          renderHTML: attributes => {
+            if (!attributes.languageRaw) return {};
+            return { 'data-language-raw': attributes.languageRaw };
+          },
+        },
+        djotSrc: {
+          default: null,
+          parseHTML: element => {
+            const pre = element.closest('pre');
+            return pre?.getAttribute('data-djot-src') || null;
+          },
+        },
+      };
+    },
+  });
+
   const editor = new Editor({
     extensions: [
       StarterKit.configure({
@@ -55,7 +86,7 @@ function createEditor(htmlContent) {
         orderedList: false,
         listItem: false,
       }),
-      CodeBlock,
+      CustomCodeBlock,
       BulletList,
       OrderedList,
       ListItem,
@@ -77,6 +108,9 @@ function createEditor(htmlContent) {
       DjotKbd,
       DjotAbbreviation,
       DjotDefinition,
+      DefinitionList,
+      DefinitionTerm,
+      DefinitionDescription,
       DjotHeadingRef,
       DjotMermaid,
       DjotCodeGroup,
@@ -206,6 +240,14 @@ describe('Visual Editor Round-Trip', () => {
     );
   });
 
+  describe('Definition lists', () => {
+    testRoundTrip(
+      'definition list',
+      '<dl><dt>Term</dt><dd><p>Definition with <em>em</em></p></dd></dl>',
+      ': Term\n\n  Definition with _em_'
+    );
+  });
+
   describe('Code blocks', () => {
     testRoundTrip(
       'plain code block',
@@ -217,6 +259,12 @@ describe('Visual Editor Round-Trip', () => {
       'code block with language',
       '<pre><code class="language-javascript">const x = 1;</code></pre>',
       '``` javascript\nconst x = 1;\n```'
+    );
+
+    testRoundTrip(
+      'safe fenced markdown code block with preserved djot source',
+      '<pre data-djot-src="```` markdown&#10;Here is how to write a code block in Markdown:&#10;&#10;```javascript&#10;console.log(&quot;Hello&quot;);&#10;```&#10;&#10;The triple backticks create a fenced code block.&#10;````&#10;"><code class="language-markdown">Here is how to write a code block in Markdown:\n\n```javascript\nconsole.log(&quot;Hello&quot;);\n```\n\nThe triple backticks create a fenced code block.</code></pre>',
+      '```` markdown\nHere is how to write a code block in Markdown:\n\n```javascript\nconsole.log("Hello");\n```\n\nThe triple backticks create a fenced code block.\n````'
     );
   });
 

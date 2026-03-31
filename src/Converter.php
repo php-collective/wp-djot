@@ -142,9 +142,10 @@ class Converter
      *
      * @param string $profileName
      * @param bool $safeMode
-     * @param string $context Context name for filters: 'article' or 'comment'
+     * @param string $context Context name for filters: 'article', 'comment', or 'excerpt'
+     * @param bool $roundTripMode Enable round-trip mode for visual editor (adds data-djot-* attributes)
      */
-    private function getProfileConverter(string $profileName, bool $safeMode, string $context = 'article'): DjotConverter
+    private function getProfileConverter(string $profileName, bool $safeMode, string $context = 'article', bool $roundTripMode = false): DjotConverter
     {
         $softBreakSetting = $context === 'comment' ? $this->commentSoftBreak : $this->postSoftBreak;
         $tocKey = ($this->tocEnabled && $context === 'article')
@@ -154,7 +155,8 @@ class Converter
         $smartQuotesKey = $this->smartQuotesLocale !== 'en' ? '_sq_' . $this->smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
         $mermaidKey = $this->mermaidEnabled ? '_mermaid' : '';
-        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey . $mermaidKey;
+        $roundTripKey = $roundTripMode ? '_rt' : '';
+        $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey . $mermaidKey . $roundTripKey;
 
         if (!isset($this->profileConverters[$key])) {
             // 'none' means no profile restrictions at all
@@ -187,9 +189,11 @@ class Converter
             // Convert tabs to 4 spaces in code blocks for consistent display
             $converter->getRenderer()->setCodeBlockTabWidth(4);
 
-            // Enable round-trip mode for visual editor compatibility
+            // Enable round-trip mode only for visual editor (excerpt context)
             // This outputs data-djot-* attributes that preserve source syntax
-            $converter->getRenderer()->setRoundTripMode(true);
+            if ($roundTripMode) {
+                $converter->getRenderer()->setRoundTripMode(true);
+            }
 
             // Add Table of Contents extension for articles when enabled
             if ($this->tocEnabled && $context === 'article') {
@@ -331,7 +335,8 @@ class Converter
     public function convertExcerpt(string $djot): string
     {
         $djot = $this->preProcess($djot, true);
-        $converter = $this->getProfileConverter($this->postProfile, false, 'excerpt');
+        // Use round-trip mode for visual editor compatibility
+        $converter = $this->getProfileConverter($this->postProfile, false, 'excerpt', roundTripMode: true);
         $html = $converter->convert($djot);
 
         return $this->postProcess($html, false);

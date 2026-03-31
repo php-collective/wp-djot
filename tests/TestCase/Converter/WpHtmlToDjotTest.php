@@ -101,4 +101,12 @@ class WpHtmlToDjotTest extends TestCase
         $this->assertStringContainsString('- Nested', $djot);
     }
 
+    public function testDefinitionList(): void
+    {
+        $html = '<dl><dt>Term</dt><dd><p>Definition with <em>em</em></p></dd></dl>';
+        $djot = $this->converter->convert($html);
+
+        $this->assertSame(": Term\n\n  Definition with _em_\n", $djot);
+    }
+
 }

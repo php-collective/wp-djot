@@ -52,7 +52,7 @@ class TorchlightExtension implements ExtensionInterface
         $this->showLineNumbers = $showLineNumbers;
         $this->engine = new Engine();
 
-        // Register djot grammar from djot-grammars package
+        // Register djot grammar from djot-grammars package for normal article rendering.
         $grammarPath = dirname(__DIR__, 2) . '/vendor/php-collective/djot-grammars/textmate/djot.tmLanguage.json';
         if (file_exists($grammarPath)) {
             $this->engine->getEnvironment()->getGrammarRepository()->register('djot', $grammarPath);
@@ -92,6 +92,15 @@ class TorchlightExtension implements ExtensionInterface
         $showLineNumbers = $parsed['lineNumbers'] || $this->showLineNumbers;
         $filename = $parsed['filename'];
         $djotSrc = $this->roundTripMode ? $this->reconstructCodeBlockSource($block, $rawLanguage) : null;
+
+        // The visual editor and wp-admin previews depend on a plain <pre><code>
+        // shape. Torchlight/Phiki markup is fine for frontend rendering but is
+        // fragile in editor/admin parsing paths.
+        if ($this->shouldRenderPlainCodeBlock($language)) {
+            $this->renderPlainCodeBlock($event, $code, $language, $rawLanguage, $filename, $djotSrc);
+
+            return;
+        }
 
         // Some TextMate grammars still trip PCRE lookbehind limitations in Phiki.
         // Fall back to plain code rendering for these languages to keep the editor stable.
@@ -172,6 +181,19 @@ class TorchlightExtension implements ExtensionInterface
         $language = strtolower($language);
 
         return in_array($language, ['markdown', 'md', 'djot', 'dj'], true);
+    }
+
+    private function shouldRenderPlainCodeBlock(string $language): bool
+    {
+        if ($this->roundTripMode) {
+            return true;
+        }
+
+        if (defined('WP_ADMIN') && WP_ADMIN) {
+            return true;
+        }
+
+        return $this->shouldUsePlainCodeFallback($language);
     }
 
     private function renderPlainCodeBlock(

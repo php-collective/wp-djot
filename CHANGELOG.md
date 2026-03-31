@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.11] - 2026-03-31
+
+### Fixed
+
+- Visual editor code block round-trip with backticks in content (e.g., markdown examples)
+- Preserve round-trip source for Torchlight-highlighted code blocks
+- Use plain code blocks in visual editor round-trip mode for consistency
+- Use plain code blocks for admin previews
+
 ## [1.5.10] - 2026-03-31
 
 ### Added

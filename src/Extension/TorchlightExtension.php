@@ -93,10 +93,10 @@ class TorchlightExtension implements ExtensionInterface
         $filename = $parsed['filename'];
         $djotSrc = $this->roundTripMode ? $this->reconstructCodeBlockSource($block, $rawLanguage) : null;
 
-        // The visual editor depends on a plain <pre><code> shape plus data-djot-src
-        // for lossless round-tripping. Torchlight/Phiki wraps code blocks in richer
-        // markup that is fine for article rendering but not safe for editor parsing.
-        if ($this->roundTripMode) {
+        // The visual editor and wp-admin previews depend on a plain <pre><code>
+        // shape. Torchlight/Phiki markup is fine for frontend rendering but is
+        // fragile in editor/admin parsing paths.
+        if ($this->shouldRenderPlainCodeBlock($language)) {
             $this->renderPlainCodeBlock($event, $code, $language, $rawLanguage, $filename, $djotSrc);
 
             return;
@@ -181,6 +181,19 @@ class TorchlightExtension implements ExtensionInterface
         $language = strtolower($language);
 
         return in_array($language, ['markdown', 'md', 'djot', 'dj'], true);
+    }
+
+    private function shouldRenderPlainCodeBlock(string $language): bool
+    {
+        if ($this->roundTripMode) {
+            return true;
+        }
+
+        if (defined('WP_ADMIN') && WP_ADMIN) {
+            return true;
+        }
+
+        return $this->shouldUsePlainCodeFallback($language);
     }
 
     private function renderPlainCodeBlock(

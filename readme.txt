@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.5.12
+Stable tag: 1.5.13
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -89,6 +89,10 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 3. Rendered output with syntax highlighting
 
 == Changelog ==
+
+= 1.5.13 =
+* Fixed shell/bash code blocks flooding the error log with PCRE lookbehind compile warnings by upgrading torchlight/engine to ^1.0 (pulls phiki 2.x, which tokenizes with Oniguruma instead of PCRE)
+* Changed markdown and djot fenced code blocks to use real syntax highlighting again — the plain-text fallback was only needed to dodge phiki 1.x's PCRE issues and is no longer required
 
 = 1.5.12 =
 * Added visible parse-warning banner above articles for logged-in editors (line/col + suggestion)

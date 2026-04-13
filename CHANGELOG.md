@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.13] - 2026-04-13
+
+### Changed
+
+- Bumped `torchlight/engine` to `^1.0`, which pulls `phiki/phiki` from 1.1.6 to 2.2.0. Phiki 2.x tokenizes TextMate grammars with Oniguruma (`mb_ereg_search_pos`) instead of PCRE, so grammars with variable-length lookbehinds (which PCRE2 rejects) no longer fail to compile. The concrete symptom was every shell/bash fenced code block firing `preg_match(): Compilation failed: lookbehind assertion is not fixed length` warnings via the shellscript grammar's `meta.statement.shell` pattern.
+- Markdown and djot fenced code blocks now go through the real phiki tokenizer again. The previous `shouldUsePlainCodeFallback()` workaround routed those languages through plain `<pre><code>` solely to dodge the PCRE lookbehind issue and is no longer needed.
+
+### Fixed
+
+- Eliminated the PCRE compile warning flood in `wp-content/debug.log` for any post containing a shell/bash code block.
+
 ## [1.5.12] - 2026-04-13
 
 ### Added

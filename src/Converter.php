@@ -10,7 +10,10 @@ if (!defined('ABSPATH')) {
 }
 
 use Djot\DjotConverter;
+use Djot\Exception\ParseException;
+use Djot\Exception\ParseWarning;
 use Djot\Extension\CodeGroupExtension;
+use Djot\Extension\FrontmatterExtension;
 use Djot\Extension\HeadingLevelShiftExtension;
 use Djot\Extension\HeadingPermalinksExtension;
 use Djot\Extension\HeadingReferenceExtension;
@@ -169,6 +172,13 @@ class Converter
                 default => Profile::article(),
             };
 
+            // Strip disallowed / unknown nodes instead of converting them to text.
+            // Needed for extension-provided node types (e.g. FrontmatterExtension) which
+            // aren't in NodeType::allBlockTypes() and would otherwise be turned into a
+            // paragraph containing their raw source. Also means a raw HTML block denied
+            // by the profile disappears entirely instead of rendering as escaped text.
+            $profile?->onDisallowed(Profile::ACTION_STRIP);
+
             // Determine soft break mode
             $softBreakMode = match ($softBreakSetting) {
                 'space' => SoftBreakMode::Space,
@@ -179,11 +189,19 @@ class Converter
             // Create converter with appropriate settings
             // significantNewlines = markdown compatibility (single newlines become soft breaks)
             // softBreakMode = how soft breaks render (now controllable separately)
+            // warnings = collect non-fatal parse issues (undefined refs, bad attr lists, ...)
+            // strict   = throw ParseException on fatal errors; caller (convertArticle) catches
+            //            and falls back so a broken post still renders for visitors.
+            //            Only enabled for the article path so a single broken comment or
+            //            excerpt can't throw a whole page.
+            $strict = ($context === 'article');
             $converter = new DjotConverter(
                 safeMode: $safeMode,
                 profile: $profile,
                 significantNewlines: $this->markdownMode,
                 softBreakMode: $softBreakMode,
+                warnings: true,
+                strict: $strict,
             );
 
             // Convert tabs to 4 spaces in code blocks for consistent display
@@ -243,6 +261,10 @@ class Converter
             if ($this->mermaidEnabled) {
                 $converter->addExtension(new MermaidExtension());
             }
+
+            // Silently strip YAML/TOML/JSON frontmatter at the top of the document.
+            // Default format is yaml, so a bare `---` opener is treated as frontmatter.
+            $converter->addExtension(new FrontmatterExtension());
 
             // Add semantic span support (kbd, abbr, dfn attributes)
             $converter->addExtension(new SemanticSpanExtension());
@@ -324,9 +346,48 @@ class Converter
     {
         $djot = $this->preProcess($djot, true);
         $converter = $this->getProfileConverter($this->postProfile, false, 'article');
-        $html = $converter->convert($djot);
+
+        try {
+            $html = $converter->convert($djot);
+            $warnings = $converter->getWarnings();
+        } catch (ParseException $e) {
+            // Fatal parse error in strict mode. Fall back to a lenient converter so the
+            // page still renders for visitors, then synthesize a warning for the banner.
+            $lenient = new DjotConverter(
+                safeMode: false,
+                profile: $this->profileForFallback(),
+                significantNewlines: $this->markdownMode,
+                warnings: false,
+                strict: false,
+            );
+            $html = $lenient->convert($djot);
+            $warnings = [new ParseWarning(
+                $e->getMessage(),
+                $e->getSourceLine(),
+                $e->getSourceColumn(),
+                'fatal',
+                null,
+            )];
+        }
+
+        $html = $this->prependWarningBanner($html, $warnings);
 
         return $this->postProcess($html, false);
+    }
+
+    /**
+     * Lenient profile used when strict parsing throws — mirrors postProfile but
+     * without extensions, just to produce renderable HTML fallback.
+     */
+    private function profileForFallback(): ?Profile
+    {
+        return match ($this->postProfile) {
+            'none' => null,
+            'full' => Profile::full(),
+            'comment' => Profile::comment(),
+            'minimal' => Profile::minimal(),
+            default => Profile::article(),
+        };
     }
 
     /**
@@ -358,6 +419,60 @@ class Converter
     }
 
     /**
+     * Prepend a visible warning banner to the rendered HTML if any parse warnings
+     * were collected, and the current visitor is a logged-in user who can edit posts.
+     *
+     * Regular visitors see nothing. Warnings are also written to the PHP error log
+     * (debug.log when WP_DEBUG_LOG is on) so they can be grepped server-side.
+     *
+     * @param list<\Djot\Exception\ParseWarning> $warnings
+     */
+    private function prependWarningBanner(string $html, array $warnings): string
+    {
+        if ($warnings === []) {
+            return $html;
+        }
+
+        $postId = function_exists('get_the_ID') ? (int)get_the_ID() : 0;
+        foreach ($warnings as $warning) {
+            error_log(sprintf('[wpdjot] post=%d %s', $postId, (string)$warning));
+        }
+
+        if (!function_exists('is_user_logged_in') || !is_user_logged_in()) {
+            return $html;
+        }
+        if (!function_exists('current_user_can') || !current_user_can('edit_posts')) {
+            return $html;
+        }
+
+        $items = '';
+        foreach ($warnings as $warning) {
+            $location = sprintf('line %d, col %d', $warning->getLine(), $warning->getColumn());
+            $suggestion = $warning->getSuggestion();
+            $items .= '<li><code>' . esc_html($location) . '</code> — ' . esc_html($warning->getMessage())
+                . ($suggestion !== null ? ' <em>(' . esc_html($suggestion) . ')</em>' : '')
+                . '</li>';
+        }
+
+        $heading = esc_html(sprintf(
+            /* translators: %d: number of djot parse warnings */
+            _n('Djot parse warning (%d)', 'Djot parse warnings (%d)', count($warnings), 'djot-markup'),
+            count($warnings),
+        ));
+        $hint = esc_html__('Only site editors see this banner.', 'djot-markup');
+
+        $banner = '<div class="wpdjot-warnings" role="alert" style="'
+            . 'border:1px solid #d63638;background:#fcf0f1;color:#1d2327;'
+            . 'padding:12px 16px;margin:0 0 16px;border-radius:4px;font-size:14px;">'
+            . '<strong>' . $heading . '</strong>'
+            . '<ul style="margin:6px 0 0;padding-left:20px;">' . $items . '</ul>'
+            . '<p style="margin:6px 0 0;font-size:12px;color:#646970;">' . $hint . '</p>'
+            . '</div>';
+
+        return $banner . $html;
+    }
+
+    /**
      * Pre-process Djot content before conversion.
      *
      * @param string $djot
@@ -375,6 +490,11 @@ class Converter
         // Syntax: ``` lang # {2,4-5} or ``` lang #=9 {2,4-5}
         $djot = $this->preProcessCodeBlocks($djot);
 
+        // Decode HTML entities that WordPress encoded at save time
+        // (e.g. &gt; in post_content even though we run before the_content filters).
+        // Without this, `$foo->bar` inside inline code renders as `$foo-&amp;gt;bar`.
+        $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
         // Only clean up WordPress HTML artifacts if content was already processed
         if (!$isRaw) {
             // Remove <br> tags that WordPress wpautop() may have added
@@ -386,9 +506,6 @@ class Converter
 
             // WordPress sometimes adds empty paragraph tags - remove them
             $djot = preg_replace('/<p>\s*<\/p>/', '', $djot) ?? $djot;
-
-            // Decode HTML entities that WordPress may have encoded
-            $djot = html_entity_decode($djot, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
             // Ensure blank line before code fences (required by Djot for block recognition)
             // Without a blank line, ``` is treated as inline code, not a code block

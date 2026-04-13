@@ -13,7 +13,7 @@
         "php": ">=8.2",
         "php-collective/djot": "^0.1.24",
         "php-collective/djot-grammars": "dev-master",
-        "torchlight/engine": "^0.1"
+        "torchlight/engine": "^1.0"
     },
     "require-dev": {
         "php-collective/code-sniffer": "dev-master",

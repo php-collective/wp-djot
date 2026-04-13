@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.12] - 2026-04-13
+
+### Added
+
+- Visible parse-warning banner above articles for logged-in editors (line/col + suggestion; regular visitors see nothing)
+- Fatal parse errors are now caught and surfaced in the banner; the page still renders via a lenient fallback converter so visitors never see a broken page
+- `FrontmatterExtension` registered for articles so YAML/TOML/JSON frontmatter at the top of a post is silently stripped instead of rendering as a thematic break + paragraph
+
+### Changed
+
+- Parse warnings are now collected (`warnings: true`) and errors throw (`strict: true`) in the article path; comments and excerpts stay lenient. Broken posts fall back to a lenient converter without extensions, so blocks like Mermaid / code-group / tabs / heading-reference temporarily won't render in a post with a fatal parse error — the banner tells the author exactly what to fix.
+- `Profile::ACTION_STRIP` is now applied to all profiles so extension-provided node types (e.g. Frontmatter) and denied raw HTML in the article profile are removed instead of converted to escaped text
+
+### Fixed
+
+- Inline code containing `>` / `<` (e.g. `` `$foo->bar` ``) no longer renders double-escaped (`&amp;gt;`) when WordPress has already encoded the stored `post_content`
+- Convert tabs to 4 spaces in code blocks (TorchlightExtension was bypassing djot-php's conversion — the CHANGELOG entry for 1.5.11 mentioned this fix, but commit `fa3bebe` landed after the `1.5.11` tag so users on 1.5.11 didn't actually get it)
+
 ## [1.5.11] - 2026-03-31
 
 ### Changed
@@ -19,7 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserve round-trip source for Torchlight-highlighted code blocks
 - Use plain code blocks in visual editor round-trip mode for consistency
 - Use plain code blocks for admin previews
-- Convert tabs to 4 spaces in code blocks (TorchlightExtension was bypassing djot-php's conversion)
 
 ## [1.5.10] - 2026-03-31
 

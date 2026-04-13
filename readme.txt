@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.5.11
+Stable tag: 1.5.12
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -89,6 +89,13 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 3. Rendered output with syntax highlighting
 
 == Changelog ==
+
+= 1.5.12 =
+* Added visible parse-warning banner above articles for logged-in editors (line/col + suggestion)
+* Added FrontmatterExtension so YAML/TOML/JSON frontmatter at the top of a post is silently stripped
+* Added strict-mode parse error capture with lenient fallback so broken posts still render for visitors
+* Fixed inline code containing `>` / `<` rendering double-escaped when WordPress had encoded the stored content
+* Fixed tabs-to-spaces conversion in TorchlightExtension code blocks (landed after the 1.5.11 tag)
 
 = 1.5.7 =
 * Added experimental visual editor (WYSIWYG) for Djot blocks powered by Tiptap

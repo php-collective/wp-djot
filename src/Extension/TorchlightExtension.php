@@ -16,6 +16,7 @@ use Djot\Node\Block\CodeBlock;
 use Djot\Renderer\HtmlRenderer;
 use Djot\Util\StringUtil;
 use Torchlight\Engine\Engine;
+use Torchlight\Engine\Options;
 
 /**
  * Torchlight syntax highlighting extension for djot-php.
@@ -55,8 +56,8 @@ class TorchlightExtension implements ExtensionInterface
         // Register djot grammar from djot-grammars package for normal article rendering.
         $grammarPath = dirname(__DIR__, 2) . '/vendor/php-collective/djot-grammars/textmate/djot.tmLanguage.json';
         if (file_exists($grammarPath)) {
-            $this->engine->getEnvironment()->getGrammarRepository()->register('djot', $grammarPath);
-            $this->engine->getEnvironment()->getGrammarRepository()->alias('dj', 'djot');
+            $this->engine->getEnvironment()->grammars->register('djot', $grammarPath);
+            $this->engine->getEnvironment()->grammars->alias('dj', 'djot');
         }
     }
 
@@ -102,26 +103,21 @@ class TorchlightExtension implements ExtensionInterface
             return;
         }
 
-        // Some TextMate grammars still trip PCRE lookbehind limitations in Phiki.
-        // Fall back to plain code rendering for these languages to keep the editor stable.
-        if ($this->shouldUsePlainCodeFallback($language)) {
-            $this->renderPlainCodeBlock($event, $code, $language, $rawLanguage, $filename, $djotSrc);
-
-            return;
-        }
-
-        // Use inline torchlight options for custom start line
-        // (API options are reset by Engine internally, but inline comments work)
+        // torchlight/engine ^1.0 dropped the `withGutter:` named argument on
+        // codeToHtml(). Per-block options (gutter, starting line number) are
+        // now applied by setting a fresh base Options on the engine before
+        // each render call.
+        $overrides = ['withGutter' => $showLineNumbers];
         if ($parsed['startLine'] !== 1) {
-            $options = ['lineNumbersStart' => $parsed['startLine']];
-            $code = '// torchlight! ' . json_encode($options) . "\n" . $code;
+            $overrides['lineNumbersStart'] = $parsed['startLine'];
         }
+        $this->engine->setTorchlightOptions(Options::default()->mergeWith($overrides));
 
         // Convert tabs to 4 spaces (matches djot-php HtmlRenderer default)
         $code = str_replace("\t", '    ', $code);
 
         try {
-            $html = $this->engine->codeToHtml($code, $language, $this->theme, withGutter: $showLineNumbers);
+            $html = $this->engine->codeToHtml($code, $language, $this->theme);
 
             // Add data-language-raw attribute to preserve full language string for visual editor
             if ($rawLanguage !== $language) {
@@ -181,13 +177,6 @@ class TorchlightExtension implements ExtensionInterface
         ) ?? $html;
     }
 
-    private function shouldUsePlainCodeFallback(string $language): bool
-    {
-        $language = strtolower($language);
-
-        return in_array($language, ['markdown', 'md', 'djot', 'dj'], true);
-    }
-
     private function shouldRenderPlainCodeBlock(string $language): bool
     {
         if ($this->roundTripMode) {
@@ -198,7 +187,7 @@ class TorchlightExtension implements ExtensionInterface
             return true;
         }
 
-        return $this->shouldUsePlainCodeFallback($language);
+        return false;
     }
 
     private function renderPlainCodeBlock(

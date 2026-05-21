@@ -14,6 +14,8 @@ Djot markup language support for WordPress. A modern, cleaner alternative to Mar
 
 Djot Markup adds support for the [Djot](https://djot.net/) markup language in WordPress. Djot is created by John MacFarlane (creator of CommonMark and Pandoc) and offers cleaner syntax with more consistent parsing rules than Markdown.
 
+https://www.youtube.com/watch?v=z0Nsjzp0gnw
+
 = Features =
 
 * **Full Djot Support**: Headings, emphasis, links, images, code blocks, tables, footnotes, and more

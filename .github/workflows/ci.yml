@@ -165,12 +165,18 @@ jobs:
           }
           JSON
 
+      # Pin the version so an upstream wp-env release can't break CI on an
+      # otherwise unchanged commit.
       - name: Start WordPress (wp-env)
-        run: npx @wordpress/env start
+        run: npx @wordpress/env@11.6.0 start
 
       - name: Run integration checks
-        run: npx @wordpress/env run cli wp eval-file wp-content/plugins/wp-djot/tests/integration/checks.php
+        run: |
+          # wp-env mounts the project at wp-content/plugins/<workspace basename>.
+          PLUGIN_SLUG="$(basename "$GITHUB_WORKSPACE")"
+          npx @wordpress/env@11.6.0 run cli \
+            wp eval-file "wp-content/plugins/${PLUGIN_SLUG}/tests/integration/checks.php"
 
       - name: Stop WordPress
         if: always()
-        run: npx @wordpress/env stop
+        run: npx @wordpress/env@11.6.0 stop

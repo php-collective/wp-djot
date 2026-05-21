@@ -134,7 +134,7 @@ class Converter
             tocMaxLevel: (int)($options['toc_max_level'] ?? 4),
             tocListType: $options['toc_list_type'] ?? 'ul',
             permalinksEnabled: !empty($options['permalinks_enabled']),
-            smartQuotesLocale: $options['smart_quotes_locale'] ?? 'en',
+            smartQuotesLocale: $options['smart_quotes_locale'] ?? 'auto',
             headingShift: (int)($options['heading_shift'] ?? 0),
             mermaidEnabled: !empty($options['mermaid_enabled']),
         );

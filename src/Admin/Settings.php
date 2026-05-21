@@ -660,7 +660,7 @@ class Settings
     {
         $options = get_option(self::OPTION_GROUP, []);
         $field = $args['field'];
-        $current = $options[$field] ?? 'en';
+        $current = $options[$field] ?? 'auto';
 
         $localeLabels = [
             'en' => "Default (English \u{201C}\u{2026}\u{201D} \u{2018}\u{2026}\u{2019})",

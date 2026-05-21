@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Require `php-collective/djot` `^0.1.27`. Auto-generated heading IDs are now transliterated to ASCII (e.g. `Über uns` → `Uber-uns`, `café` → `cafe`, `Привет` → `Privet`) so deep-link fragments survive being shared through auto-linkers that truncate or percent-mangle non-ASCII. Anchors for existing non-ASCII headings change — update any hardcoded in-page links.
+- Default the smart-quotes locale to `auto` (follow the WordPress site language) for new installs, instead of `en`. The `auto` option already existed; this only changes the default so non-English sites get correct quotes without manual configuration. Installs that already persisted a `smart_quotes_locale` value keep it (defaults only apply when the option is unset).
 - Tested up to WordPress 7.0.
 
 ### Fixed

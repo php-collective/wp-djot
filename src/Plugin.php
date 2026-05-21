@@ -490,7 +490,7 @@ class Plugin
             'toc_max_level' => 4,
             'toc_list_type' => 'ul',
             'permalinks_enabled' => false,
-            'smart_quotes_locale' => 'en',
+            'smart_quotes_locale' => 'auto',
             'visual_editor_mode' => 'disabled',
         ];
 

@@ -10,6 +10,24 @@ if (!defined('ABSPATH')) {
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 // Mock WordPress functions for testing
+if (!function_exists('get_option')) {
+    function get_option(string $key, mixed $default = false): mixed
+    {
+        global $wp_test_options;
+
+        return $wp_test_options[$key] ?? $default;
+    }
+}
+
+if (!function_exists('get_locale')) {
+    function get_locale(): string
+    {
+        global $wp_test_locale;
+
+        return $wp_test_locale ?? 'en_US';
+    }
+}
+
 if (!function_exists('get_post')) {
     function get_post(int $postId): ?object
     {

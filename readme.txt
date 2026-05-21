@@ -92,6 +92,7 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 = 1.5.14 =
 * Changed auto-generated heading anchor IDs to be transliterated to ASCII (e.g. "Über uns" becomes "Uber-uns", "café" becomes "cafe") so deep links survive being shared through chat, email, and other auto-linkers that mangle non-ASCII fragments. Note: anchors for existing non-ASCII headings change, so update any hardcoded in-page links.
+* Changed the smart-quotes default for new installs to "Auto (from site language)" so a non-English site gets the right typographic quotes out of the box. Existing sites that already saved a quote setting are unaffected.
 * Changed minimum djot-php library to 0.1.27.
 * Tested up to WordPress 7.0.
 

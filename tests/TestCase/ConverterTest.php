@@ -20,6 +20,14 @@ class ConverterTest extends TestCase
         $this->converter = new Converter(safeMode: false);
     }
 
+    protected function tearDown(): void
+    {
+        global $wp_test_options, $wp_test_locale;
+        $wp_test_options = null;
+        $wp_test_locale = null;
+        parent::tearDown();
+    }
+
     public function testPreservesInternalNewlines(): void
     {
         $djot = "# Heading\n\nParagraph 1\n\nParagraph 2";
@@ -495,6 +503,21 @@ class ConverterTest extends TestCase
         $html = $converter->convertComment('"Hallo"');
 
         // German quotes should also apply to comments
+        $this->assertStringContainsString("\u{201E}Hallo\u{201C}", $html);
+    }
+
+    public function testSmartQuotesDefaultsToSiteLocaleForFreshInstall(): void
+    {
+        global $wp_test_options, $wp_test_locale;
+        // Fresh install: no saved smart_quotes_locale; site language is German.
+        $wp_test_options = [];
+        $wp_test_locale = 'de_DE';
+
+        $converter = Converter::fromSettings();
+        $html = $converter->convertArticle('"Hallo"');
+
+        // The new default ('auto') follows the site language, so a German site
+        // gets German quotes without the admin picking a locale manually.
         $this->assertStringContainsString("\u{201E}Hallo\u{201C}", $html);
     }
 

@@ -145,7 +145,7 @@ jobs:
           SLUG: djot-markup
 
       - name: Upload release asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.deploy.outputs.zip-path }}
         env:

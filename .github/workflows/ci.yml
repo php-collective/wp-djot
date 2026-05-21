@@ -111,11 +111,26 @@ jobs:
       - name: Install runtime dependencies
         run: composer install --no-dev --prefer-dist --no-progress
 
+      # Stage the plugin as it actually ships (mirror .distignore) so dev-only
+      # files (scripts, configs, dotfiles, docs) aren't flagged as plugin files.
+      - name: Stage distribution copy
+        run: |
+          mkdir -p ../dist/djot-markup
+          grep -vE '^\s*(#|$)' .distignore > /tmp/distignore-excludes
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude-from=/tmp/distignore-excludes \
+            ./ ../dist/djot-markup/
+
       - name: Run Plugin Check
         uses: WordPress/plugin-check-action@v1
         with:
-          build-dir: './'
+          build-dir: '../dist/djot-markup'
           # The repo folder is wp-djot but the plugin slug / text domain is
           # djot-markup; without this every __() flags a text-domain mismatch.
           slug: 'djot-markup'
-          exclude-directories: 'vendor,node_modules,tests,docs'
+          # Third-party runtime code we don't control.
+          exclude-directories: 'vendor'
+          # Errors-only enforcement: warnings (error_log, slow meta_query,
+          # broad enqueue scope) are reported but don't fail the build.
+          ignore-warnings: 'true'

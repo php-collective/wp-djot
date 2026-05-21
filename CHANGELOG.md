@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.14] - 2026-05-21
+
+### Changed
+
+- Require `php-collective/djot` `^0.1.27`. Auto-generated heading IDs are now transliterated to ASCII (e.g. `Über uns` → `Uber-uns`, `café` → `cafe`, `Привет` → `Privet`) so deep-link fragments survive being shared through auto-linkers that truncate or percent-mangle non-ASCII. Anchors for existing non-ASCII headings change — update any hardcoded in-page links.
+- Default the smart-quotes locale to `auto` (follow the WordPress site language) for new installs, instead of `en`. The `auto` option already existed; this only changes the default so non-English sites get correct quotes without manual configuration. Installs that already persisted a `smart_quotes_locale` value keep it (defaults only apply when the option is unset).
+- Tested up to WordPress 7.0.
+
+### Fixed
+
+- The PHPUnit suite and PHPStan now actually execute. The `ABSPATH` direct-access guard in `src/functions.php` (registered under composer `autoload.files`) was terminating both tools during their autoload bootstrap, so they silently exited `0`. The guard is removed from that one file (other `src/` classes keep theirs; they are class-autoloaded after the WP entry point defines `ABSPATH`). A PHPUnit job was added to CI so this cannot regress unnoticed.
+
 ## [1.5.13] - 2026-04-13
 
 ### Changed

@@ -11,6 +11,8 @@ if (!defined('ABSPATH')) {
 
 use WP_CLI;
 use WpDjot\Migration\Migrator;
+use function WP_CLI\Utils\format_items;
+use function WP_CLI\Utils\make_progress_bar;
 
 /**
  * Migrate WordPress content to Djot format.
@@ -103,7 +105,7 @@ class MigrateCommand
         WP_CLI::log("Found {$total} posts, {$canMigrate} can be auto-migrated.");
         WP_CLI::log('');
 
-        WP_CLI\Utils\format_items($format, $results, [
+        format_items($format, $results, [
             'post_id',
             'complexity',
             'html',
@@ -218,7 +220,7 @@ class MigrateCommand
         $failed = 0;
         $skipped = 0;
 
-        $progress = WP_CLI\Utils\make_progress_bar('Migrating posts', $totalMigratable);
+        $progress = make_progress_bar('Migrating posts', $totalMigratable);
 
         foreach ($posts as $post) {
             $result = $this->migrator->migrate($post->ID, $dryRun, $force);
@@ -295,7 +297,7 @@ class MigrateCommand
         $success = 0;
         $failed = 0;
 
-        $progress = WP_CLI\Utils\make_progress_bar('Rolling back posts', $total);
+        $progress = make_progress_bar('Rolling back posts', $total);
 
         foreach ($posts as $post) {
             $result = $this->migrator->rollback($post->ID);
@@ -449,7 +451,7 @@ class MigrateCommand
         WP_CLI::log("Found {$total} comments to analyze.");
         WP_CLI::log('');
 
-        WP_CLI\Utils\format_items($format, $results, [
+        format_items($format, $results, [
             'comment_id',
             'complexity',
             'html',
@@ -530,7 +532,7 @@ class MigrateCommand
         $success = 0;
         $failed = 0;
 
-        $progress = WP_CLI\Utils\make_progress_bar('Migrating comments', $total);
+        $progress = make_progress_bar('Migrating comments', $total);
 
         foreach ($comments as $comment) {
             $result = $this->migrator->migrateComment($comment->comment_ID, $dryRun);
@@ -604,7 +606,7 @@ class MigrateCommand
         $success = 0;
         $failed = 0;
 
-        $progress = WP_CLI\Utils\make_progress_bar('Rolling back comments', $total);
+        $progress = make_progress_bar('Rolling back comments', $total);
 
         foreach ($comments as $comment) {
             $result = $this->migrator->rollbackComment($comment->comment_ID);

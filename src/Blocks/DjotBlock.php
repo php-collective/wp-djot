@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+use WP_Post;
 use WP_REST_Request;
 use WP_REST_Response;
 use WpDjot\Converter;
@@ -66,9 +67,10 @@ class DjotBlock
      *
      * @param \WP_REST_Response $response
      * @param \WP_Post $post
+     *
      * @return \WP_REST_Response
      */
-    public function migrateBlockNameInRest(\WP_REST_Response $response, \WP_Post $post): \WP_REST_Response
+    public function migrateBlockNameInRest(WP_REST_Response $response, WP_Post $post): WP_REST_Response
     {
         $data = $response->get_data();
 
@@ -276,7 +278,7 @@ class DjotBlock
     /**
      * Render Djot content for preview.
      *
-     * @param WP_REST_Request $request Request with 'content' and optional 'context' params.
+     * @param \WP_REST_Request $request Request with 'content' and optional 'context' params.
      *        context='editor' returns clean HTML without TOC/permalinks for visual editor.
      */
     public function renderPreview(WP_REST_Request $request): WP_REST_Response

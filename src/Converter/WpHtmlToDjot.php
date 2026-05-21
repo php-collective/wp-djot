@@ -98,5 +98,4 @@ class WpHtmlToDjot extends HtmlToDjot
         // Escape quotes and backslashes
         return str_replace(['\\', '"'], ['\\\\', '\\"'], $value);
     }
-
 }

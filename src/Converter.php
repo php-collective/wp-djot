@@ -107,9 +107,9 @@ class Converter
         $this->headingShift = $headingShift;
         $this->mermaidEnabled = $mermaidEnabled;
         $this->converter = new DjotConverter(safeMode: false);
-        $this->converter->getRenderer()->setCodeBlockTabWidth(4);
+        $this->converter->getHtmlRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
-        $this->safeConverter->getRenderer()->setCodeBlockTabWidth(4);
+        $this->safeConverter->getHtmlRenderer()->setCodeBlockTabWidth(4);
     }
 
     /**
@@ -134,8 +134,8 @@ class Converter
             tocMaxLevel: (int)($options['toc_max_level'] ?? 4),
             tocListType: $options['toc_list_type'] ?? 'ul',
             permalinksEnabled: !empty($options['permalinks_enabled']),
-            smartQuotesLocale: $options['smart_quotes_locale'] ?? 'en',
-            headingShift: (int) ($options['heading_shift'] ?? 0),
+            smartQuotesLocale: $options['smart_quotes_locale'] ?? 'auto',
+            headingShift: (int)($options['heading_shift'] ?? 0),
             mermaidEnabled: !empty($options['mermaid_enabled']),
         );
     }
@@ -155,7 +155,11 @@ class Converter
             ? '_toc_' . $this->tocPosition . '_' . $this->tocMinLevel . '_' . $this->tocMaxLevel . '_' . $this->tocListType
             : '';
         $permalinksKey = ($this->permalinksEnabled && $context === 'article') ? '_permalinks' : '';
-        $smartQuotesKey = $this->smartQuotesLocale !== 'en' ? '_sq_' . $this->smartQuotesLocale : '';
+        // Resolve 'auto' to the active site locale up front so the cache key reflects
+        // the locale actually used. Otherwise a switch_to_locale() between conversions
+        // in one request would reuse the first locale's cached converter.
+        $smartQuotesLocale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
+        $smartQuotesKey = $smartQuotesLocale !== 'en' ? '_sq_' . $smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
         $mermaidKey = $this->mermaidEnabled ? '_mermaid' : '';
         $roundTripKey = $roundTripMode ? '_rt' : '';
@@ -205,12 +209,12 @@ class Converter
             );
 
             // Convert tabs to 4 spaces in code blocks for consistent display
-            $converter->getRenderer()->setCodeBlockTabWidth(4);
+            $converter->getHtmlRenderer()->setCodeBlockTabWidth(4);
 
             // Enable round-trip mode only for visual editor (excerpt context)
             // This outputs data-djot-* attributes that preserve source syntax
             if ($roundTripMode) {
-                $converter->getRenderer()->setRoundTripMode(true);
+                $converter->getHtmlRenderer()->setRoundTripMode(true);
             }
 
             // Add Table of Contents extension for articles when enabled
@@ -247,9 +251,8 @@ class Converter
             }
 
             // Add smart quotes extension for non-English locales
-            if ($this->smartQuotesLocale !== 'en') {
-                $locale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
-                $converter->addExtension(new SmartQuotesExtension(locale: $locale));
+            if ($smartQuotesLocale !== 'en') {
+                $converter->addExtension(new SmartQuotesExtension(locale: $smartQuotesLocale));
             }
 
             // Apply heading level shift (h1 → h2, etc.)
@@ -361,13 +364,15 @@ class Converter
                 strict: false,
             );
             $html = $lenient->convert($djot);
-            $warnings = [new ParseWarning(
-                $e->getMessage(),
-                $e->getSourceLine(),
-                $e->getSourceColumn(),
-                'fatal',
-                null,
-            )];
+            $warnings = [
+                new ParseWarning(
+                    $e->getMessage(),
+                    $e->getSourceLine(),
+                    $e->getSourceColumn(),
+                    'fatal',
+                    null,
+                ),
+            ];
         }
 
         $html = $this->prependWarningBanner($html, $warnings);
@@ -425,6 +430,7 @@ class Converter
      * Regular visitors see nothing. Warnings are also written to the PHP error log
      * (debug.log when WP_DEBUG_LOG is on) so they can be grepped server-side.
      *
+     * @param string $html
      * @param list<\Djot\Exception\ParseWarning> $warnings
      */
     private function prependWarningBanner(string $html, array $warnings): string

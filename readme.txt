@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.5.13
+Stable tag: 1.5.14
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -89,6 +89,12 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 3. Rendered output with syntax highlighting
 
 == Changelog ==
+
+= 1.5.14 =
+* Changed auto-generated heading anchor IDs to be transliterated to ASCII (e.g. "Über uns" becomes "Uber-uns", "café" becomes "cafe") so deep links survive being shared through chat, email, and other auto-linkers that mangle non-ASCII fragments. Note: anchors for existing non-ASCII headings change, so update any hardcoded in-page links.
+* Changed the smart-quotes default for new installs to "Auto (from site language)" so a non-English site gets the right typographic quotes out of the box. Existing sites that already saved a quote setting are unaffected.
+* Changed minimum djot-php library to 0.1.27.
+* Tested up to WordPress 7.0.
 
 = 1.5.13 =
 * Fixed shell/bash code blocks flooding the error log with PCRE lookbehind compile warnings by upgrading torchlight/engine to ^1.0 (pulls phiki 2.x, which tokenizes with Oniguruma instead of PCRE)

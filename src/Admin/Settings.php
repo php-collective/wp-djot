@@ -359,8 +359,8 @@ class Settings
                 ? $input['comment_profile']
                 : 'comment',
             'shortcode_tag' => sanitize_key($input['shortcode_tag'] ?? 'djot'),
-            'heading_shift' => in_array((int) ($input['heading_shift'] ?? 0), [0, 1, 2], true)
-                ? (int) $input['heading_shift']
+            'heading_shift' => in_array((int)($input['heading_shift'] ?? 0), [0, 1, 2], true)
+                ? (int)$input['heading_shift']
                 : 0,
             'mermaid_enabled' => !empty($input['mermaid_enabled']),
             'markdown_mode' => !empty($input['markdown_mode']),
@@ -621,7 +621,7 @@ class Settings
     {
         $options = get_option(self::OPTION_GROUP, []);
         $field = $args['field'];
-        $current = (int) ($options[$field] ?? 0);
+        $current = (int)($options[$field] ?? 0);
 
         $shifts = [
             0 => __('None (h1 stays h1)', 'djot-markup'),
@@ -638,7 +638,7 @@ class Settings
         foreach ($shifts as $value => $label) {
             printf(
                 '<option value="%s" %s>%s</option>',
-                esc_attr((string) $value),
+                esc_attr((string)$value),
                 selected($current, $value, false),
                 esc_html($label),
             );
@@ -660,7 +660,7 @@ class Settings
     {
         $options = get_option(self::OPTION_GROUP, []);
         $field = $args['field'];
-        $current = $options[$field] ?? 'en';
+        $current = $options[$field] ?? 'auto';
 
         $localeLabels = [
             'en' => "Default (English \u{201C}\u{2026}\u{201D} \u{2018}\u{2026}\u{2019})",

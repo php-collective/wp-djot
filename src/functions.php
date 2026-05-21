@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 /**
  * Template tags and helper functions for WP Djot.
- *
- * Loaded via composer's `autoload.files`, so the WP-style ABSPATH guard is
- * intentionally omitted: composer-mediated files are not URL-reachable, and
- * the guard otherwise terminates phpunit/phpstan during their autoload boot.
  *
  * @package WpDjot
  */

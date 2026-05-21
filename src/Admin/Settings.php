@@ -771,10 +771,10 @@ class Settings
 
         for ($level = 1; $level <= 6; $level++) {
             printf(
-                '<option value="%d" %s>H%d</option>',
-                $level,
+                '<option value="%s" %s>H%s</option>',
+                esc_attr((string)$level),
                 selected((int)$current, $level, false),
-                $level,
+                esc_html((string)$level),
             );
         }
 

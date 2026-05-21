@@ -144,9 +144,9 @@ class DjotBlock
         if (!empty($options['mermaid_enabled'])) {
             wp_enqueue_script(
                 'mermaid',
-                'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js',
+                WPDJOT_PLUGIN_URL . 'assets/js/vendor/mermaid.min.js',
                 [],
-                '11',
+                '11.15.0',
                 true,
             );
 

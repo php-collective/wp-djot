@@ -84,251 +84,193 @@ class Settings
             ],
         );
 
-        // Content Settings Section
-        add_settings_section(
-            'wpdjot_content',
-            __('Content Settings', 'djot-markup'),
-            [$this, 'renderContentSectionDescription'],
-            self::PAGE_SLUG,
-        );
+        foreach ($this->settingsSections() as $section) {
+            add_settings_section(
+                $section['id'],
+                $section['title'],
+                $section['description'],
+                self::PAGE_SLUG,
+            );
 
-        add_settings_field(
-            'enable_posts',
-            __('Enable for Posts', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_content',
-            ['field' => 'enable_posts', 'description' => __('Process Djot markup in blog posts.', 'djot-markup')],
-        );
+            foreach ($section['fields'] as $fieldId => $field) {
+                add_settings_field(
+                    $fieldId,
+                    $field['label'],
+                    $field['render'],
+                    self::PAGE_SLUG,
+                    $section['id'],
+                    ['field' => $fieldId, 'description' => $field['description']],
+                );
+            }
+        }
+    }
 
-        add_settings_field(
-            'enable_pages',
-            __('Enable for Pages', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_content',
-            ['field' => 'enable_pages', 'description' => __('Process Djot markup in pages.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'enable_comments',
-            __('Enable for Comments', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_content',
-            ['field' => 'enable_comments', 'description' => __('Process Djot markup in comments (always uses safe mode).', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'process_full_content',
-            __('Process Full Content', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_content',
-            ['field' => 'process_full_content', 'description' => __('Process entire post/page content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'process_full_comments',
-            __('Process Full Comments', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_content',
-            ['field' => 'process_full_comments', 'description' => __('Process entire comment content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'djot-markup')],
-        );
-
-        // Security Settings Section
-        add_settings_section(
-            'wpdjot_security',
-            __('Security Settings', 'djot-markup'),
-            [$this, 'renderSecuritySectionDescription'],
-            self::PAGE_SLUG,
-        );
-
-        add_settings_field(
-            'safe_mode',
-            __('Safe Mode', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_security',
-            ['field' => 'safe_mode', 'description' => __('Block dangerous URL schemes and strip event handlers. Recommended for untrusted content.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'post_profile',
-            __('Posts/Pages Profile', 'djot-markup'),
-            [$this, 'renderProfileSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_security',
-            ['field' => 'post_profile', 'description' => __('Feature restrictions for posts and pages.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'comment_profile',
-            __('Comments Profile', 'djot-markup'),
-            [$this, 'renderProfileSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_security',
-            ['field' => 'comment_profile', 'description' => __('Feature restrictions for user comments.', 'djot-markup')],
-        );
-
-        // Rendering Settings Section
-        add_settings_section(
-            'wpdjot_rendering',
-            __('Rendering Settings', 'djot-markup'),
-            [$this, 'renderRenderingSectionDescription'],
-            self::PAGE_SLUG,
-        );
-
-        add_settings_field(
-            'markdown_mode',
-            __('Markdown Compatibility', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_rendering',
-            ['field' => 'markdown_mode', 'description' => __('Enable Markdown-like behavior: single line breaks become visible, and blocks can interrupt paragraphs without blank lines.', 'djot-markup') . '<br>' . __('Recommended for users migrating from Markdown without having migrated their texts yet.', 'djot-markup') . '<br><strong>' . __('Warning: This deviates from the Djot specification.', 'djot-markup') . '</strong>'],
-        );
-
-        add_settings_field(
-            'post_soft_break',
-            __('Posts/Pages Line Breaks', 'djot-markup'),
-            [$this, 'renderSoftBreakSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_rendering',
-            ['field' => 'post_soft_break', 'description' => __('How single line breaks are rendered in posts and pages.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'comment_soft_break',
-            __('Comment Line Breaks', 'djot-markup'),
-            [$this, 'renderSoftBreakSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_rendering',
-            ['field' => 'comment_soft_break', 'description' => __('How single line breaks are rendered in comments.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'smart_quotes_locale',
-            __('Smart Quotes', 'djot-markup'),
-            [$this, 'renderSmartQuotesLocaleSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_rendering',
-            ['field' => 'smart_quotes_locale', 'description' => __('Choose which typographic quote characters to use. Default English uses curly quotes.', 'djot-markup')],
-        );
-
-        // Advanced Settings Section
-        add_settings_section(
-            'wpdjot_advanced',
-            __('Advanced Settings', 'djot-markup'),
-            [$this, 'renderAdvancedSectionDescription'],
-            self::PAGE_SLUG,
-        );
-
-        add_settings_field(
-            'shortcode_tag',
-            __('Shortcode Tag', 'djot-markup'),
-            [$this, 'renderTextField'],
-            self::PAGE_SLUG,
-            'wpdjot_advanced',
-            ['field' => 'shortcode_tag', 'description' => __('The shortcode tag to use (default: djot).', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'heading_shift',
-            __('Heading Level Shift', 'djot-markup'),
-            [$this, 'renderHeadingShiftSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_advanced',
-            ['field' => 'heading_shift', 'description' => __('Shift heading levels down. Useful when h1 is reserved for page title.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'mermaid_enabled',
-            __('Mermaid Diagrams', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_advanced',
-            ['field' => 'mermaid_enabled', 'description' => __('Enable Mermaid.js diagram rendering from code blocks.', 'djot-markup') . '<br><code>``` mermaid</code> ' . __('blocks will be rendered as diagrams.', 'djot-markup')],
-        );
-
-        // Table of Contents Section
-        add_settings_section(
-            'wpdjot_toc',
-            __('Table of Contents', 'djot-markup'),
-            [$this, 'renderTocSectionDescription'],
-            self::PAGE_SLUG,
-        );
-
-        add_settings_field(
-            'toc_enabled',
-            __('Enable TOC', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_toc',
-            ['field' => 'toc_enabled', 'description' => __('Automatically generate a table of contents from headings in posts and pages.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'toc_position',
-            __('TOC Position', 'djot-markup'),
-            [$this, 'renderTocPositionSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_toc',
-            ['field' => 'toc_position', 'description' => __('Where to insert the table of contents.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'toc_min_level',
-            __('Minimum Heading Level', 'djot-markup'),
-            [$this, 'renderHeadingLevelSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_toc',
-            ['field' => 'toc_min_level', 'description' => __('Include headings starting from this level (default: 2 to skip page title).', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'toc_max_level',
-            __('Maximum Heading Level', 'djot-markup'),
-            [$this, 'renderHeadingLevelSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_toc',
-            ['field' => 'toc_max_level', 'description' => __('Include headings up to this level.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'toc_list_type',
-            __('TOC List Type', 'djot-markup'),
-            [$this, 'renderTocListTypeSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_toc',
-            ['field' => 'toc_list_type', 'description' => __('Use ordered (numbered) or unordered (bulleted) list.', 'djot-markup')],
-        );
-
-        add_settings_field(
-            'permalinks_enabled',
-            __('Heading Permalinks', 'djot-markup'),
-            [$this, 'renderCheckboxField'],
-            self::PAGE_SLUG,
-            'wpdjot_toc',
-            ['field' => 'permalinks_enabled', 'description' => __('Add clickable # symbols to headings. Shown on hover, clicking copies the heading URL to clipboard.', 'djot-markup')],
-        );
-
-        // Experimental Settings Section
-        add_settings_section(
-            'wpdjot_experimental',
-            __('Experimental', 'djot-markup'),
-            [$this, 'renderExperimentalSectionDescription'],
-            self::PAGE_SLUG,
-        );
-
-        add_settings_field(
-            'visual_editor_mode',
-            __('Visual Editor', 'djot-markup'),
-            [$this, 'renderVisualEditorModeSelect'],
-            self::PAGE_SLUG,
-            'wpdjot_experimental',
-            ['field' => 'visual_editor_mode', 'description' => __('Enable the WYSIWYG visual editor for Djot blocks.', 'djot-markup') . '<br><em>' . __('Note: Some edge cases may not round-trip perfectly. Verify in Write mode for critical content.', 'djot-markup') . '</em>'],
-        );
+    /**
+     * Settings sections and their fields, driving registration above.
+     *
+     * @return array<int, array{
+     *     id: string,
+     *     title: string,
+     *     description: callable,
+     *     fields: array<string, array{label: string, render: callable, description: string}>
+     * }>
+     */
+    private function settingsSections(): array
+    {
+        return [
+            [
+                'id' => 'wpdjot_content',
+                'title' => __('Content Settings', 'djot-markup'),
+                'description' => [$this, 'renderContentSectionDescription'],
+                'fields' => [
+                    'enable_posts' => [
+                        'label' => __('Enable for Posts', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Process Djot markup in blog posts.', 'djot-markup'),
+                    ],
+                    'enable_pages' => [
+                        'label' => __('Enable for Pages', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Process Djot markup in pages.', 'djot-markup'),
+                    ],
+                    'enable_comments' => [
+                        'label' => __('Enable for Comments', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Process Djot markup in comments (always uses safe mode).', 'djot-markup'),
+                    ],
+                    'process_full_content' => [
+                        'label' => __('Process Full Content', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Process entire post/page content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'djot-markup'),
+                    ],
+                    'process_full_comments' => [
+                        'label' => __('Process Full Comments', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Process entire comment content as Djot. When disabled, only {djot}...{/djot} blocks are processed.', 'djot-markup'),
+                    ],
+                ],
+            ],
+            [
+                'id' => 'wpdjot_security',
+                'title' => __('Security Settings', 'djot-markup'),
+                'description' => [$this, 'renderSecuritySectionDescription'],
+                'fields' => [
+                    'safe_mode' => [
+                        'label' => __('Safe Mode', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Block dangerous URL schemes and strip event handlers. Recommended for untrusted content.', 'djot-markup'),
+                    ],
+                    'post_profile' => [
+                        'label' => __('Posts/Pages Profile', 'djot-markup'),
+                        'render' => [$this, 'renderProfileSelect'],
+                        'description' => __('Feature restrictions for posts and pages.', 'djot-markup'),
+                    ],
+                    'comment_profile' => [
+                        'label' => __('Comments Profile', 'djot-markup'),
+                        'render' => [$this, 'renderProfileSelect'],
+                        'description' => __('Feature restrictions for user comments.', 'djot-markup'),
+                    ],
+                ],
+            ],
+            [
+                'id' => 'wpdjot_rendering',
+                'title' => __('Rendering Settings', 'djot-markup'),
+                'description' => [$this, 'renderRenderingSectionDescription'],
+                'fields' => [
+                    'markdown_mode' => [
+                        'label' => __('Markdown Compatibility', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Enable Markdown-like behavior: single line breaks become visible, and blocks can interrupt paragraphs without blank lines.', 'djot-markup') . '<br>' . __('Recommended for users migrating from Markdown without having migrated their texts yet.', 'djot-markup') . '<br><strong>' . __('Warning: This deviates from the Djot specification.', 'djot-markup') . '</strong>',
+                    ],
+                    'post_soft_break' => [
+                        'label' => __('Posts/Pages Line Breaks', 'djot-markup'),
+                        'render' => [$this, 'renderSoftBreakSelect'],
+                        'description' => __('How single line breaks are rendered in posts and pages.', 'djot-markup'),
+                    ],
+                    'comment_soft_break' => [
+                        'label' => __('Comment Line Breaks', 'djot-markup'),
+                        'render' => [$this, 'renderSoftBreakSelect'],
+                        'description' => __('How single line breaks are rendered in comments.', 'djot-markup'),
+                    ],
+                    'smart_quotes_locale' => [
+                        'label' => __('Smart Quotes', 'djot-markup'),
+                        'render' => [$this, 'renderSmartQuotesLocaleSelect'],
+                        'description' => __('Choose which typographic quote characters to use. Default English uses curly quotes.', 'djot-markup'),
+                    ],
+                ],
+            ],
+            [
+                'id' => 'wpdjot_advanced',
+                'title' => __('Advanced Settings', 'djot-markup'),
+                'description' => [$this, 'renderAdvancedSectionDescription'],
+                'fields' => [
+                    'shortcode_tag' => [
+                        'label' => __('Shortcode Tag', 'djot-markup'),
+                        'render' => [$this, 'renderTextField'],
+                        'description' => __('The shortcode tag to use (default: djot).', 'djot-markup'),
+                    ],
+                    'heading_shift' => [
+                        'label' => __('Heading Level Shift', 'djot-markup'),
+                        'render' => [$this, 'renderHeadingShiftSelect'],
+                        'description' => __('Shift heading levels down. Useful when h1 is reserved for page title.', 'djot-markup'),
+                    ],
+                    'mermaid_enabled' => [
+                        'label' => __('Mermaid Diagrams', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Enable Mermaid.js diagram rendering from code blocks.', 'djot-markup') . '<br><code>``` mermaid</code> ' . __('blocks will be rendered as diagrams.', 'djot-markup'),
+                    ],
+                ],
+            ],
+            [
+                'id' => 'wpdjot_toc',
+                'title' => __('Table of Contents', 'djot-markup'),
+                'description' => [$this, 'renderTocSectionDescription'],
+                'fields' => [
+                    'toc_enabled' => [
+                        'label' => __('Enable TOC', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Automatically generate a table of contents from headings in posts and pages.', 'djot-markup'),
+                    ],
+                    'toc_position' => [
+                        'label' => __('TOC Position', 'djot-markup'),
+                        'render' => [$this, 'renderTocPositionSelect'],
+                        'description' => __('Where to insert the table of contents.', 'djot-markup'),
+                    ],
+                    'toc_min_level' => [
+                        'label' => __('Minimum Heading Level', 'djot-markup'),
+                        'render' => [$this, 'renderHeadingLevelSelect'],
+                        'description' => __('Include headings starting from this level (default: 2 to skip page title).', 'djot-markup'),
+                    ],
+                    'toc_max_level' => [
+                        'label' => __('Maximum Heading Level', 'djot-markup'),
+                        'render' => [$this, 'renderHeadingLevelSelect'],
+                        'description' => __('Include headings up to this level.', 'djot-markup'),
+                    ],
+                    'toc_list_type' => [
+                        'label' => __('TOC List Type', 'djot-markup'),
+                        'render' => [$this, 'renderTocListTypeSelect'],
+                        'description' => __('Use ordered (numbered) or unordered (bulleted) list.', 'djot-markup'),
+                    ],
+                    'permalinks_enabled' => [
+                        'label' => __('Heading Permalinks', 'djot-markup'),
+                        'render' => [$this, 'renderCheckboxField'],
+                        'description' => __('Add clickable # symbols to headings. Shown on hover, clicking copies the heading URL to clipboard.', 'djot-markup'),
+                    ],
+                ],
+            ],
+            [
+                'id' => 'wpdjot_experimental',
+                'title' => __('Experimental', 'djot-markup'),
+                'description' => [$this, 'renderExperimentalSectionDescription'],
+                'fields' => [
+                    'visual_editor_mode' => [
+                        'label' => __('Visual Editor', 'djot-markup'),
+                        'render' => [$this, 'renderVisualEditorModeSelect'],
+                        'description' => __('Enable the WYSIWYG visual editor for Djot blocks.', 'djot-markup') . '<br><em>' . __('Note: Some edge cases may not round-trip perfectly. Verify in Write mode for critical content.', 'djot-markup') . '</em>',
+                    ],
+                ],
+            ],
+        ];
     }
 
     /**

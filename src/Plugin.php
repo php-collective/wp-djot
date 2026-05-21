@@ -101,7 +101,7 @@ class Plugin
     public function customizeConverter(DjotConverter $converter, string $context): DjotConverter
     {
         // Video embed support - convert image syntax with video URLs to oEmbed
-        $converter->getRenderer()->on('render.image', function (RenderEvent $event): void {
+        $converter->on('render.image', function (RenderEvent $event): void {
             $this->handleVideoEmbed($event);
         });
 

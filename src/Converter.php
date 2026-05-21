@@ -107,9 +107,9 @@ class Converter
         $this->headingShift = $headingShift;
         $this->mermaidEnabled = $mermaidEnabled;
         $this->converter = new DjotConverter(safeMode: false);
-        $this->converter->getRenderer()->setCodeBlockTabWidth(4);
+        $this->converter->getHtmlRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
-        $this->safeConverter->getRenderer()->setCodeBlockTabWidth(4);
+        $this->safeConverter->getHtmlRenderer()->setCodeBlockTabWidth(4);
     }
 
     /**
@@ -205,12 +205,12 @@ class Converter
             );
 
             // Convert tabs to 4 spaces in code blocks for consistent display
-            $converter->getRenderer()->setCodeBlockTabWidth(4);
+            $converter->getHtmlRenderer()->setCodeBlockTabWidth(4);
 
             // Enable round-trip mode only for visual editor (excerpt context)
             // This outputs data-djot-* attributes that preserve source syntax
             if ($roundTripMode) {
-                $converter->getRenderer()->setRoundTripMode(true);
+                $converter->getHtmlRenderer()->setRoundTripMode(true);
             }
 
             // Add Table of Contents extension for articles when enabled

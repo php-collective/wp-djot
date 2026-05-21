@@ -322,17 +322,22 @@ class ConverterTest extends TestCase
         $this->assertStringNotContainsString('&lt;b&gt;', $html);
     }
 
-    public function testArticleProfileEscapesRawHtml(): void
+    public function testArticleProfileStripsRawHtml(): void
     {
         $converter = new Converter(
             safeMode: false,
             postProfile: 'article',
         );
 
-        $html = $converter->convertArticle('`<b>bold</b>`{=html}');
+        // Article profile disallows raw HTML; disallowed nodes are stripped
+        // (not escaped), so the live tag never reaches output and no escaped
+        // text is shown either. Surrounding content is preserved.
+        $html = $converter->convertArticle('Hello `<b>bold</b>`{=html} world');
 
-        $this->assertStringContainsString('&lt;b&gt;', $html);
+        $this->assertStringContainsString('Hello', $html);
+        $this->assertStringContainsString('world', $html);
         $this->assertStringNotContainsString('<b>bold</b>', $html);
+        $this->assertStringNotContainsString('&lt;b&gt;', $html);
     }
 
     public function testCommentsNeverAllowRawHtml(): void
@@ -402,16 +407,18 @@ class ConverterTest extends TestCase
 
     public function testMarkdownModeEnabled(): void
     {
+        // Markdown mode makes a single newline a soft break (significantNewlines);
+        // rendering it as a visible <br> is the separate post_soft_break knob.
+        // The two are decoupled, so both must be set for line breaks to show.
         $converter = new Converter(
             safeMode: false,
             postProfile: 'article',
             commentProfile: 'comment',
-            postSoftBreak: 'newline',
+            postSoftBreak: 'br',
             commentSoftBreak: 'newline',
             markdownMode: true,
         );
 
-        // In markdown mode, single line breaks become <br>
         $html = $converter->convertArticle("Line 1\nLine 2");
 
         $this->assertStringContainsString('<br', $html);

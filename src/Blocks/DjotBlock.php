@@ -9,11 +9,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+use Djot\Converter\HtmlToDjot;
 use WP_Post;
 use WP_REST_Request;
 use WP_REST_Response;
 use WpDjot\Converter;
-use WpDjot\Converter\WpHtmlToDjot;
 use WpDjot\Converter\WpMarkdownToDjot;
 
 /**
@@ -353,7 +353,7 @@ class DjotBlock
             return new WP_REST_Response(['djot' => ''], 200);
         }
 
-        $converter = new WpHtmlToDjot();
+        $converter = new HtmlToDjot();
         $djot = $converter->convert($content);
 
         return new WP_REST_Response(['djot' => $djot], 200);

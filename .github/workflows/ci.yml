@@ -134,3 +134,43 @@ jobs:
           # Errors-only enforcement: warnings (error_log, slow meta_query,
           # broad enqueue scope) are reported but don't fail the build.
           ignore-warnings: 'true'
+
+  integration:
+    name: WP Integration
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      # The plugin loads its runtime deps from vendor/, so install them before
+      # wp-env mounts the directory as an active plugin.
+      - name: Install runtime dependencies
+        run: composer install --no-dev --prefer-dist --no-progress
+
+      # Written here rather than committed: a repo-root .wp-env.json would be
+      # picked up by the Plugin Check job and break its dist-scanning config.
+      - name: Write wp-env config
+        run: |
+          cat > .wp-env.json <<'JSON'
+          {
+            "plugins": ["."],
+            "phpVersion": "8.3",
+            "config": { "WP_DEBUG": true, "WP_DEBUG_DISPLAY": false }
+          }
+          JSON
+
+      - name: Start WordPress (wp-env)
+        run: npx @wordpress/env start
+
+      - name: Run integration checks
+        run: npx @wordpress/env run cli wp eval-file wp-content/plugins/wp-djot/tests/integration/checks.php
+
+      - name: Stop WordPress
+        if: always()
+        run: npx @wordpress/env stop

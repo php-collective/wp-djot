@@ -155,7 +155,11 @@ class Converter
             ? '_toc_' . $this->tocPosition . '_' . $this->tocMinLevel . '_' . $this->tocMaxLevel . '_' . $this->tocListType
             : '';
         $permalinksKey = ($this->permalinksEnabled && $context === 'article') ? '_permalinks' : '';
-        $smartQuotesKey = $this->smartQuotesLocale !== 'en' ? '_sq_' . $this->smartQuotesLocale : '';
+        // Resolve 'auto' to the active site locale up front so the cache key reflects
+        // the locale actually used. Otherwise a switch_to_locale() between conversions
+        // in one request would reuse the first locale's cached converter.
+        $smartQuotesLocale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
+        $smartQuotesKey = $smartQuotesLocale !== 'en' ? '_sq_' . $smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
         $mermaidKey = $this->mermaidEnabled ? '_mermaid' : '';
         $roundTripKey = $roundTripMode ? '_rt' : '';
@@ -247,9 +251,8 @@ class Converter
             }
 
             // Add smart quotes extension for non-English locales
-            if ($this->smartQuotesLocale !== 'en') {
-                $locale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
-                $converter->addExtension(new SmartQuotesExtension(locale: $locale));
+            if ($smartQuotesLocale !== 'en') {
+                $converter->addExtension(new SmartQuotesExtension(locale: $smartQuotesLocale));
             }
 
             // Apply heading level shift (h1 → h2, etc.)

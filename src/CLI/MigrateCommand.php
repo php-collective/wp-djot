@@ -11,6 +11,8 @@ if (!defined('ABSPATH')) {
 
 use WP_CLI;
 use WpDjot\Migration\Migrator;
+use function WP_CLI\Utils\format_items;
+use function WP_CLI\Utils\make_progress_bar;
 
 /**
  * Migrate WordPress content to Djot format.

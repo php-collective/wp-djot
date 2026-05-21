@@ -521,6 +521,27 @@ class ConverterTest extends TestCase
         $this->assertStringContainsString("\u{201E}Hallo\u{201C}", $html);
     }
 
+    public function testSmartQuotesAutoRebuildsAfterLocaleSwitch(): void
+    {
+        global $wp_test_locale;
+        $converter = new Converter(
+            safeMode: false,
+            postProfile: 'article',
+            smartQuotesLocale: 'auto',
+        );
+
+        $wp_test_locale = 'de_DE';
+        $de = $converter->convertArticle('"Hallo"');
+        $this->assertStringContainsString("\u{201E}Hallo\u{201C}", $de);
+
+        // A locale switch within the same request (e.g. switch_to_locale()) must
+        // produce the new locale's quotes, not the cached first-locale converter.
+        $wp_test_locale = 'fr_FR';
+        $fr = $converter->convertArticle('"Bonjour"');
+        $this->assertStringContainsString("\u{00AB}", $fr);
+        $this->assertStringNotContainsString("\u{201E}", $fr);
+    }
+
     public function testCodeBlockFilename(): void
     {
         // Use convertArticle() which has TorchlightExtension with filename support

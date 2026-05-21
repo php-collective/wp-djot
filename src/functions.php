@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+// Prevent direct web access. This file is composer-autoloaded, so the guard is
+// scoped to non-CLI SAPIs — otherwise it would terminate phpunit/phpstan during
+// their autoload boot (before a test bootstrap can define ABSPATH).
+if (!defined('ABSPATH') && PHP_SAPI !== 'cli') {
+    exit;
+}
+
 /**
  * Template tags and helper functions for WP Djot.
- *
- * Loaded via composer's `autoload.files`, so the WP-style ABSPATH guard is
- * intentionally omitted: composer-mediated files are not URL-reachable, and
- * the guard otherwise terminates phpunit/phpstan during their autoload boot.
  *
  * @package WpDjot
  */

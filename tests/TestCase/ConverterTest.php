@@ -542,6 +542,20 @@ class ConverterTest extends TestCase
         $this->assertStringNotContainsString("\u{201E}", $fr);
     }
 
+    public function testTitlelessAbbrRendersAsPlainText(): void
+    {
+        // HtmlToDjot migrates a title-less <abbr> to [text]{abbr}; the semantic
+        // span renderer drops it to plain text (a title-less abbr is meaningless),
+        // so rendered output never leaks a <span abbr=""> wrapper or raw {abbr}.
+        $converter = new Converter(safeMode: false, postProfile: 'article');
+
+        $html = $converter->convertArticle('[CSS]{abbr}');
+
+        $this->assertStringContainsString('CSS', $html);
+        $this->assertStringNotContainsString('<span', $html);
+        $this->assertStringNotContainsString('{abbr}', $html);
+    }
+
     public function testCodeBlockFilename(): void
     {
         // Use convertArticle() which has TorchlightExtension with filename support

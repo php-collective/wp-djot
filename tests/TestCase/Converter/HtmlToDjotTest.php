@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace WpDjot\Test\TestCase\Converter;
 
+use Djot\Converter\HtmlToDjot;
 use PHPUnit\Framework\TestCase;
-use WpDjot\Converter\WpHtmlToDjot;
 
-class WpHtmlToDjotTest extends TestCase
+/**
+ * Pins the HTML to Djot conversion contract that the migrate command and the
+ * convert-html REST endpoint rely on. The conversion lives in djot-php; this
+ * guards wp-djot's features against regressions from library upgrades.
+ */
+class HtmlToDjotTest extends TestCase
 {
-    private WpHtmlToDjot $converter;
+    private HtmlToDjot $converter;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->converter = new WpHtmlToDjot();
+        $this->converter = new HtmlToDjot();
     }
 
     public function testKbd(): void
@@ -46,8 +51,9 @@ class WpHtmlToDjotTest extends TestCase
         $html = '<abbr>CSS</abbr>';
         $djot = $this->converter->convert($html);
 
-        // Without title, abbr is rendered as plain text
-        $this->assertSame("CSS\n", $djot);
+        // Title-less abbr is preserved as a flagged span so it round-trips back
+        // to <abbr> rather than losing the semantic element.
+        $this->assertSame("[CSS]{abbr}\n", $djot);
     }
 
     public function testDfn(): void

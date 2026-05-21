@@ -9,8 +9,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+use Djot\Converter\HtmlToDjot;
 use WP_Query;
-use WpDjot\Converter\WpHtmlToDjot;
 use WpDjot\Converter\WpMarkdownToDjot;
 
 /**
@@ -18,7 +18,7 @@ use WpDjot\Converter\WpMarkdownToDjot;
  */
 class Migrator
 {
-    private WpHtmlToDjot $htmlConverter;
+    private HtmlToDjot $htmlConverter;
 
     private WpMarkdownToDjot $markdownConverter;
 
@@ -35,7 +35,7 @@ class Migrator
 
     public function __construct()
     {
-        $this->htmlConverter = new WpHtmlToDjot();
+        $this->htmlConverter = new HtmlToDjot();
         $this->markdownConverter = new WpMarkdownToDjot();
     }
 

@@ -135,7 +135,7 @@ class Converter
             tocListType: $options['toc_list_type'] ?? 'ul',
             permalinksEnabled: !empty($options['permalinks_enabled']),
             smartQuotesLocale: $options['smart_quotes_locale'] ?? 'en',
-            headingShift: (int) ($options['heading_shift'] ?? 0),
+            headingShift: (int)($options['heading_shift'] ?? 0),
             mermaidEnabled: !empty($options['mermaid_enabled']),
         );
     }
@@ -361,13 +361,15 @@ class Converter
                 strict: false,
             );
             $html = $lenient->convert($djot);
-            $warnings = [new ParseWarning(
-                $e->getMessage(),
-                $e->getSourceLine(),
-                $e->getSourceColumn(),
-                'fatal',
-                null,
-            )];
+            $warnings = [
+                new ParseWarning(
+                    $e->getMessage(),
+                    $e->getSourceLine(),
+                    $e->getSourceColumn(),
+                    'fatal',
+                    null,
+                ),
+            ];
         }
 
         $html = $this->prependWarningBanner($html, $warnings);
@@ -425,6 +427,7 @@ class Converter
      * Regular visitors see nothing. Warnings are also written to the PHP error log
      * (debug.log when WP_DEBUG_LOG is on) so they can be grepped server-side.
      *
+     * @param string $html
      * @param list<\Djot\Exception\ParseWarning> $warnings
      */
     private function prependWarningBanner(string $html, array $warnings): string

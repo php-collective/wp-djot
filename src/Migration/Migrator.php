@@ -219,7 +219,7 @@ class Migrator
     /**
      * Get posts that can be migrated.
      *
-     * @param array{post_type?: (string | array<string>), limit?: int, offset?: int}|array $args
+     * @param array{post_type?: (string | array<string>), limit?: int, offset?: int} $args
      *
      * @return array<\WP_Post>
      */
@@ -545,7 +545,7 @@ class Migrator
     /**
      * Get comments that can be migrated.
      *
-     * @param array{limit?: int, offset?: int, post_id?: int}|array $args
+     * @param array{limit?: int, offset?: int, post_id?: int} $args
      *
      * @return array<\WP_Comment>
      */

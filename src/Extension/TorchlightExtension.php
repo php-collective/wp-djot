@@ -15,6 +15,7 @@ use Djot\Extension\ExtensionInterface;
 use Djot\Node\Block\CodeBlock;
 use Djot\Renderer\HtmlRenderer;
 use Djot\Util\StringUtil;
+use Throwable;
 use Torchlight\Engine\Engine;
 use Torchlight\Engine\Options;
 
@@ -134,7 +135,7 @@ class TorchlightExtension implements ExtensionInterface
             }
 
             $event->setHtml($html);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Fallback to basic rendering on error
             // Convert tabs to 4 spaces (matches djot-php HtmlRenderer default)
             $code = str_replace("\t", '    ', $code);
@@ -281,7 +282,7 @@ class TorchlightExtension implements ExtensionInterface
             $language = $matches[1];
             $lineNumbers = true;
             if (isset($matches[2])) {
-                $startLine = (int) $matches[2];
+                $startLine = (int)$matches[2];
             }
         }
 

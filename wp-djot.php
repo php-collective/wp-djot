@@ -43,6 +43,11 @@ if (!file_exists($wpdjot_autoloader)) {
 
 require_once $wpdjot_autoloader;
 
+// Template-tag helpers. Required explicitly (not via composer autoload.files)
+// so the file's ABSPATH guard never runs during the test/static-analysis
+// autoload boot, where it would terminate the process before ABSPATH exists.
+require_once WPDJOT_PLUGIN_DIR . 'src/functions.php';
+
 // Migrate settings from old option name (wp_djot_settings -> wpdjot_settings)
 add_action('plugins_loaded', static function (): void {
     $oldOption = get_option('wp_djot_settings');

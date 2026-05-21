@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-// Prevent direct web access. This file is composer-autoloaded, so the guard is
-// scoped to non-CLI SAPIs — otherwise it would terminate phpunit/phpstan during
-// their autoload boot (before a test bootstrap can define ABSPATH).
-if (!defined('ABSPATH') && PHP_SAPI !== 'cli') {
+// Prevent direct access
+if (!defined('ABSPATH')) {
     exit;
 }
 

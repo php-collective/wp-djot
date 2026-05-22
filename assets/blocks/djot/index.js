@@ -2233,6 +2233,7 @@
                         )
                     ),
                     importType === 'markdown' && wp.element.createElement( 'p', { style: { marginTop: '12px', fontSize: '12px', color: '#666' } },
+                        // translators: Translate only the leading "Converts:" label. The Markdown/Djot syntax tokens (e.g. **bold**, _italic_, {=highlight=}) and the → arrows must stay unchanged.
                         __( 'Converts: **bold** → *bold*, *italic* → _italic_, ~~strike~~ → {~strike~}, ==highlight== → {=highlight=}', 'djot-markup' )
                     ),
                     wp.element.createElement(

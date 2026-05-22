@@ -517,6 +517,7 @@ class Settings
             ],
             'br' => [
                 'label' => __('Visible line break', 'djot-markup'),
+                /* translators: Keep the <br> HTML tag literal. */
                 'description' => __('Render as <br> tag. Useful for poetry, addresses, or preserving line breaks.', 'djot-markup'),
             ],
         ];

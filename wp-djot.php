@@ -34,6 +34,7 @@ $wpdjot_autoloader = WPDJOT_PLUGIN_DIR . 'vendor/autoload.php';
 if (!file_exists($wpdjot_autoloader)) {
     add_action('admin_notices', static function (): void {
         echo '<div class="notice notice-error"><p>';
+        /* translators: "composer install" is a literal shell command and must not be translated. */
         echo esc_html__('WP Djot: Please run "composer install" in the plugin directory.', 'djot-markup');
         echo '</p></div>';
     });

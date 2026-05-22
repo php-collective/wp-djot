@@ -28,3 +28,4 @@ composer.lock
 *.log
 *.tmp
 _*
+.wp-env.json

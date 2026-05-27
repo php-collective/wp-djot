@@ -119,21 +119,46 @@ jobs:
           grep -vE '^\s*(#|$)' .distignore > /tmp/distignore-excludes
           rsync -a --delete \
             --exclude='.git' \
+            --exclude='.wp-env*.json' \
             --exclude-from=/tmp/distignore-excludes \
             ./ ../dist/djot-markup/
 
+      - name: Write Plugin Check wp-env config
+        run: |
+          PLUGIN_DIR="$(realpath ../dist/djot-markup)"
+          cat > .wp-env.plugin-check.json <<JSON
+          {
+            "core": null,
+            "port": 8880,
+            "testsEnvironment": false,
+            "plugins": ["https://downloads.wordpress.org/plugin/plugin-check.zip"],
+            "mappings": {
+              "wp-content/plugins/djot-markup": "${PLUGIN_DIR}"
+            }
+          }
+          JSON
+
+      # Pin wp-env. WordPress/plugin-check-action@v1 installs the latest
+      # @wordpress/env internally, which has made push builds flaky.
+      - name: Start WordPress for Plugin Check
+        run: npx @wordpress/env@11.6.0 --config .wp-env.plugin-check.json start --update
+
       - name: Run Plugin Check
-        uses: WordPress/plugin-check-action@v1
-        with:
-          build-dir: '../dist/djot-markup'
-          # The repo folder is wp-djot but the plugin slug / text domain is
-          # djot-markup; without this every __() flags a text-domain mismatch.
-          slug: 'djot-markup'
-          # Third-party runtime code we don't control.
-          exclude-directories: 'vendor'
-          # Errors-only enforcement: warnings (error_log, slow meta_query,
-          # broad enqueue scope) are reported but don't fail the build.
-          ignore-warnings: 'true'
+        run: |
+          npx @wordpress/env@11.6.0 --config .wp-env.plugin-check.json run cli \
+            wp plugin activate djot-markup
+
+          npx @wordpress/env@11.6.0 --config .wp-env.plugin-check.json run cli \
+            wp plugin check djot-markup \
+              --format=json \
+              --ignore-warnings \
+              --exclude-directories=vendor \
+              --slug=djot-markup \
+              --require=./wp-content/plugins/plugin-check/cli.php
+
+      - name: Stop WordPress for Plugin Check
+        if: always()
+        run: npx @wordpress/env@11.6.0 --config .wp-env.plugin-check.json stop
 
   integration:
     name: WP Integration

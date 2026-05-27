@@ -1760,6 +1760,7 @@
                                 var result = [];
                                 var paragraph = [];
                                 var inFence = false;
+                                var fenceMarker = null;
                                 var inFrontmatter = false;
 
                                 function flushParagraph() {
@@ -1779,6 +1780,16 @@
                                     return true;
                                 }
 
+                                function isFenceOpener( line ) {
+                                    return line.match( /^\s*(`{3,}|~{3,})/ );
+                                }
+
+                                function isFenceCloser( line, marker ) {
+                                    if ( ! marker ) return false;
+                                    var pattern = marker.charAt( 0 ) === '`' ? '`' : '~';
+                                    return new RegExp( '^\\s*' + pattern + '{' + marker.length + ',}\\s*$' ).test( line );
+                                }
+
                                 lines.forEach( function( line, index ) {
                                     if ( index === 0 && /^---\w*\s*$/.test( line ) ) {
                                         flushParagraph();
@@ -1795,14 +1806,20 @@
                                         return;
                                     }
 
-                                    if ( /^(`{3,}|~{3,})/.test( line ) ) {
-                                        flushParagraph();
-                                        inFence = ! inFence;
+                                    if ( inFence ) {
                                         result.push( line );
+                                        if ( isFenceCloser( line, fenceMarker ) ) {
+                                            inFence = false;
+                                            fenceMarker = null;
+                                        }
                                         return;
                                     }
 
-                                    if ( inFence ) {
+                                    var fenceMatch = isFenceOpener( line );
+                                    if ( fenceMatch ) {
+                                        flushParagraph();
+                                        inFence = true;
+                                        fenceMarker = fenceMatch[1];
                                         result.push( line );
                                         return;
                                     }

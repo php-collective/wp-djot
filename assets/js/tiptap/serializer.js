@@ -47,10 +47,18 @@ export function serializeToDjot(doc) {
                 break;
 
             case 'paragraph':
+                if (canUseRoundTripSource(node)) {
+                    output += ensureTrailingNewline(node.attrs.djotSrc);
+                    break;
+                }
                 output += serializeInline(node.content) + '\n';
                 break;
 
             case 'heading':
+                if (canUseRoundTripSource(node)) {
+                    output += ensureTrailingNewline(node.attrs.djotSrc);
+                    break;
+                }
                 output += '#'.repeat(node.attrs?.level || 1) + ' ' + serializeInline(node.content) + '\n';
                 break;
 
@@ -105,7 +113,7 @@ export function serializeToDjot(doc) {
                     }
                 } else {
                     // Use languageRaw (with Torchlight options) if available, otherwise language
-                    const lang = node.attrs?.languageRaw || node.attrs?.language || '';
+                    const lang = String(node.attrs?.languageRaw || node.attrs?.language || '');
                     const codeContent = (node.content || []).map(c => c.text || '').join('');
                     // Find a safe fence that doesn't conflict with the content
                     const fence = findSafeCodeFence(codeContent);
@@ -363,7 +371,11 @@ export function serializeToDjot(doc) {
                         t = '[[' + (ref || t) + ']]';
                     }
                 } else if (link) {
-                    t = '[' + t + '](' + link.attrs.href + ')';
+                    if (link.attrs?.djotAutolink && text === link.attrs.href) {
+                        t = t.replace(text, '<' + text + '>');
+                    } else {
+                        t = '[' + t + '](' + link.attrs.href + ')';
+                    }
                 }
                 if (djotSpan) t = '[' + t + ']{.' + (djotSpan.attrs?.class || 'class') + '}';
                 if (kbd) t = '[' + t + ']{kbd}';
@@ -394,6 +406,33 @@ export function serializeToDjot(doc) {
         });
 
         return result;
+    }
+
+    function canUseRoundTripSource(node) {
+        if (!node.attrs?.djotSrc || !node.attrs?.djotPlain) {
+            return false;
+        }
+
+        return plainText(node.content) === node.attrs.djotPlain;
+    }
+
+    function ensureTrailingNewline(value) {
+        return value.endsWith('\n') ? value : value + '\n';
+    }
+
+    function plainText(content) {
+        return (content || []).map(node => {
+            if (node.type === 'text') {
+                return node.text || '';
+            }
+            if (node.type === 'hardBreak') {
+                return '\n';
+            }
+            if (node.content) {
+                return plainText(node.content);
+            }
+            return '';
+        }).join('');
     }
 
     /**

@@ -50,6 +50,12 @@ export const DjotEmbed = Node.create({
             },
             {
                 tag: 'div[data-djot-src]',
+                getAttrs: element => {
+                    if (element.hasAttribute('data-djot-frontmatter')) {
+                        return false;
+                    }
+                    return {};
+                },
             },
         ];
     },

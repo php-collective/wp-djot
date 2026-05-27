@@ -37,6 +37,15 @@ export function serializeToDjot(doc) {
                 });
                 break;
 
+            case 'djotFrontmatter':
+                if (node.attrs?.djotSrc) {
+                    output += node.attrs.djotSrc;
+                    if (!node.attrs.djotSrc.endsWith('\n')) {
+                        output += '\n';
+                    }
+                }
+                break;
+
             case 'paragraph':
                 output += serializeInline(node.content) + '\n';
                 break;
@@ -100,8 +109,7 @@ export function serializeToDjot(doc) {
                     const codeContent = (node.content || []).map(c => c.text || '').join('');
                     // Find a safe fence that doesn't conflict with the content
                     const fence = findSafeCodeFence(codeContent);
-                    // Djot uses space between ``` and language
-                    output += fence + (lang ? ' ' + lang : '') + '\n';
+                    output += fence + lang + '\n';
                     output += codeContent + '\n';
                     output += fence + '\n';
                 }
@@ -115,7 +123,7 @@ export function serializeToDjot(doc) {
                         output += '\n';
                     }
                 } else {
-                    output += '``` mermaid\n';
+                    output += '```mermaid\n';
                     output += (node.content || []).map(c => c.text || '').join('') + '\n';
                     output += '```\n';
                 }
@@ -237,10 +245,9 @@ export function serializeToDjot(doc) {
                         // Preserved widths - use them directly for accurate round-trip
                         return '-'.repeat(Math.max(3, width));
                     }
-                    // No preserved widths - calculate from content
-                    return '-'.repeat(Math.max(3, calculatedColWidths[i] || 3));
-                }).join('|');
-                output += '|' + separator + '|\n';
+                    return '---';
+                }).join(' | ');
+                output += '| ' + separator + ' |\n';
             }
         });
     }
@@ -506,8 +513,8 @@ export function serializeToDjot(doc) {
                     allRowTexts.forEach((cellTexts, rowIndex) => {
                         result += indent + '| ' + cellTexts.join(' | ') + ' |\n';
                         if (rowIndex === 0) {
-                            const separator = colWidths.map(width => '-'.repeat(width)).join('|');
-                            result += indent + '|' + separator + '|\n';
+                            const separator = colWidths.map(() => '---').join(' | ');
+                            result += indent + '| ' + separator + ' |\n';
                         }
                     });
                     result += '\n';

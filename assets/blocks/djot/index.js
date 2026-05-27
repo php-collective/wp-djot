@@ -1733,11 +1733,91 @@
                             // Normalize both for comparison (ignore whitespace differences)
                             function normalizeForComparison( djot ) {
                                 if ( ! djot ) return '';
-                                return djot
+                                var normalized = djot
                                     .trim()
                                     .replace( /\r\n/g, '\n' )
                                     .replace( /[ \t]+$/gm, '' )      // trailing whitespace
                                     .replace( /\n{3,}/g, '\n\n' );   // multiple blank lines
+                                normalized = normalizeFenceInfoSpacing( normalized );
+                                normalized = normalizeTableSeparators( normalized );
+                                normalized = normalizeParagraphWrapping( normalized );
+                                return normalized;
+                            }
+
+                            function normalizeFenceInfoSpacing( djot ) {
+                                return djot.replace( /^(`{3,}|~{3,})[ \t]+([^`~\s].*)$/gm, '$1$2' );
+                            }
+
+                            function normalizeTableSeparators( djot ) {
+                                return djot.replace( /^\|(?:[ \t]*:?-{3,}:?[ \t]*\|)+[ \t]*$/gm, function( line ) {
+                                    var cells = line.split( '|' ).length - 2;
+                                    return '| ' + Array( cells ).fill( '---' ).join( ' | ' ) + ' |';
+                                } );
+                            }
+
+                            function normalizeParagraphWrapping( djot ) {
+                                var lines = djot.split( '\n' );
+                                var result = [];
+                                var paragraph = [];
+                                var inFence = false;
+                                var inFrontmatter = false;
+
+                                function flushParagraph() {
+                                    if ( paragraph.length ) {
+                                        result.push( paragraph.join( ' ' ) );
+                                        paragraph = [];
+                                    }
+                                }
+
+                                function isPlainParagraphLine( line ) {
+                                    if ( ! line.trim() ) return false;
+                                    if ( /^(#{1,6}\s|>|-{3,}\s*$|={3,}\s*$|:{3,}|`{3,}|~{3,})/.test( line ) ) return false;
+                                    if ( /^(\s*)([-+*]|\d+[.)])\s+/.test( line ) ) return false;
+                                    if ( /^\s*\|.*\|\s*$/.test( line ) ) return false;
+                                    if ( /^\s*\[[^\]]+\]:/.test( line ) ) return false;
+                                    if ( /^\s*\{[.#%]/.test( line ) ) return false;
+                                    return true;
+                                }
+
+                                lines.forEach( function( line, index ) {
+                                    if ( index === 0 && /^---\w*\s*$/.test( line ) ) {
+                                        flushParagraph();
+                                        inFrontmatter = true;
+                                        result.push( line );
+                                        return;
+                                    }
+
+                                    if ( inFrontmatter ) {
+                                        result.push( line );
+                                        if ( /^---\s*$/.test( line ) ) {
+                                            inFrontmatter = false;
+                                        }
+                                        return;
+                                    }
+
+                                    if ( /^(`{3,}|~{3,})/.test( line ) ) {
+                                        flushParagraph();
+                                        inFence = ! inFence;
+                                        result.push( line );
+                                        return;
+                                    }
+
+                                    if ( inFence ) {
+                                        result.push( line );
+                                        return;
+                                    }
+
+                                    if ( isPlainParagraphLine( line ) ) {
+                                        paragraph.push( line );
+                                        return;
+                                    }
+
+                                    flushParagraph();
+                                    result.push( line );
+                                } );
+
+                                flushParagraph();
+                                return result.join( '\n' );
                             }
 
                             var originalNormalized = normalizeForComparison( content );

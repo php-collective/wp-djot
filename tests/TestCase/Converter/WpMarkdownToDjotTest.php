@@ -54,8 +54,8 @@ class WpMarkdownToDjotTest extends TestCase
         $md = 'The <abbr>CSS</abbr> spec';
         $djot = $this->converter->convert($md);
 
-        // Without title, abbr is stripped to plain text
-        $this->assertSame('The CSS spec', $djot);
+        // Title-less abbr is preserved as a flagged span so it can round-trip.
+        $this->assertSame('The [CSS]{abbr} spec', $djot);
     }
 
     public function testDfn(): void

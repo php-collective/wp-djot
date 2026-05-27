@@ -300,7 +300,7 @@ describe('Visual Editor Round-Trip', () => {
     testRoundTrip(
       'simple table',
       '<table><tr><th><p>Header</p></th></tr><tr><td><p>Cell</p></td></tr></table>',
-      '| Header |\n| --- |\n| Cell |'
+      '| Header |\n|------|\n| Cell |'
     );
   });
 
@@ -405,7 +405,7 @@ Welcome to the documentation!
 Configuration options:
 
 | Option | Default |
-| --- | --- |
+|-------|-------|
 | enabled | true |
 
 :::

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.15] - 2026-05-27
+
+### Changed
+
+- Require `php-collective/djot` `^0.1.28`, bringing upstream parser fixes for sequential list-item attributes, numeric reference-label warnings, and nested list blocks with deeper indentation or tabs.
+- The WordPress.org plugin page now embeds the Djot Markup demo video directly.
+
+### Fixed
+
+- Title-less `<abbr>` tags in Markdown conversion are now preserved as Djot semantic spans instead of being flattened to plain text.
+- Added translator comments for token-bearing strings so localized labels that include placeholders or literal syntax are clearer for translators.
+
 ## [1.5.14] - 2026-05-21
 
 ### Changed

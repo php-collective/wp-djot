@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.5.14
+Stable tag: 1.5.15
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -91,6 +91,12 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 3. Rendered output with syntax highlighting
 
 == Changelog ==
+
+= 1.5.15 =
+* Changed minimum djot-php library to 0.1.28, bringing upstream parser fixes for sequential list-item attributes, numeric reference-label warnings, and nested list blocks with deeper indentation or tabs.
+* Added the Djot Markup demo video directly to the WordPress.org plugin page.
+* Fixed Markdown conversion for title-less `<abbr>` tags so the semantic element is preserved instead of flattened to plain text.
+* Improved translator context for strings that contain placeholders or literal syntax tokens.
 
 = 1.5.14 =
 * Changed auto-generated heading anchor IDs to be transliterated to ASCII (e.g. "Über uns" becomes "Uber-uns", "café" becomes "cafe") so deep links survive being shared through chat, email, and other auto-linkers that mangle non-ASCII fragments. Note: anchors for existing non-ASCII headings change, so update any hardcoded in-page links.

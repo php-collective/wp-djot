@@ -49,6 +49,7 @@ import { DjotMermaid } from '../../assets/js/tiptap/extensions/djot-mermaid.js';
 import { DjotCodeGroup } from '../../assets/js/tiptap/extensions/djot-code-group.js';
 import { DjotTabs } from '../../assets/js/tiptap/extensions/djot-tabs.js';
 import { DjotFrontmatter } from '../../assets/js/tiptap/extensions/djot-frontmatter.js';
+import { DjotRoundTripSource } from '../../assets/js/tiptap/extensions/djot-round-trip-source.js';
 
 /**
  * Create a TipTap editor with all extensions for testing
@@ -119,6 +120,7 @@ function createEditor(htmlContent) {
       DjotCodeGroup,
       DjotTabs,
       DjotFrontmatter,
+      DjotRoundTripSource,
     ],
     content: htmlContent,
   });
@@ -288,6 +290,46 @@ describe('Visual Editor Round-Trip', () => {
     );
   });
 
+  describe('Round-trip source preservation', () => {
+    testRoundTrip(
+      'paragraph source with code-only link',
+      '<p data-djot-src="[`cakephp-menu`](https://github.com/dereuromark/cakephp-menu)" data-djot-plain="cakephp-menu"><a href="https://github.com/dereuromark/cakephp-menu"><code>cakephp-menu</code></a></p>',
+      '[`cakephp-menu`](https://github.com/dereuromark/cakephp-menu)'
+    );
+
+    testRoundTrip(
+      'paragraph source with strong autolink',
+      '<p data-djot-src="**&lt;https://sandbox.dereuromark.de/menu-sandbox&gt;**" data-djot-plain="https://sandbox.dereuromark.de/menu-sandbox"><strong><a href="https://sandbox.dereuromark.de/menu-sandbox" data-djot-autolink="1">https://sandbox.dereuromark.de/menu-sandbox</a></strong></p>',
+      '**<https://sandbox.dereuromark.de/menu-sandbox>**'
+    );
+
+    testRoundTrip(
+      'heading source with explicit trailing id',
+      '<h2 data-djot-src="## A small detour: keeping the tree honest {#tree-integrity}" data-djot-plain="A small detour: keeping the tree honest">A small detour: keeping the tree honest</h2>',
+      '## A small detour: keeping the tree honest {#tree-integrity}'
+    );
+
+    testRoundTrip(
+      'paragraph source with emphasis spanning code',
+      '<p data-djot-src="*Explicit `detach()`.*" data-djot-plain="Explicit detach()."><strong>Explicit <code>detach()</code>.</strong></p>',
+      '*Explicit `detach()`.*'
+    );
+
+    it('falls back when preserved paragraph text changes', () => {
+      const editor = createEditor('<p data-djot-src="*Original*" data-djot-plain="Original">Changed</p>');
+      const result = serializeToDjot(editor.getJSON());
+      editor.destroy();
+
+      expect(normalize(result)).toBe('Changed');
+    });
+
+    testRoundTrip(
+      'autolink fallback',
+      '<p><a href="https://example.com" data-djot-autolink="1">https://example.com</a></p>',
+      '<https://example.com>'
+    );
+  });
+
   describe('Lists', () => {
     testRoundTrip(
       'bullet list',
@@ -333,7 +375,7 @@ describe('Visual Editor Round-Trip', () => {
   describe('Code groups', () => {
     testRoundTrip(
       'code group with tabs',
-      `<div class="code-group">
+      `<div class="code-group" data-djot-src="::: code-group&#10;&#10;\`\`\`php [PHP]&#10;echo 1;&#10;\`\`\`&#10;&#10;\`\`\`js [JS]&#10;console.log(1);&#10;\`\`\`&#10;:::">
         <input type="radio" name="codegroup-1" id="codegroup-1-tab-1" class="code-group-radio" checked>
         <label for="codegroup-1-tab-1" class="code-group-label">PHP</label>
         <input type="radio" name="codegroup-1" id="codegroup-1-tab-2" class="code-group-radio">
@@ -342,11 +384,12 @@ describe('Visual Editor Round-Trip', () => {
         <div class="code-group-panel"><pre><code class="language-js">console.log(1);</code></pre></div>
       </div>`,
       `::: code-group
-\`\`\` php [PHP]
+
+\`\`\`php [PHP]
 echo 1;
 \`\`\`
 
-\`\`\` js [JS]
+\`\`\`js [JS]
 console.log(1);
 \`\`\`
 :::`

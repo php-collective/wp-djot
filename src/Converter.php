@@ -408,12 +408,22 @@ class Converter
         $djot = $this->preProcess($djot, true);
         $frontmatterSource = $this->extractLeadingFrontmatterSource($djot);
         $codeBlockSources = $this->extractFencedCodeBlockSources($djot);
+        $containerSources = $this->extractFencedDivSources($djot, 'code-group');
+        $roundTripBlockSources = $this->extractRoundTripBlockSources($djot);
+        $djot = $this->protectRoundTripSmartQuoteLiterals($djot);
         // Use round-trip mode for visual editor compatibility
         $converter = $this->getProfileConverter($this->postProfile, false, 'excerpt', roundTripMode: true);
         $html = $converter->convert($djot);
         if ($codeBlockSources !== []) {
             $html = $this->restoreRoundTripCodeSources($html, $codeBlockSources);
         }
+        if ($containerSources !== []) {
+            $html = $this->restoreRoundTripContainerSources($html, $containerSources, 'code-group');
+        }
+        if ($roundTripBlockSources !== []) {
+            $html = $this->addRoundTripBlockSources($html, $roundTripBlockSources);
+        }
+        $html = $this->restoreRoundTripSmartQuoteLiterals($html);
         if ($frontmatterSource !== null) {
             $html = $this->prependRoundTripFrontmatter($html, $frontmatterSource);
         }
@@ -448,6 +458,243 @@ class Converter
             . '" hidden></div>' . "\n" . $html;
     }
 
+    private function protectRoundTripSmartQuoteLiterals(string $djot): string
+    {
+        return str_replace(["\u{2018}", "\u{2019}"], ["\u{E000}", "\u{E001}"], $djot);
+    }
+
+    private function restoreRoundTripSmartQuoteLiterals(string $html): string
+    {
+        return str_replace(["\u{E000}", "\u{E001}"], ["\u{2018}", "\u{2019}"], $html);
+    }
+
+    /**
+     * @return list<array{type: 'paragraph'|'heading', source: string, plain: string}>
+     */
+    private function extractRoundTripBlockSources(string $djot): array
+    {
+        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", $djot));
+        $blocks = [];
+        $paragraph = [];
+        $inFence = false;
+        $inFrontmatter = false;
+        $inDivFence = false;
+
+        foreach ($lines as $index => $line) {
+            if ($index === 0 && preg_match('/^---\w*\s*$/', $line)) {
+                $this->flushRoundTripParagraph($blocks, $paragraph);
+                $inFrontmatter = true;
+
+                continue;
+            }
+            if ($inFrontmatter) {
+                if (preg_match('/^---\s*$/', $line)) {
+                    $inFrontmatter = false;
+                }
+
+                continue;
+            }
+
+            if (preg_match('/^\s*(`{3,}|~{3,})/', $line)) {
+                $this->flushRoundTripParagraph($blocks, $paragraph);
+                $inFence = !$inFence;
+
+                continue;
+            }
+            if ($inFence) {
+                continue;
+            }
+
+            if (preg_match('/^\s*:{3,}/', $line)) {
+                $this->flushRoundTripParagraph($blocks, $paragraph);
+                $inDivFence = !$inDivFence;
+
+                continue;
+            }
+            if ($inDivFence) {
+                continue;
+            }
+
+            if (trim($line) === '') {
+                $this->flushRoundTripParagraph($blocks, $paragraph);
+
+                continue;
+            }
+
+            if (preg_match('/^(#{1,6}\s+.*)$/', $line, $matches)) {
+                $this->flushRoundTripParagraph($blocks, $paragraph);
+                $blocks[] = [
+                    'type' => 'heading',
+                    'source' => $matches[1],
+                    'plain' => $this->plainTextFromDjotSource($matches[1], 'heading'),
+                ];
+
+                continue;
+            }
+
+            if ($this->isRoundTripParagraphLine($line)) {
+                $paragraph[] = $line;
+
+                continue;
+            }
+
+            $this->flushRoundTripParagraph($blocks, $paragraph);
+        }
+
+        $this->flushRoundTripParagraph($blocks, $paragraph);
+
+        return $blocks;
+    }
+
+    /**
+     * @param list<array{type: 'paragraph'|'heading', source: string, plain: string}> $blocks
+     * @param list<string> $paragraph
+     */
+    private function flushRoundTripParagraph(array &$blocks, array &$paragraph): void
+    {
+        if ($paragraph === []) {
+            return;
+        }
+
+        $source = implode("\n", $paragraph);
+        $blocks[] = [
+            'type' => 'paragraph',
+            'source' => $source,
+            'plain' => $this->plainTextFromDjotSource($source, 'paragraph'),
+        ];
+        $paragraph = [];
+    }
+
+    private function isRoundTripParagraphLine(string $line): bool
+    {
+        return !preg_match('/^\s*(?:>|[-+*]\s+|\d+[.)]\s+|\|+|\[[^\]]+\]:|\{[.#%])/', $line);
+    }
+
+    private function plainTextFromDjotSource(string $source, string $type): string
+    {
+        $plain = trim(str_replace("\n", ' ', $source));
+        if ($type === 'heading') {
+            $plain = (string)preg_replace('/^#{1,6}\s+/', '', $plain);
+            $plain = (string)preg_replace('/\s+\{#[^}]+\}\s*$/', '', $plain);
+        }
+        $plain = (string)preg_replace_callback(
+            '/\[([^\]]+)\]\([^)]+\)/',
+            fn (array $matches): string => $this->plainTextFromDjotSource($matches[1], 'paragraph'),
+            $plain,
+        );
+        $plain = (string)preg_replace('/<((?:https?|mailto):[^>]+)>/', '$1', $plain);
+        $plain = (string)preg_replace('/`([^`]*)`/', '$1', $plain);
+        $plain = str_replace(['*', '_'], '', $plain);
+        $plain = (string)preg_replace('/\s+/', ' ', $plain);
+
+        return html_entity_decode(trim($plain), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * @param string $html
+     * @param list<array{type: 'paragraph'|'heading', source: string, plain: string}> $blockSources
+     */
+    private function addRoundTripBlockSources(string $html, array $blockSources): string
+    {
+        $index = 0;
+
+        return preg_replace_callback(
+            '/<(p|h[1-6])\b([^>]*)>(.*?)<\/\1>/s',
+            function (array $matches) use ($blockSources, &$index): string {
+                $expectedType = str_starts_with($matches[1], 'h') ? 'heading' : 'paragraph';
+                $source = $blockSources[$index] ?? null;
+                if ($source === null || $source['type'] !== $expectedType) {
+                    return $matches[0];
+                }
+
+                $plain = $this->plainTextFromHtml($matches[3]);
+                if ($plain !== $source['plain']) {
+                    return $matches[0];
+                }
+
+                $index++;
+                if (str_contains($matches[2], 'data-djot-src=')) {
+                    return $matches[0];
+                }
+
+                return '<' . $matches[1] . $matches[2]
+                    . ' data-djot-src="' . $this->encodeRoundTripAttribute($source['source']) . '"'
+                    . ' data-djot-plain="' . $this->encodeRoundTripAttribute($source['plain']) . '">'
+                    . $matches[3] . '</' . $matches[1] . '>';
+            },
+            $html,
+        ) ?? $html;
+    }
+
+    private function plainTextFromHtml(string $html): string
+    {
+        $plain = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $plain = (string)preg_replace('/\s+/', ' ', $plain);
+
+        return trim($plain);
+    }
+
+    private function encodeRoundTripAttribute(string $value): string
+    {
+        return str_replace("\n", '&#10;', htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function extractFencedDivSources(string $djot, string $class): array
+    {
+        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", $djot));
+        $sources = [];
+        $current = [];
+        $fenceLength = 0;
+
+        foreach ($lines as $line) {
+            if ($current === []) {
+                if (preg_match('/^\s*(:{3,})\s+' . preg_quote($class, '/') . '\b.*$/', $line, $matches)) {
+                    $fenceLength = strlen($matches[1]);
+                    $current = [$line];
+                }
+
+                continue;
+            }
+
+            $current[] = $line;
+            if (preg_match('/^\s*:{' . $fenceLength . ',}\s*$/', $line)) {
+                $sources[] = implode("\n", $current);
+                $current = [];
+                $fenceLength = 0;
+            }
+        }
+
+        return $sources;
+    }
+
+    /**
+     * @param string $html
+     * @param list<string> $containerSources
+     * @param string $class
+     */
+    private function restoreRoundTripContainerSources(string $html, array $containerSources, string $class): string
+    {
+        $index = 0;
+
+        return preg_replace_callback(
+            '/<div\b(?=[^>]*\bclass="[^"]*\b' . preg_quote($class, '/') . '\b[^"]*")([^>]*)\sdata-djot-src="[^"]*"([^>]*)>/',
+            function (array $matches) use ($containerSources, &$index): string {
+                if (!isset($containerSources[$index])) {
+                    return $matches[0];
+                }
+
+                $source = $this->encodeRoundTripAttribute($containerSources[$index]);
+                $index++;
+
+                return '<div' . $matches[1] . ' data-djot-src="' . $source . '"' . $matches[2] . '>';
+            },
+            $html,
+        ) ?? $html;
+    }
+
     /**
      * @return list<string>
      */
@@ -458,28 +705,38 @@ class Converter
         $current = [];
         $fenceChar = null;
         $fenceLength = 0;
+        $stripBlockquoteMarkers = false;
 
         foreach ($lines as $line) {
+            $sourceLine = $stripBlockquoteMarkers ? $this->stripBlockquoteMarker($line) : $line;
             if ($fenceChar === null) {
-                if (preg_match('/^\s*(`{3,}|~{3,}).*$/', $line, $matches)) {
+                $candidateLine = $this->stripBlockquoteMarker($line);
+                if (preg_match('/^\s*(`{3,}|~{3,}).*$/', $candidateLine, $matches)) {
                     $fenceChar = $matches[1][0];
                     $fenceLength = strlen($matches[1]);
-                    $current = [$line];
+                    $stripBlockquoteMarkers = $candidateLine !== $line;
+                    $current = [$candidateLine];
                 }
 
                 continue;
             }
 
-            $current[] = $line;
-            if (preg_match('/^\s*' . preg_quote(str_repeat($fenceChar, $fenceLength), '/') . $fenceChar . '*\s*$/', $line)) {
+            $current[] = $sourceLine;
+            if (preg_match('/^\s*' . preg_quote(str_repeat($fenceChar, $fenceLength), '/') . $fenceChar . '*\s*$/', $sourceLine)) {
                 $sources[] = implode("\n", $current);
                 $current = [];
                 $fenceChar = null;
                 $fenceLength = 0;
+                $stripBlockquoteMarkers = false;
             }
         }
 
         return $sources;
+    }
+
+    private function stripBlockquoteMarker(string $line): string
+    {
+        return (string)preg_replace('/^\s*>\s?/', '', $line);
     }
 
     /**

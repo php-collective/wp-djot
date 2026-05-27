@@ -9,3 +9,4 @@ export { DjotSpan } from './djot-span.js';
 export { DjotFootnote } from './djot-footnote.js';
 export { DjotEmbed } from './djot-embed.js';
 export { DjotFrontmatter } from './djot-frontmatter.js';
+export { DjotRoundTripSource } from './djot-round-trip-source.js';

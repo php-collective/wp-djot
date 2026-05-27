@@ -36,6 +36,7 @@ import { DjotHeadingRef } from './extensions/djot-heading-ref.js';
 import { DjotMermaid } from './extensions/djot-mermaid.js';
 import { DjotCodeGroup } from './extensions/djot-code-group.js';
 import { DjotTabs } from './extensions/djot-tabs.js';
+import { DjotFrontmatter } from './extensions/djot-frontmatter.js';
 
 /**
  * DjotKit - A Tiptap extension bundle for Djot markup
@@ -50,6 +51,8 @@ export const DjotKit = Extension.create({
 
     addExtensions() {
         const extensions = [];
+
+        extensions.push(DjotFrontmatter);
 
         // StarterKit provides: Document, Paragraph, Text, Bold, Italic, Code,
         // CodeBlock, Blockquote, BulletList, OrderedList, ListItem, Heading,

@@ -159,7 +159,7 @@ class Converter
         // the locale actually used. Otherwise a switch_to_locale() between conversions
         // in one request would reuse the first locale's cached converter.
         $smartQuotesLocale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
-        $smartQuotesKey = $smartQuotesLocale !== 'en' ? '_sq_' . $smartQuotesLocale : '';
+        $smartQuotesKey = (!$roundTripMode && $smartQuotesLocale !== 'en') ? '_sq_' . $smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
         $mermaidKey = $this->mermaidEnabled ? '_mermaid' : '';
         $roundTripKey = $roundTripMode ? '_rt' : '';
@@ -215,6 +215,10 @@ class Converter
             // This outputs data-djot-* attributes that preserve source syntax
             if ($roundTripMode) {
                 $converter->getHtmlRenderer()->setRoundTripMode(true);
+                $converter->getParser()->getInlineParser()->setQuoteCharacters('"', '"', "'", "'");
+                $converter->addOutputTransformer(static function (string $html): string {
+                    return str_replace(["\u{2018}", "\u{2019}"], ["'", "'"], $html);
+                });
             }
 
             // Add Table of Contents extension for articles when enabled
@@ -250,8 +254,9 @@ class Converter
                 ));
             }
 
-            // Add smart quotes extension for non-English locales
-            if ($smartQuotesLocale !== 'en') {
+            // Add smart quotes extension for non-English locales.
+            // Round-trip/editor mode must not mutate source punctuation.
+            if (!$roundTripMode && $smartQuotesLocale !== 'en') {
                 $converter->addExtension(new SmartQuotesExtension(locale: $smartQuotesLocale));
             }
 
@@ -266,7 +271,7 @@ class Converter
             }
 
             // Silently strip YAML/TOML/JSON frontmatter at the top of the document.
-            // Default format is yaml, so a bare `---` opener is treated as frontmatter.
+            // convertExcerpt() carries it separately for visual-editor round trips.
             $converter->addExtension(new FrontmatterExtension());
 
             // Add semantic span support (kbd, abbr, dfn attributes)
@@ -401,11 +406,108 @@ class Converter
     public function convertExcerpt(string $djot): string
     {
         $djot = $this->preProcess($djot, true);
+        $frontmatterSource = $this->extractLeadingFrontmatterSource($djot);
+        $codeBlockSources = $this->extractFencedCodeBlockSources($djot);
         // Use round-trip mode for visual editor compatibility
         $converter = $this->getProfileConverter($this->postProfile, false, 'excerpt', roundTripMode: true);
         $html = $converter->convert($djot);
+        if ($codeBlockSources !== []) {
+            $html = $this->restoreRoundTripCodeSources($html, $codeBlockSources);
+        }
+        if ($frontmatterSource !== null) {
+            $html = $this->prependRoundTripFrontmatter($html, $frontmatterSource);
+        }
 
         return $this->postProcess($html, false);
+    }
+
+    /**
+     * Extract leading frontmatter source so the visual editor can put it back.
+     */
+    private function extractLeadingFrontmatterSource(string $djot): ?string
+    {
+        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", $djot));
+        if (!preg_match('/^---\w*\s*$/', $lines[0])) {
+            return null;
+        }
+
+        $count = count($lines);
+        for ($i = 1; $i < $count; $i++) {
+            if (preg_match('/^---\s*$/', $lines[$i])) {
+                return implode("\n", array_slice($lines, 0, $i + 1));
+            }
+        }
+
+        return null;
+    }
+
+    private function prependRoundTripFrontmatter(string $html, string $frontmatterSource): string
+    {
+        return '<div data-djot-frontmatter data-djot-src="'
+            . str_replace("\n", '&#10;', htmlspecialchars($frontmatterSource, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'))
+            . '" hidden></div>' . "\n" . $html;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function extractFencedCodeBlockSources(string $djot): array
+    {
+        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", $djot));
+        $sources = [];
+        $current = [];
+        $fenceChar = null;
+        $fenceLength = 0;
+
+        foreach ($lines as $line) {
+            if ($fenceChar === null) {
+                if (preg_match('/^\s*(`{3,}|~{3,}).*$/', $line, $matches)) {
+                    $fenceChar = $matches[1][0];
+                    $fenceLength = strlen($matches[1]);
+                    $current = [$line];
+                }
+
+                continue;
+            }
+
+            $current[] = $line;
+            if (preg_match('/^\s*' . preg_quote(str_repeat($fenceChar, $fenceLength), '/') . $fenceChar . '*\s*$/', $line)) {
+                $sources[] = implode("\n", $current);
+                $current = [];
+                $fenceChar = null;
+                $fenceLength = 0;
+            }
+        }
+
+        return $sources;
+    }
+
+    /**
+     * @param string $html
+     * @param list<string> $codeBlockSources
+     */
+    private function restoreRoundTripCodeSources(string $html, array $codeBlockSources): string
+    {
+        $index = 0;
+
+        return preg_replace_callback(
+            '/<pre\b([^>]*)\sdata-djot-src="[^"]*"([^>]*)>/',
+            static function (array $matches) use ($codeBlockSources, &$index): string {
+                if (!isset($codeBlockSources[$index])) {
+                    return $matches[0];
+                }
+
+                $source = str_replace(
+                    "\n",
+                    '&#10;',
+                    htmlspecialchars($codeBlockSources[$index], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                );
+                $index++;
+
+                return '<pre' . $matches[1] . ' data-djot-src="' . $source . '"' . $matches[2] . '>';
+            },
+            $html,
+        ) ?? $html;
     }
 
     /**

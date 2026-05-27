@@ -35,6 +35,7 @@ import { DjotInsert } from '../../assets/js/tiptap/extensions/djot-insert.js';
 import { DjotDelete } from '../../assets/js/tiptap/extensions/djot-delete.js';
 import { DjotDiv } from '../../assets/js/tiptap/extensions/djot-div.js';
 import { DjotSpan } from '../../assets/js/tiptap/extensions/djot-span.js';
+import { DjotEmbed } from '../../assets/js/tiptap/extensions/djot-embed.js';
 import { DjotKbd } from '../../assets/js/tiptap/extensions/djot-kbd.js';
 import { DjotAbbreviation } from '../../assets/js/tiptap/extensions/djot-abbr.js';
 import { DjotDefinition } from '../../assets/js/tiptap/extensions/djot-dfn.js';
@@ -47,6 +48,7 @@ import { DjotHeadingRef } from '../../assets/js/tiptap/extensions/djot-heading-r
 import { DjotMermaid } from '../../assets/js/tiptap/extensions/djot-mermaid.js';
 import { DjotCodeGroup } from '../../assets/js/tiptap/extensions/djot-code-group.js';
 import { DjotTabs } from '../../assets/js/tiptap/extensions/djot-tabs.js';
+import { DjotFrontmatter } from '../../assets/js/tiptap/extensions/djot-frontmatter.js';
 
 /**
  * Create a TipTap editor with all extensions for testing
@@ -105,6 +107,7 @@ function createEditor(htmlContent) {
       DjotDelete,
       DjotDiv,
       DjotSpan,
+      DjotEmbed,
       DjotKbd,
       DjotAbbreviation,
       DjotDefinition,
@@ -115,6 +118,7 @@ function createEditor(htmlContent) {
       DjotMermaid,
       DjotCodeGroup,
       DjotTabs,
+      DjotFrontmatter,
     ],
     content: htmlContent,
   });
@@ -258,7 +262,7 @@ describe('Visual Editor Round-Trip', () => {
     testRoundTrip(
       'code block with language',
       '<pre><code class="language-javascript">const x = 1;</code></pre>',
-      '``` javascript\nconst x = 1;\n```'
+      '```javascript\nconst x = 1;\n```'
     );
 
     testRoundTrip(
@@ -272,7 +276,15 @@ describe('Visual Editor Round-Trip', () => {
     testRoundTrip(
       'mermaid block',
       '<pre class="mermaid">graph TD;\n    A-->B;</pre>',
-      '``` mermaid\ngraph TD;\n    A-->B;\n```'
+      '```mermaid\ngraph TD;\n    A-->B;\n```'
+    );
+  });
+
+  describe('Frontmatter', () => {
+    testRoundTrip(
+      'frontmatter placeholder',
+      '<div data-djot-frontmatter data-djot-src="---&#10;title: Test&#10;tags:&#10;  - Djot&#10;---" hidden></div><p>Body</p>',
+      '---\ntitle: Test\ntags:\n  - Djot\n---\n\nBody'
     );
   });
 
@@ -300,7 +312,7 @@ describe('Visual Editor Round-Trip', () => {
     testRoundTrip(
       'simple table',
       '<table><tr><th><p>Header</p></th></tr><tr><td><p>Cell</p></td></tr></table>',
-      '| Header |\n|------|\n| Cell |'
+      '| Header |\n| --- |\n| Cell |'
     );
   });
 
@@ -405,7 +417,7 @@ Welcome to the documentation!
 Configuration options:
 
 | Option | Default |
-|-------|-------|
+| --- | --- |
 | enabled | true |
 
 :::

@@ -265,6 +265,20 @@ class MigratorTest extends TestCase
         $this->assertStringContainsString('[gallery ids="1,2,3"]', $result['converted']);
     }
 
+    public function testPlaceholderTokenInContentIsNotClobbered(): void
+    {
+        // A literal that matches the legacy deterministic placeholder shape must
+        // survive untouched: the per-run nonce keeps real tokens distinct from it.
+        $content = '<p>Text before [gallery ids="1,2,3"] and a literal '
+            . 'WPDJOTSHORTCODE0MARK token in prose.</p>';
+        $this->createPost(42, $content);
+
+        $result = $this->migrator->migrate(42, dryRun: true);
+
+        $this->assertStringContainsString('[gallery ids="1,2,3"]', $result['converted']);
+        $this->assertStringContainsString('WPDJOTSHORTCODE0MARK', $result['converted']);
+    }
+
     public function testSelfClosingShortcode(): void
     {
         $this->createPost(41, 'Text [br/] more text');

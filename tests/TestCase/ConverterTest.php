@@ -42,6 +42,26 @@ class ConverterTest extends TestCase
         $this->assertEquals(2, substr_count($html, '<p>'));
     }
 
+    public function testNumericReferenceLabelsDoNotCrashParser(): void
+    {
+        $converter = new DjotConverter();
+
+        $html = $converter->convert("[1]: https://example.com\n\nPlain text\n");
+
+        $this->assertSame("<p>Plain text</p>\n", $html);
+    }
+
+    public function testHeadingIdsAreAsciiFolded(): void
+    {
+        // djot 0.1.29 changed the default slugger to keep non-ASCII characters.
+        // wp-djot pins the legacy ASCII-folded ids via AsciiHeadingIdsExtension so
+        // existing anchor and permalink URLs keep resolving after the upgrade.
+        $html = $this->converter->convertArticle("# Über Café\n");
+
+        $this->assertStringContainsString('id="Uber-Cafe"', $html);
+        $this->assertStringNotContainsString('id="Über-Café"', $html);
+    }
+
     public function testPreservesCodeBlockNewlines(): void
     {
         $djot = "```\nline1\nline2\nline3\n```";

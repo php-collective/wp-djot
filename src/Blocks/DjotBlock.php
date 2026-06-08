@@ -10,11 +10,11 @@ if (!defined('ABSPATH')) {
 }
 
 use Djot\Converter\HtmlToDjot;
+use Djot\Converter\MarkdownToDjot;
 use WP_Post;
 use WP_REST_Request;
 use WP_REST_Response;
 use WpDjot\Converter;
-use WpDjot\Converter\WpMarkdownToDjot;
 
 /**
  * Registers the Djot Gutenberg block.
@@ -336,7 +336,7 @@ class DjotBlock
             return new WP_REST_Response(['djot' => ''], 200);
         }
 
-        $converter = new WpMarkdownToDjot();
+        $converter = new MarkdownToDjot();
         $djot = $converter->convert($content);
 
         return new WP_REST_Response(['djot' => $djot], 200);

@@ -10,8 +10,8 @@ if (!defined('ABSPATH')) {
 }
 
 use Djot\Converter\HtmlToDjot;
+use Djot\Converter\MarkdownToDjot;
 use WP_Query;
-use WpDjot\Converter\WpMarkdownToDjot;
 
 /**
  * Handles migration of WordPress content to Djot format.
@@ -20,7 +20,7 @@ class Migrator
 {
     private HtmlToDjot $htmlConverter;
 
-    private WpMarkdownToDjot $markdownConverter;
+    private MarkdownToDjot $markdownConverter;
 
     private string $backupMetaKey = '_wpdjot_original_content';
 
@@ -36,7 +36,7 @@ class Migrator
     public function __construct()
     {
         $this->htmlConverter = new HtmlToDjot();
-        $this->markdownConverter = new WpMarkdownToDjot();
+        $this->markdownConverter = new MarkdownToDjot();
     }
 
     /**
@@ -318,7 +318,7 @@ class Migrator
         $pattern = '/\[([a-zA-Z_][a-zA-Z0-9_-]*)(?:\s[^\]]*)?(?:\/\]|\](?:.*?\[\/\1\])?)/s';
 
         return (string)preg_replace_callback($pattern, function (array $matches) use (&$placeholders): string {
-            $placeholder = '{{SHORTCODE_' . count($placeholders) . '}}';
+            $placeholder = 'WPDJOTSHORTCODE' . count($placeholders) . 'MARK';
             $placeholders[$placeholder] = $matches[0];
 
             return $placeholder;
@@ -335,7 +335,7 @@ class Migrator
         $pattern = '/<!--\s*wp:[^>]+-->.*?<!--\s*\/wp:[^>]+-->/s';
 
         return (string)preg_replace_callback($pattern, function (array $matches) use (&$placeholders): string {
-            $placeholder = '{{BLOCK_' . count($placeholders) . '}}';
+            $placeholder = 'WPDJOTBLOCK' . count($placeholders) . 'MARK';
             $placeholders[$placeholder] = $matches[0];
 
             return $placeholder;

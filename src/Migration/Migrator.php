@@ -279,11 +279,12 @@ class Migrator
      */
     private function convert(string $content, array $analysis): string
     {
-        // Per-run random nonce keeps placeholder tokens unique to this conversion, so
+        // Content-derived nonce keeps placeholder tokens unique to this conversion, so
         // content that happens to contain a placeholder-shaped literal cannot collide
-        // with a token during the str_replace() restore below. Hex keeps the token free
-        // of characters djot escapes in converter output.
-        $nonce = bin2hex(random_bytes(8));
+        // with a token during the str_replace() restore below. A self-referential
+        // collision (content embedding the hash of itself) is not constructable. md5
+        // never throws and stays hex, so the token is free of characters djot escapes.
+        $nonce = substr(md5($content), 0, 12);
 
         // Preserve shortcodes
         $shortcodePlaceholders = [];

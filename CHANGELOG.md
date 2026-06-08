@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.16] - YYYY-MM-DD
+
+### Changed
+
+- Require `php-collective/djot` `^0.1.29`, bringing upstream fixes for empty list items, indented and lazily-wrapped list markers, a tab delimiter after blockquote markers, a block-nesting depth cap, stricter reference/footnote/abbreviation definition whitespace, and improved HtmlToDjot round-trip fidelity.
+- Pin ASCII-folded heading IDs via the new `AsciiHeadingIdsExtension`. djot `0.1.29` changed its default slugger to preserve non-ASCII characters; this keeps the transliterated IDs introduced in 1.5.14 (e.g. `Über uns` → `Uber-uns`), so existing in-page anchors and permalinks keep resolving. No anchor changes for existing posts.
+- Dropped the redundant `WpMarkdownToDjot` override now that djot converts `<kbd>`, `<abbr>`, and `<dfn>` semantic elements to Djot spans natively.
+
+### Fixed
+
+- Shortcode and Gutenberg block placeholders in the migrate command no longer leak into output as escaped `\{\{...}}` literals. djot `0.1.29` now escapes Djot-significant characters (including braces) in HtmlToDjot text output, which broke the previous `{{...}}` placeholder tokens; they are now brace-free.
+
 ## [1.5.15] - 2026-05-27
 
 ### Changed

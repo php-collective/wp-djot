@@ -4,17 +4,23 @@ declare(strict_types=1);
 
 namespace WpDjot\Test\TestCase\Converter;
 
+use Djot\Converter\MarkdownToDjot;
 use PHPUnit\Framework\TestCase;
-use WpDjot\Converter\WpMarkdownToDjot;
 
-class WpMarkdownToDjotTest extends TestCase
+/**
+ * Pins the Markdown to Djot conversion contract that the migrate command and
+ * the convert-markdown REST endpoint rely on. The semantic-element conversion
+ * (kbd/abbr/dfn) lives in djot-php; this guards wp-djot's features against
+ * regressions from library upgrades.
+ */
+class MarkdownToDjotTest extends TestCase
 {
-    private WpMarkdownToDjot $converter;
+    private MarkdownToDjot $converter;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->converter = new WpMarkdownToDjot();
+        $this->converter = new MarkdownToDjot();
     }
 
     public function testKbd(): void

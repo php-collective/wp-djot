@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=8.2",
-        "php-collective/djot": "^0.1.28",
+        "php-collective/djot": "^0.1.29",
         "php-collective/djot-grammars": "dev-master",
         "torchlight/engine": "^1.0"
     },

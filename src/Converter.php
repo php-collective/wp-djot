@@ -12,6 +12,7 @@ if (!defined('ABSPATH')) {
 use Djot\DjotConverter;
 use Djot\Exception\ParseException;
 use Djot\Exception\ParseWarning;
+use Djot\Extension\AsciiHeadingIdsExtension;
 use Djot\Extension\CodeGroupExtension;
 use Djot\Extension\FrontmatterExtension;
 use Djot\Extension\HeadingLevelShiftExtension;
@@ -210,6 +211,12 @@ class Converter
 
             // Convert tabs to 4 spaces in code blocks for consistent display
             $converter->getHtmlRenderer()->setCodeBlockTabWidth(4);
+
+            // Fold auto-generated heading ids to ASCII (Über -> Uber, Привет -> Privet).
+            // djot 0.1.29 changed the default slugger to preserve non-ASCII characters;
+            // this extension restores the ASCII-folded ids used by earlier releases so
+            // existing anchor/permalink URLs keep working.
+            $converter->addExtension(new AsciiHeadingIdsExtension());
 
             // Enable round-trip mode only for visual editor (excerpt context)
             // This outputs data-djot-* attributes that preserve source syntax

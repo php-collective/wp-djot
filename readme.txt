@@ -92,6 +92,11 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 
 == Changelog ==
 
+= 1.5.16 =
+* Changed minimum djot-php library to 0.1.29, bringing upstream parser fixes for empty list items, indented and lazily-wrapped list markers, blockquote tab delimiters, and stricter reference definition handling.
+* Kept heading anchor IDs stable across the upgrade. Djot 0.1.29 now preserves non-ASCII characters in auto-generated IDs by default, but the plugin keeps the ASCII-folded IDs introduced in 1.5.14 (e.g. "Über uns" becomes "Uber-uns") so existing in-page links keep working.
+* Fixed the migrate command so shortcodes and Gutenberg blocks are preserved correctly after the djot change that escapes special characters during conversion.
+
 = 1.5.15 =
 * Changed minimum djot-php library to 0.1.28, bringing upstream parser fixes for sequential list-item attributes, numeric reference-label warnings, and nested list blocks with deeper indentation or tabs.
 * Added the Djot Markup demo video directly to the WordPress.org plugin page.

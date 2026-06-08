@@ -279,13 +279,19 @@ class Migrator
      */
     private function convert(string $content, array $analysis): string
     {
+        // Per-run random nonce keeps placeholder tokens unique to this conversion, so
+        // content that happens to contain a placeholder-shaped literal cannot collide
+        // with a token during the str_replace() restore below. Hex keeps the token free
+        // of characters djot escapes in converter output.
+        $nonce = bin2hex(random_bytes(8));
+
         // Preserve shortcodes
         $shortcodePlaceholders = [];
-        $content = $this->protectShortcodes($content, $shortcodePlaceholders);
+        $content = $this->protectShortcodes($content, $shortcodePlaceholders, $nonce);
 
         // Preserve Gutenberg blocks (if any)
         $blockPlaceholders = [];
-        $content = $this->protectGutenbergBlocks($content, $blockPlaceholders);
+        $content = $this->protectGutenbergBlocks($content, $blockPlaceholders, $nonce);
 
         // Convert based on content type (Markdown first, then HTML)
         if ($analysis['has_markdown']) {
@@ -311,14 +317,15 @@ class Migrator
     /**
      * @param string $content
      * @param array<string, string> $placeholders
+     * @param string $nonce
      */
-    private function protectShortcodes(string $content, array &$placeholders): string
+    private function protectShortcodes(string $content, array &$placeholders, string $nonce): string
     {
         // Match WordPress shortcodes
         $pattern = '/\[([a-zA-Z_][a-zA-Z0-9_-]*)(?:\s[^\]]*)?(?:\/\]|\](?:.*?\[\/\1\])?)/s';
 
-        return (string)preg_replace_callback($pattern, function (array $matches) use (&$placeholders): string {
-            $placeholder = 'WPDJOTSHORTCODE' . count($placeholders) . 'MARK';
+        return (string)preg_replace_callback($pattern, function (array $matches) use (&$placeholders, $nonce): string {
+            $placeholder = 'WPDJOTSHORTCODE' . $nonce . count($placeholders) . 'MARK';
             $placeholders[$placeholder] = $matches[0];
 
             return $placeholder;
@@ -328,14 +335,15 @@ class Migrator
     /**
      * @param string $content
      * @param array<string, string> $placeholders
+     * @param string $nonce
      */
-    private function protectGutenbergBlocks(string $content, array &$placeholders): string
+    private function protectGutenbergBlocks(string $content, array &$placeholders, string $nonce): string
     {
         // Match Gutenberg block comments
         $pattern = '/<!--\s*wp:[^>]+-->.*?<!--\s*\/wp:[^>]+-->/s';
 
-        return (string)preg_replace_callback($pattern, function (array $matches) use (&$placeholders): string {
-            $placeholder = 'WPDJOTBLOCK' . count($placeholders) . 'MARK';
+        return (string)preg_replace_callback($pattern, function (array $matches) use (&$placeholders, $nonce): string {
+            $placeholder = 'WPDJOTBLOCK' . $nonce . count($placeholders) . 'MARK';
             $placeholders[$placeholder] = $matches[0];
 
             return $placeholder;

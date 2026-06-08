@@ -192,7 +192,9 @@ class Converter
             };
 
             // Create converter with appropriate settings
-            // significantNewlines = markdown compatibility (single newlines become soft breaks)
+            // blocksInterruptParagraphs + nestedListsWithoutBlankLine = markdown
+            //   compatibility; the granular successors to djot's deprecated
+            //   significantNewlines (which was the union of these two levers).
             // softBreakMode = how soft breaks render (now controllable separately)
             // warnings = collect non-fatal parse issues (undefined refs, bad attr lists, ...)
             // strict   = throw ParseException on fatal errors; caller (convertArticle) catches
@@ -203,7 +205,8 @@ class Converter
             $converter = new DjotConverter(
                 safeMode: $safeMode,
                 profile: $profile,
-                significantNewlines: $this->markdownMode,
+                blocksInterruptParagraphs: $this->markdownMode,
+                nestedListsWithoutBlankLine: $this->markdownMode,
                 softBreakMode: $softBreakMode,
                 warnings: true,
                 strict: $strict,
@@ -371,7 +374,8 @@ class Converter
             $lenient = new DjotConverter(
                 safeMode: false,
                 profile: $this->profileForFallback(),
-                significantNewlines: $this->markdownMode,
+                blocksInterruptParagraphs: $this->markdownMode,
+                nestedListsWithoutBlankLine: $this->markdownMode,
                 warnings: false,
                 strict: false,
             );

@@ -4,6 +4,7 @@
 # Usage: ./scripts/build.sh
 
 set -e
+set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(dirname "$SCRIPT_DIR")"
@@ -36,38 +37,27 @@ cd "$PLUGIN_DIR"
 
 rm "$TMP_DIR/composer.json" "$TMP_DIR/composer.lock"
 
-# Copy plugin files, excluding development files
+# Copy plugin files: TRACKED files only (git archive), so local-only content
+# (a wordpress/ test install, nested checkouts, node_modules, downloaded
+# phars) can never leak into the zip. Then prune the tracked dev files the
+# distribution must not carry.
 echo "Copying plugin files..."
-rsync -a \
-    --exclude='/.git' \
-    --exclude='/.gitattributes' \
-    --exclude='/.gitignore' \
-    --exclude='/.github' \
-    --exclude='/.idea' \
-    --exclude='/.vscode' \
-    --exclude='/.phpunit.cache' \
-    --exclude='/.editorconfig' \
-    --exclude='/.ddev' \
-    --exclude='/stubs' \
-    --exclude='/tests' \
-    --exclude='/build' \
-    --exclude='/build.sh' \
-    --exclude='/scripts' \
-    --exclude='/docs' \
-    --exclude='/composer.lock' \
-    --exclude='/phpcs.xml' \
-    --exclude='/phpstan.neon' \
-    --exclude='/phpunit.xml.dist' \
-    --exclude='/vendor' \
-    --exclude='/.distignore' \
-    --exclude='CHANGELOG.md' \
-    --exclude='CONTRIBUTING.md' \
-    --exclude='README.md' \
-    --exclude='/_*' \
-    --exclude='*.log' \
-    --exclude='*.tmp' \
-    --exclude='*.zip' \
-    "$PLUGIN_DIR/" "$TMP_DIR/"
+# Modified/staged tracked files are included via a temporary stash tree
+# (matches the version read from the working tree above); untracked files
+# stay out by design, with a note so a forgotten `git add` is visible.
+TREE=$(git -C "$PLUGIN_DIR" stash create || true)
+git -C "$PLUGIN_DIR" archive "${TREE:-HEAD}" | tar -x -C "$TMP_DIR"
+UNTRACKED=$(git -C "$PLUGIN_DIR" ls-files --others --exclude-standard)
+if [ -n "$UNTRACKED" ]; then
+    echo "note: untracked files are NOT packaged:"
+    echo "$UNTRACKED" | head -10
+fi
+rm -rf "$TMP_DIR/tests" "$TMP_DIR/docs" "$TMP_DIR/scripts" "$TMP_DIR/stubs" "$TMP_DIR/.github"
+rm -f "$TMP_DIR/rector-bootstrap.php"
+rm -f "$TMP_DIR/.gitattributes" "$TMP_DIR/.gitignore" "$TMP_DIR/.editorconfig" "$TMP_DIR/.distignore" \
+    "$TMP_DIR/phpcs.xml" "$TMP_DIR/phpstan.neon" "$TMP_DIR/phpunit.xml.dist" \
+    "$TMP_DIR/composer.lock" "$TMP_DIR/rector.php" "$TMP_DIR/package.json" "$TMP_DIR/package-lock.json" "$TMP_DIR/renovate.json" \
+    "$TMP_DIR/CHANGELOG.md" "$TMP_DIR/CONTRIBUTING.md" "$TMP_DIR/README.md"
 
 # Clean vendor non-permitted files
 echo "Cleaning vendor files..."
@@ -108,6 +98,8 @@ find "$TMP_DIR/vendor" -type f -name "*.md" -delete 2>/dev/null || true
 find "$TMP_DIR/vendor" -type f -name "phpunit.xml*" -delete 2>/dev/null || true
 find "$TMP_DIR/vendor" -type f -name "phpstan.neon" -delete 2>/dev/null || true
 find "$TMP_DIR/vendor" -type f -name "phpcs.xml" -delete 2>/dev/null || true
+find "$TMP_DIR/vendor" -type f \( -name 'package.json' -o -name 'package-lock.json' -o -name 'renovate.json' -o -name '.gitignore' -o -name '.gitattributes' -o -name '.editorconfig' \) -delete 2>/dev/null || true
+rm -rf "$TMP_DIR/vendor/php-collective/djot-grammars/tiptap/demo"
 find "$TMP_DIR/vendor" -depth -type d -name "bin" ! -path "$TMP_DIR/vendor/bin" -exec rm -rf {} + 2>/dev/null || true
 rm -rf "$TMP_DIR/vendor/bin"
 

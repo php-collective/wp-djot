@@ -25,6 +25,11 @@
 /phpunit.xml.dist
 /rector.php
 /rector-bootstrap.php
+/rector.phar
+/node_modules
+/package.json
+/package-lock.json
+/renovate.json
 /.editorconfig
 
 # Documentation (keep readme.txt and composer.json)

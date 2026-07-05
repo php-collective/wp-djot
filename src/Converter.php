@@ -122,8 +122,14 @@ class Converter
     {
         $options = get_option('wpdjot_settings', []);
 
+        // Site-level hard opt-out: when unfiltered HTML is disabled site-wide,
+        // raw-HTML passthrough must never be possible regardless of the plugin
+        // setting (mirrors how core strips the unfiltered_html capability).
+        $safeMode = !empty($options['safe_mode'])
+            || (defined('DISALLOW_UNFILTERED_HTML') && DISALLOW_UNFILTERED_HTML);
+
         return new self(
-            safeMode: !empty($options['safe_mode']),
+            safeMode: $safeMode,
             postProfile: $options['post_profile'] ?? 'article',
             commentProfile: $options['comment_profile'] ?? 'comment',
             postSoftBreak: $options['post_soft_break'] ?? 'newline',

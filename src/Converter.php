@@ -122,10 +122,13 @@ class Converter
     {
         $options = get_option('wpdjot_settings', []);
 
+        // Safe mode defaults to ON: a fresh install has no stored option array
+        // yet, and the absence of the key must not read as "disabled" (the
+        // settings sanitizer always stores an explicit boolean once saved).
         // Site-level hard opt-out: when unfiltered HTML is disabled site-wide,
         // raw-HTML passthrough must never be possible regardless of the plugin
         // setting (mirrors how core strips the unfiltered_html capability).
-        $safeMode = !empty($options['safe_mode'])
+        $safeMode = (bool)($options['safe_mode'] ?? true)
             || (defined('DISALLOW_UNFILTERED_HTML') && DISALLOW_UNFILTERED_HTML);
 
         return new self(

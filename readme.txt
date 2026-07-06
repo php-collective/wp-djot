@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.5.16
+Stable tag: 1.5.17
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -91,6 +91,13 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 3. Rendered output with syntax highlighting
 
 == Changelog ==
+
+= 1.5.17 =
+* Safe mode now defaults to on for fresh installs: with no saved settings yet, rendering previously ran with safe mode disabled until the settings page was saved once.
+* Safe mode is forced when DISALLOW_UNFILTERED_HTML is set, mirroring how core strips the unfiltered_html capability.
+* The visual editor no longer loses admonition titles ({title="..."}) on a round trip: the title is captured, stays visible while editing, and serializes back to the attribute line.
+* Changed minimum djot-php library to 0.1.31: tab set and code group ids are deduplicated against explicit ids and heading anchors, so a colliding id attribute or heading slug no longer produces duplicate DOM ids with broken tab wiring. Also hardens URL schemes in the non-HTML renderers and derives heading ids from source text rather than smart-punctuation glyphs.
+* Updated bundled Mermaid to 11.16.
 
 = 1.5.16 =
 * Changed minimum djot-php library to 0.1.29, bringing upstream parser fixes for empty list items, indented and lazily-wrapped list markers, blockquote tab delimiters, and stricter reference definition handling.

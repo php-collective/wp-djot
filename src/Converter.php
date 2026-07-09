@@ -70,6 +70,10 @@ class Converter
 
     private bool $mermaidEnabled;
 
+    private string $torchlightTheme;
+
+    private string $torchlightDarkTheme;
+
     /**
      * @var array<string, \Djot\DjotConverter>
      */
@@ -91,6 +95,8 @@ class Converter
         string $smartQuotesLocale = 'en',
         int $headingShift = 0,
         bool $mermaidEnabled = false,
+        string $torchlightTheme = 'github-light',
+        string $torchlightDarkTheme = '',
     ) {
         $this->defaultSafeMode = $safeMode;
         $this->postProfile = $postProfile;
@@ -107,6 +113,8 @@ class Converter
         $this->smartQuotesLocale = $smartQuotesLocale;
         $this->headingShift = $headingShift;
         $this->mermaidEnabled = $mermaidEnabled;
+        $this->torchlightTheme = $torchlightTheme;
+        $this->torchlightDarkTheme = $torchlightDarkTheme;
         $this->converter = new DjotConverter(safeMode: false);
         $this->converter->getHtmlRenderer()->setCodeBlockTabWidth(4);
         $this->safeConverter = new DjotConverter(safeMode: true);
@@ -147,6 +155,8 @@ class Converter
             smartQuotesLocale: $options['smart_quotes_locale'] ?? 'auto',
             headingShift: (int)($options['heading_shift'] ?? 0),
             mermaidEnabled: !empty($options['mermaid_enabled']),
+            torchlightTheme: (string)($options['torchlight_theme'] ?? 'github-light'),
+            torchlightDarkTheme: (string)($options['torchlight_dark_theme'] ?? ''),
         );
     }
 
@@ -306,8 +316,14 @@ class Converter
             $converter->addExtension(new HeadingReferenceExtension());
 
             // Add Torchlight syntax highlighting
+            // A configured dark theme switches to dual-theme rendering: one
+            // pass emits both palettes and the front end flips them via the
+            // --phiki-dark-* CSS variables.
+            $torchlightTheme = $this->torchlightDarkTheme !== '' && $this->torchlightDarkTheme !== $this->torchlightTheme
+                ? ['light' => $this->torchlightTheme, 'dark' => $this->torchlightDarkTheme]
+                : $this->torchlightTheme;
             $converter->addExtension(new TorchlightExtension(
-                theme: 'github-light',
+                theme: $torchlightTheme,
             ));
 
             // Allow customization via WordPress filters

@@ -27,6 +27,31 @@ add_filter('wpdjot_converter_product', function(Djot\DjotConverter $converter): 
 });
 ```
 
+## Code Highlighting Themes
+
+Settings -> Djot -> Rendering Settings offers two Torchlight theme selects:
+
+- **Code Highlighting Theme** - the (light) theme used for all code blocks. Default: `github-light`.
+- **Code Highlighting Theme (Dark Mode)** - optional. When set, every code block renders **both palettes in one pass**: the light theme as regular inline colors, the dark theme as `--phiki-dark-*` CSS variables on the same elements. No re-render, no per-post divergence - the front end decides which palette shows.
+
+A (block) theme with a dark mode activates the dark palette like this:
+
+```css
+/* Example: dark mode toggled via a data-theme attribute on <html>. */
+[data-theme="dark"] .phiki.phiki-themes,
+[data-theme="dark"] .phiki.phiki-themes span,
+[data-theme="dark"] .phiki.phiki-themes .line {
+    color: var(--phiki-dark-color) !important;
+    background-color: var(--phiki-dark-background-color, transparent) !important;
+}
+
+[data-theme="dark"] .phiki.phiki-themes .line-has-background {
+    background: var(--phiki-dark-background) !important;
+}
+```
+
+For OS-preference-only sites, wrap the same rules in a prefers-color-scheme media query instead. The `!important` is required because Phiki emits the light palette as inline styles.
+
 ## Built-in Customizations
 
 The plugin includes these customizations out of the box for semantic HTML elements:

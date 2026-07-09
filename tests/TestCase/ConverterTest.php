@@ -344,6 +344,44 @@ class ConverterTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/["\']class=/', $html);
     }
 
+    public function testTorchlightThemeSettingIsApplied(): void
+    {
+        if (!class_exists(\Torchlight\Engine\Engine::class)) {
+            $this->markTestSkipped('Torchlight Engine is not installed.');
+        }
+
+        $converter = new Converter(
+            safeMode: false,
+            torchlightTheme: 'github-dark',
+        );
+
+        $html = $converter->convertArticle("``` php\necho 1;\n```");
+
+        $this->assertStringContainsString('github-dark', $html);
+        $this->assertStringNotContainsString('github-light', $html);
+    }
+
+    public function testTorchlightDarkThemeEnablesDualThemeRendering(): void
+    {
+        if (!class_exists(\Torchlight\Engine\Engine::class)) {
+            $this->markTestSkipped('Torchlight Engine is not installed.');
+        }
+
+        $converter = new Converter(
+            safeMode: false,
+            torchlightTheme: 'github-light',
+            torchlightDarkTheme: 'github-dark',
+        );
+
+        $html = $converter->convertArticle("``` php\necho 1;\n```");
+
+        // Dual-theme rendering: both palettes in one pass, the dark one as
+        // --phiki-dark-* CSS variables the front end can activate.
+        $this->assertStringContainsString('github-light', $html);
+        $this->assertStringContainsString('github-dark', $html);
+        $this->assertStringContainsString('--phiki-dark-color', $html);
+    }
+
     public function testNoneProfileAllowsRawHtml(): void
     {
         $converter = new Converter(

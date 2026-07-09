@@ -613,12 +613,6 @@ class Settings
     }
 
     /**
-     * Render smart quotes locale select dropdown.
-     *
-     * @param array<string, mixed> $args
-     */
-
-    /**
      * Torchlight themes bundled with the engine; falls back to a curated list
      * when the engine package is not installed.
      *
@@ -626,17 +620,25 @@ class Settings
      */
     public static function torchlightThemes(): array
     {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+
         if (class_exists(Engine::class)) {
             $file = (new ReflectionClass(Engine::class))->getFileName();
             $files = $file !== false
                 ? (glob(dirname($file, 2) . '/resources/themes/normalized/*.json') ?: [])
                 : [];
             if ($files !== []) {
-                return array_map(static fn (string $f): string => basename($f, '.json'), $files);
+                $themes = array_map(static fn (string $f): string => basename($f, '.json'), $files);
+                sort($themes);
+
+                return $cache = $themes;
             }
         }
 
-        return ['github-light', 'github-dark', 'dracula', 'nord', 'one-dark-pro', 'atom-one-dark', 'min-light', 'min-dark'];
+        return $cache = ['github-light', 'github-dark', 'dracula', 'nord', 'one-dark-pro', 'atom-one-dark', 'min-light', 'min-dark'];
     }
 
     /**
@@ -700,6 +702,11 @@ class Settings
         }
     }
 
+    /**
+     * Render smart quotes locale select dropdown.
+     *
+     * @param array<string, mixed> $args
+     */
     public function renderSmartQuotesLocaleSelect(array $args): void
     {
         $options = get_option(self::OPTION_GROUP, []);

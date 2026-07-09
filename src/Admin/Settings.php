@@ -627,9 +627,10 @@ class Settings
     public static function torchlightThemes(): array
     {
         if (class_exists(Engine::class)) {
-            $dir = dirname((new ReflectionClass(Engine::class))->getFileName(), 2)
-                . '/resources/themes/normalized';
-            $files = glob($dir . '/*.json') ?: [];
+            $file = (new ReflectionClass(Engine::class))->getFileName();
+            $files = $file !== false
+                ? (glob(dirname($file, 2) . '/resources/themes/normalized/*.json') ?: [])
+                : [];
             if ($files !== []) {
                 return array_map(static fn (string $f): string => basename($f, '.json'), $files);
             }
@@ -660,6 +661,10 @@ class Settings
             );
         }
         echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
     }
 
     /**
@@ -689,6 +694,10 @@ class Settings
             );
         }
         echo '</select>';
+
+        if (!empty($args['description'])) {
+            printf('<p class="description">%s</p>', esc_html($args['description']));
+        }
     }
 
     public function renderSmartQuotesLocaleSelect(array $args): void

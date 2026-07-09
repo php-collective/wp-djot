@@ -324,6 +324,26 @@ class ConverterTest extends TestCase
         $this->assertStringContainsString('</dfn>', $html);
     }
 
+    public function testTorchlightSpecialLineAttributesAreKsesSafe(): void
+    {
+        if (!class_exists(\Torchlight\Engine\Engine::class)) {
+            $this->markTestSkipped('Torchlight Engine is not installed.');
+        }
+
+        // The engine glues the class attribute onto the preceding quoted style
+        // value on highlight/diff lines (`style="..."class='line ...'`). That
+        // markup survives string assertions, but wp_kses drops the mangled
+        // attribute run at render time, so the line loses its classes (and
+        // with them the gutter padding + accent styles). The extension must
+        // emit a space between the attributes.
+        $html = $this->converter->convertArticle("``` php\na(); // [tl! highlight]\nb(); // [tl! ++]\nc(); // [tl! --]\n```");
+
+        $this->assertStringContainsString('line-highlight', $html);
+        $this->assertStringContainsString('line-add', $html);
+        $this->assertStringContainsString('line-remove', $html);
+        $this->assertDoesNotMatchRegularExpression('/["\']class=/', $html);
+    }
+
     public function testNoneProfileAllowsRawHtml(): void
     {
         $converter = new Converter(

@@ -10,6 +10,8 @@ if (!defined('ABSPATH')) {
 }
 
 use Djot\Extension\SmartQuotesExtension;
+use ReflectionClass;
+use Torchlight\Engine\Engine;
 
 /**
  * Admin settings page for WP Djot.
@@ -197,6 +199,16 @@ class Settings
                         'render' => [$this, 'renderSmartQuotesLocaleSelect'],
                         'description' => __('Choose which typographic quote characters to use. Default English uses curly quotes.', 'djot-markup'),
                     ],
+                    'torchlight_theme' => [
+                        'label' => __('Code Highlighting Theme', 'djot-markup'),
+                        'render' => [$this, 'renderTorchlightThemeSelect'],
+                        'description' => __('Color theme for Torchlight syntax highlighting in code blocks.', 'djot-markup'),
+                    ],
+                    'torchlight_dark_theme' => [
+                        'label' => __('Code Highlighting Theme (Dark Mode)', 'djot-markup'),
+                        'render' => [$this, 'renderTorchlightDarkThemeSelect'],
+                        'description' => __('Optional second theme for dark mode. When set, code blocks render both palettes in one pass and your (block) theme can switch them via the --phiki-dark-* CSS variables - no re-render needed.', 'djot-markup'),
+                    ],
                 ],
             ],
             [
@@ -315,6 +327,12 @@ class Settings
             'smart_quotes_locale' => in_array($input['smart_quotes_locale'] ?? '', array_merge(['auto'], SmartQuotesExtension::getSupportedLocales()), true)
                 ? $input['smart_quotes_locale']
                 : 'en',
+            'torchlight_theme' => in_array($input['torchlight_theme'] ?? '', self::torchlightThemes(), true)
+                ? $input['torchlight_theme']
+                : 'github-light',
+            'torchlight_dark_theme' => in_array($input['torchlight_dark_theme'] ?? '', self::torchlightThemes(), true)
+                ? $input['torchlight_dark_theme']
+                : '',
             'toc_enabled' => !empty($input['toc_enabled']),
             'toc_position' => in_array($input['toc_position'] ?? '', ['top', 'bottom'], true)
                 ? $input['toc_position']
@@ -599,6 +617,80 @@ class Settings
      *
      * @param array<string, mixed> $args
      */
+
+    /**
+     * Torchlight themes bundled with the engine; falls back to a curated list
+     * when the engine package is not installed.
+     *
+     * @return array<string>
+     */
+    public static function torchlightThemes(): array
+    {
+        if (class_exists(Engine::class)) {
+            $dir = dirname((new ReflectionClass(Engine::class))->getFileName(), 2)
+                . '/resources/themes/normalized';
+            $files = glob($dir . '/*.json') ?: [];
+            if ($files !== []) {
+                return array_map(static fn (string $f): string => basename($f, '.json'), $files);
+            }
+        }
+
+        return ['github-light', 'github-dark', 'dracula', 'nord', 'one-dark-pro', 'atom-one-dark', 'min-light', 'min-dark'];
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     */
+    public function renderTorchlightThemeSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $current = $options[$field] ?? 'github-light';
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+        foreach (self::torchlightThemes() as $theme) {
+            printf(
+                '<option value="%1$s"%2$s>%1$s</option>',
+                esc_attr($theme),
+                selected($current, $theme, false),
+            );
+        }
+        echo '</select>';
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     */
+    public function renderTorchlightDarkThemeSelect(array $args): void
+    {
+        $options = get_option(self::OPTION_GROUP, []);
+        $field = $args['field'];
+        $current = $options[$field] ?? '';
+
+        printf(
+            '<select id="%1$s" name="%2$s[%1$s]">',
+            esc_attr($field),
+            esc_attr(self::OPTION_GROUP),
+        );
+        printf(
+            '<option value=""%s>%s</option>',
+            selected($current, '', false),
+            esc_html__('Disabled (single theme)', 'djot-markup'),
+        );
+        foreach (self::torchlightThemes() as $theme) {
+            printf(
+                '<option value="%1$s"%2$s>%1$s</option>',
+                esc_attr($theme),
+                selected($current, $theme, false),
+            );
+        }
+        echo '</select>';
+    }
+
     public function renderSmartQuotesLocaleSelect(array $args): void
     {
         $options = get_option(self::OPTION_GROUP, []);

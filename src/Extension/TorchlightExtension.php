@@ -36,18 +36,24 @@ class TorchlightExtension implements ExtensionInterface
 {
     private Engine $engine;
 
-    private string $theme;
+    /**
+     * @var array<string, string>|string
+     */
+    private string|array $theme;
 
     private bool $showLineNumbers;
 
     private bool $roundTripMode = false;
 
     /**
-     * @param string $theme Theme name (e.g., 'github-light', 'github-dark', 'synthwave-84')
+     * @param array<string, string>|string $theme Theme name (e.g., 'github-light'), or a
+     *   ['light' => ..., 'dark' => ...] pair for dual-theme rendering: Phiki then emits
+     *   both palettes in one pass (dark values as --phiki-dark-* CSS variables) so the
+     *   front end can switch schemes without re-rendering.
      * @param bool $showLineNumbers Whether to show line numbers by default
      */
     public function __construct(
-        string $theme = 'github-light',
+        array|string $theme = 'github-light',
         bool $showLineNumbers = false,
     ) {
         $this->theme = $theme;

@@ -387,10 +387,10 @@ class Plugin
     }
 
     /**
-     * Whether any post in the main query mentions mermaid in its source.
-     * Cheap (posts are already in memory) and errs on loading: a mention in
-     * prose costs one extra script load, a missed fence would break a
-     * diagram.
+     * Whether the current request should enqueue Mermaid.
+     * Default is a main-query content sniff (posts are already in memory) that
+     * errs on loading; a prose mention costs one extra script load. The
+     * wpdjot_load_mermaid filter can override this for other sources.
      */
     private function pageNeedsMermaid(): bool
     {

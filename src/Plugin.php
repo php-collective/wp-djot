@@ -12,6 +12,7 @@ if (!defined('ABSPATH')) {
 use Djot\DjotConverter;
 use Djot\Event\RenderEvent;
 use WP_CLI;
+use WP_Post;
 use WpDjot\Admin\Settings;
 use WpDjot\Blocks\DjotBlock;
 use WpDjot\CLI\MigrateCommand;
@@ -386,6 +387,43 @@ class Plugin
     }
 
     /**
+     * Whether the current request should enqueue Mermaid.
+     * Default is a main-query content sniff (posts are already in memory) that
+     * errs on loading; a prose mention costs one extra script load. The
+     * wpdjot_load_mermaid filter can override this for other sources.
+     */
+    private function pageNeedsMermaid(): bool
+    {
+        global $wp_query;
+
+        $needed = false;
+        // Post content only renders on singular views (shouldFilterContent
+        // skips archives/feeds). Djot emitted through the shortcode or the
+        // wpdjot_to_html() template tag (widgets, page builders, custom
+        // templates) is outside the main query - sites doing that with
+        // diagrams force-load via the wpdjot_load_mermaid filter below.
+        foreach (is_singular() ? (array)($wp_query->posts ?? []) : [] as $post) {
+            // Custom main queries can return ids (fields => 'ids'); resolve
+            // through the post cache.
+            $post = $post instanceof WP_Post ? $post : get_post($post);
+            if ($post instanceof WP_Post && str_contains($post->post_content, 'mermaid')) {
+                $needed = true;
+
+                break;
+            }
+        }
+
+        /**
+         * Filter whether the Mermaid library is enqueued for this request.
+         * Return true to force-load it (e.g. for mermaid rendered outside the
+         * main query - widgets, page builders).
+         *
+         * @param bool $needed Result of the main-query content sniff.
+         */
+        return (bool)apply_filters('wpdjot_load_mermaid', $needed);
+    }
+
+    /**
      * Enqueue frontend assets.
      */
     public function enqueueAssets(): void
@@ -423,10 +461,12 @@ class Plugin
             wp_add_inline_script('wpdjot-permalink', $copyJs);
         }
 
-        // Mermaid.js for diagram rendering
-        // Always enqueue when enabled - lazy-loading via filter doesn't work reliably
-        // because block rendering happens after wp_enqueue_scripts
-        if ($this->options['mermaid_enabled']) {
+        // Mermaid.js for diagram rendering: ~2MB even minified, so load it
+        // only when something in the main query can actually use it (its raw
+        // source mentions mermaid). Rendering happens after
+        // wp_enqueue_scripts, but the queried posts' source is already
+        // available here - same content-sniff approach as wp-carve.
+        if ($this->options['mermaid_enabled'] && $this->pageNeedsMermaid()) {
             wp_enqueue_script(
                 'mermaid',
                 WPDJOT_PLUGIN_URL . 'assets/js/vendor/mermaid.min.js',

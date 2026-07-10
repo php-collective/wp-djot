@@ -77,6 +77,14 @@ add_filter('wpdjot_allowed_html', function(array $allowed): array {
 });
 ```
 
+### wpdjot_load_mermaid
+
+Whether the Mermaid library is enqueued for the current request (only evaluated when the Mermaid setting is enabled - the filter cannot turn Mermaid on). By default it loads only when a post in the main query mentions `mermaid` in its source; return `true` to force-load it for content rendered outside the main query (widgets, page builders).
+
+```php
+add_filter('wpdjot_load_mermaid', fn (bool $needed): bool => $needed || is_page('diagrams'));
+```
+
 ## Examples
 
 ### Add Custom CSS Class to All Code Blocks

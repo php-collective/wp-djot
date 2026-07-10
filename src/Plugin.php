@@ -397,7 +397,10 @@ class Plugin
         global $wp_query;
 
         $needed = false;
-        foreach ((array)($wp_query->posts ?? []) as $post) {
+        // Djot only renders on singular views (shouldFilterContent skips
+        // archives/feeds), so a diagram can never appear elsewhere - the
+        // filter below can still force-load for special setups.
+        foreach (is_singular() ? (array)($wp_query->posts ?? []) : [] as $post) {
             // Custom main queries can return ids (fields => 'ids'); resolve
             // through the post cache.
             $post = $post instanceof WP_Post ? $post : get_post($post);

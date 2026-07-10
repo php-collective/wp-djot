@@ -181,7 +181,7 @@ class Converter
         $smartQuotesLocale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
         $smartQuotesKey = (!$roundTripMode && $smartQuotesLocale !== 'en') ? '_sq_' . $smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
-        $mermaidKey = $this->mermaidEnabled ? '_mermaid' : '';
+        $mermaidKey = $this->mermaidEnabled && $context !== 'comment' ? '_mermaid' : '';
         $roundTripKey = $roundTripMode ? '_rt' : '';
         $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey . $mermaidKey . $roundTripKey;
 
@@ -294,8 +294,11 @@ class Converter
                 $converter->addExtension(new HeadingLevelShiftExtension(shift: $this->headingShift));
             }
 
-            // Add Mermaid diagram support
-            if ($this->mermaidEnabled) {
+            // Add Mermaid diagram support. Never for comments: diagrams
+            // execute a client-side renderer over the block's text, which is
+            // not a surface untrusted commenters should reach - a mermaid
+            // fence in a comment stays an ordinary code block.
+            if ($this->mermaidEnabled && $context !== 'comment') {
                 $converter->addExtension(new MermaidExtension());
             }
 

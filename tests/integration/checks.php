@@ -112,15 +112,13 @@ $wpdjot_check('mermaid enqueued on singular post using it', $wpdjot_mermaid_enqu
 $wpdjot_check('mermaid skipped on singular post without it', !$wpdjot_mermaid_enqueued(['p' => $wpdjot_plain_post]));
 $wpdjot_check('mermaid skipped on archive views', !$wpdjot_mermaid_enqueued([]));
 
-// A mermaid block in a comment also triggers the load.
-$wpdjot_comment_id = wp_insert_comment([
-    'comment_post_ID' => $wpdjot_plain_post,
-    'comment_content' => "``` mermaid\nflowchart LR\n    A --> B\n```",
-    'comment_approved' => 1,
-]);
-wp_update_comment_count($wpdjot_plain_post); // wp_insert_comment does not bump it
-$wpdjot_check('mermaid enqueued for diagram in comment', $wpdjot_mermaid_enqueued(['p' => $wpdjot_plain_post]));
-wp_delete_comment($wpdjot_comment_id, true);
+// Diagrams do not render in comments (the comment profile gates the
+// extension), so comment content deliberately does not factor into the
+// sniff.
+$wpdjot_check(
+    'comment profile does not render mermaid',
+    !str_contains(\WpDjot\Converter::fromSettings()->convertComment("``` mermaid\nflowchart LR\n    A --> B\n```"), 'class="mermaid"'),
+);
 
 update_option('wpdjot_settings', $wpdjot_prev_options);
 wp_delete_post($wpdjot_mermaid_post, true);

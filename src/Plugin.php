@@ -404,26 +404,10 @@ class Plugin
             // Custom main queries can return ids (fields => 'ids'); resolve
             // through the post cache.
             $post = $post instanceof WP_Post ? $post : get_post($post);
-            if (!$post instanceof WP_Post) {
-                continue;
-            }
-            if (str_contains($post->post_content, 'mermaid')) {
+            if ($post instanceof WP_Post && str_contains($post->post_content, 'mermaid')) {
                 $needed = true;
 
                 break;
-            }
-            // Comments render Djot too (filterComment), so a diagram can live
-            // in a comment on an otherwise mermaid-free post. One extra query
-            // only on singular views with comments; primes the comment cache
-            // the comment template reads anyway.
-            if ($this->options['enable_comments'] && (int)$post->comment_count > 0) {
-                foreach (get_comments(['post_id' => $post->ID, 'status' => 'approve']) as $comment) {
-                    if (str_contains((string)$comment->comment_content, 'mermaid')) {
-                        $needed = true;
-
-                        break 2;
-                    }
-                }
             }
         }
 

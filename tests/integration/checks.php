@@ -76,6 +76,45 @@ $wpdjot_check(
     is_array($renderData) ? $wpdjot_snippet((string)($renderData['html'] ?? '')) : 'no data',
 );
 
+// Mermaid conditional enqueue: the library loads on a singular post whose
+// source uses mermaid, and stays out everywhere else.
+$wpdjot_prev_options = get_option('wpdjot_settings', []);
+update_option('wpdjot_settings', array_merge(is_array($wpdjot_prev_options) ? $wpdjot_prev_options : [], [
+    'mermaid_enabled' => true,
+    'enable_posts' => true,
+]));
+$wpdjot_plugin = new \WpDjot\Plugin();
+$wpdjot_plugin->init();
+
+$wpdjot_mermaid_post = wp_insert_post([
+    'post_title' => 'Mermaid integration check',
+    'post_status' => 'publish',
+    'post_content' => "``` mermaid\nflowchart LR\n    A --> B\n```",
+]);
+$wpdjot_plain_post = wp_insert_post([
+    'post_title' => 'Plain integration check',
+    'post_status' => 'publish',
+    'post_content' => 'No diagrams here.',
+]);
+
+$wpdjot_mermaid_enqueued = static function (array $query) use ($wpdjot_plugin): bool {
+    global $wp_query, $wp_the_query, $wp_scripts;
+    $wp_scripts = null;
+    $wp_query = new WP_Query($query);
+    $wp_the_query = $wp_query;
+    $wpdjot_plugin->enqueueAssets();
+
+    return wp_script_is('mermaid', 'enqueued');
+};
+
+$wpdjot_check('mermaid enqueued on singular post using it', $wpdjot_mermaid_enqueued(['p' => $wpdjot_mermaid_post]));
+$wpdjot_check('mermaid skipped on singular post without it', !$wpdjot_mermaid_enqueued(['p' => $wpdjot_plain_post]));
+$wpdjot_check('mermaid skipped on archive views', !$wpdjot_mermaid_enqueued([]));
+
+update_option('wpdjot_settings', $wpdjot_prev_options);
+wp_delete_post($wpdjot_mermaid_post, true);
+wp_delete_post($wpdjot_plain_post, true);
+
 if ($wpdjot_failures !== []) {
     fwrite(STDERR, "\n" . count($wpdjot_failures) . " integration check(s) failed:\n - " . implode("\n - ", $wpdjot_failures) . "\n");
     exit(1);

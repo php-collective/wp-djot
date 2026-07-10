@@ -82,6 +82,7 @@ $wpdjot_prev_options = get_option('wpdjot_settings', []);
 update_option('wpdjot_settings', array_merge(is_array($wpdjot_prev_options) ? $wpdjot_prev_options : [], [
     'mermaid_enabled' => true,
     'enable_posts' => true,
+    'enable_comments' => true,
 ]));
 $wpdjot_plugin = new \WpDjot\Plugin();
 $wpdjot_plugin->init();
@@ -110,6 +111,16 @@ $wpdjot_mermaid_enqueued = static function (array $query) use ($wpdjot_plugin): 
 $wpdjot_check('mermaid enqueued on singular post using it', $wpdjot_mermaid_enqueued(['p' => $wpdjot_mermaid_post]));
 $wpdjot_check('mermaid skipped on singular post without it', !$wpdjot_mermaid_enqueued(['p' => $wpdjot_plain_post]));
 $wpdjot_check('mermaid skipped on archive views', !$wpdjot_mermaid_enqueued([]));
+
+// A mermaid block in a comment also triggers the load.
+$wpdjot_comment_id = wp_insert_comment([
+    'comment_post_ID' => $wpdjot_plain_post,
+    'comment_content' => "``` mermaid\nflowchart LR\n    A --> B\n```",
+    'comment_approved' => 1,
+]);
+wp_update_comment_count($wpdjot_plain_post); // wp_insert_comment does not bump it
+$wpdjot_check('mermaid enqueued for diagram in comment', $wpdjot_mermaid_enqueued(['p' => $wpdjot_plain_post]));
+wp_delete_comment($wpdjot_comment_id, true);
 
 update_option('wpdjot_settings', $wpdjot_prev_options);
 wp_delete_post($wpdjot_mermaid_post, true);

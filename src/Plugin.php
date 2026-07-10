@@ -398,6 +398,9 @@ class Plugin
 
         $needed = false;
         foreach ((array)($wp_query->posts ?? []) as $post) {
+            // Custom main queries can return ids (fields => 'ids'); resolve
+            // through the post cache.
+            $post = $post instanceof WP_Post ? $post : get_post($post);
             if ($post instanceof WP_Post && str_contains($post->post_content, 'mermaid')) {
                 $needed = true;
 

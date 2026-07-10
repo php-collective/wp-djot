@@ -657,9 +657,10 @@ class Settings
         );
         foreach (self::torchlightThemes() as $theme) {
             printf(
-                '<option value="%1$s"%2$s>%1$s</option>',
+                '<option value="%1$s"%2$s>%3$s</option>',
                 esc_attr($theme),
                 selected($current, $theme, false),
+                esc_html($theme),
             );
         }
         echo '</select>';
@@ -690,9 +691,10 @@ class Settings
         );
         foreach (self::torchlightThemes() as $theme) {
             printf(
-                '<option value="%1$s"%2$s>%1$s</option>',
+                '<option value="%1$s"%2$s>%3$s</option>',
                 esc_attr($theme),
                 selected($current, $theme, false),
+                esc_html($theme),
             );
         }
         echo '</select>';

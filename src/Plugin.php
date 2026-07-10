@@ -12,6 +12,7 @@ if (!defined('ABSPATH')) {
 use Djot\DjotConverter;
 use Djot\Event\RenderEvent;
 use WP_CLI;
+use WP_Post;
 use WpDjot\Admin\Settings;
 use WpDjot\Blocks\DjotBlock;
 use WpDjot\CLI\MigrateCommand;
@@ -386,6 +387,35 @@ class Plugin
     }
 
     /**
+     * Whether any post in the main query mentions mermaid in its source.
+     * Cheap (posts are already in memory) and errs on loading: a mention in
+     * prose costs one extra script load, a missed fence would break a
+     * diagram.
+     */
+    private function pageNeedsMermaid(): bool
+    {
+        global $wp_query;
+
+        $needed = false;
+        foreach ((array)($wp_query->posts ?? []) as $post) {
+            if ($post instanceof WP_Post && str_contains($post->post_content, 'mermaid')) {
+                $needed = true;
+
+                break;
+            }
+        }
+
+        /**
+         * Filter whether the Mermaid library is enqueued for this request.
+         * Return true to force-load it (e.g. for mermaid rendered outside the
+         * main query - widgets, page builders).
+         *
+         * @param bool $needed Result of the main-query content sniff.
+         */
+        return (bool)apply_filters('wpdjot_load_mermaid', $needed);
+    }
+
+    /**
      * Enqueue frontend assets.
      */
     public function enqueueAssets(): void
@@ -423,10 +453,12 @@ class Plugin
             wp_add_inline_script('wpdjot-permalink', $copyJs);
         }
 
-        // Mermaid.js for diagram rendering
-        // Always enqueue when enabled - lazy-loading via filter doesn't work reliably
-        // because block rendering happens after wp_enqueue_scripts
-        if ($this->options['mermaid_enabled']) {
+        // Mermaid.js for diagram rendering: ~2MB even minified, so load it
+        // only when something in the main query can actually use it (its raw
+        // source mentions mermaid). Rendering happens after
+        // wp_enqueue_scripts, but the queried posts' source is already
+        // available here - same content-sniff approach as wp-carve.
+        if ($this->options['mermaid_enabled'] && $this->pageNeedsMermaid()) {
             wp_enqueue_script(
                 'mermaid',
                 WPDJOT_PLUGIN_URL . 'assets/js/vendor/mermaid.min.js',

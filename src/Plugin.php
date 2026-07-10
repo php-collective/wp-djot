@@ -397,9 +397,11 @@ class Plugin
         global $wp_query;
 
         $needed = false;
-        // Djot only renders on singular views (shouldFilterContent skips
-        // archives/feeds), so a diagram can never appear elsewhere - the
-        // filter below can still force-load for special setups.
+        // Post content only renders on singular views (shouldFilterContent
+        // skips archives/feeds). Djot emitted through the shortcode or the
+        // wpdjot_to_html() template tag (widgets, page builders, custom
+        // templates) is outside the main query - sites doing that with
+        // diagrams force-load via the wpdjot_load_mermaid filter below.
         foreach (is_singular() ? (array)($wp_query->posts ?? []) : [] as $post) {
             // Custom main queries can return ids (fields => 'ids'); resolve
             // through the post cache.

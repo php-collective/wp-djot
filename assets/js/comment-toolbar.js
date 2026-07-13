@@ -118,8 +118,19 @@
             },
             body: JSON.stringify({ content: content }),
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+        .then(({ ok, data }) => {
+            if (!ok) {
+                // The endpoint returns 403 (comments disabled) or 429 (rate
+                // limited) with a { message }; surface it instead of a blank
+                // preview. textContent avoids injecting the message as HTML.
+                const p = document.createElement('p');
+                p.className = 'djot-preview-error';
+                p.textContent = (data && data.message) ? data.message : 'Preview unavailable';
+                previewPane.innerHTML = '';
+                previewPane.appendChild(p);
+                return;
+            }
             previewPane.innerHTML = data.html || '<p class="djot-preview-empty">Nothing to preview</p>';
         })
         .catch(() => {

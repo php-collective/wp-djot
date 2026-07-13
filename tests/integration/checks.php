@@ -51,6 +51,14 @@ $wpdjot_check(
     $wpdjot_snippet($tagHtml),
 );
 
+// The public preview-comment endpoint is gated on Djot comment rendering
+// (added this release); enable it for these checks. Captured once here and
+// restored at the end of the file.
+$wpdjot_prev_options = get_option('wpdjot_settings', []);
+update_option('wpdjot_settings', array_merge(is_array($wpdjot_prev_options) ? $wpdjot_prev_options : [], [
+    'enable_comments' => true,
+]));
+
 // Public REST endpoint (no auth) renders a comment preview.
 $previewReq = new WP_REST_Request('POST', '/wpdjot/v1/preview-comment');
 $previewReq->set_param('content', 'Inline `code` here.');
@@ -62,6 +70,17 @@ $wpdjot_check(
     is_array($previewData) && isset($previewData['html']) && str_contains((string)$previewData['html'], '<code>'),
     is_array($previewData) ? $wpdjot_snippet((string)($previewData['html'] ?? '')) : 'no data',
 );
+
+// Gate: with Djot comments explicitly disabled, the endpoint refuses.
+update_option('wpdjot_settings', array_merge(is_array($wpdjot_prev_options) ? $wpdjot_prev_options : [], [
+    'enable_comments' => false,
+]));
+$disabledReq = new WP_REST_Request('POST', '/wpdjot/v1/preview-comment');
+$disabledReq->set_param('content', 'x');
+$wpdjot_check('REST preview-comment refuses when comments disabled', rest_do_request($disabledReq)->get_status() === 403);
+update_option('wpdjot_settings', array_merge(is_array($wpdjot_prev_options) ? $wpdjot_prev_options : [], [
+    'enable_comments' => true,
+]));
 
 // Authenticated REST render endpoint (requires edit_posts).
 wp_set_current_user(1);
@@ -77,8 +96,8 @@ $wpdjot_check(
 );
 
 // Mermaid conditional enqueue: the library loads on a singular post whose
-// source uses mermaid, and stays out everywhere else.
-$wpdjot_prev_options = get_option('wpdjot_settings', []);
+// source uses mermaid, and stays out everywhere else. ($wpdjot_prev_options was
+// captured above, before the preview checks toggled enable_comments.)
 update_option('wpdjot_settings', array_merge(is_array($wpdjot_prev_options) ? $wpdjot_prev_options : [], [
     'mermaid_enabled' => true,
     'enable_posts' => true,

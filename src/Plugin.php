@@ -439,15 +439,131 @@ class Plugin
         return $mtime ? (string)$mtime : WPDJOT_VERSION;
     }
 
+    /**
+     * Whether the current front-end view renders any Djot, so the stylesheet
+     * is worth loading. Filterable via `wpdjot_enqueue_styles` for surfaces the
+     * detection cannot see (e.g. a [djot] shortcode injected by a widget or
+     * page builder outside the queried post content).
+     */
+    private function shouldEnqueueStyles(): bool
+    {
+        return (bool)apply_filters('wpdjot_enqueue_styles', $this->pageUsesDjot());
+    }
+
+    /**
+     * Content sniff mirroring pageNeedsMermaid(): walk the queried posts and
+     * report whether anything on this view renders Djot.
+     */
+    private function pageUsesDjot(): bool
+    {
+        // Comment Djot needs the stylesheet on any singular page that shows the
+        // comment toolbar (its preview renders into .djot-content) or already
+        // displays rendered Djot comments - independent of whether the post
+        // itself is Djot.
+        if (
+            is_singular()
+            && $this->options['enable_comments']
+            && (comments_open() || (int)get_comments_number() > 0)
+        ) {
+            return true;
+        }
+
+        // Dynamic Djot blocks and the [djot] shortcode are rendered by core's
+        // do_blocks()/do_shortcode() on the_content, so they also render on
+        // archive/home listings that show full post content - not only singular
+        // views. Scan the whole queried loop for them.
+        $tag = (string)$this->options['shortcode_tag'];
+        foreach ($this->queriedPosts() as $post) {
+            if (
+                has_block('wpdjot/djot', $post)
+                || has_block('wp-djot/djot', $post)
+                || ($tag !== '' && has_shortcode($post->post_content, $tag))
+                // A synced/reusable block (core/block) only stores a reference
+                // here; do_blocks() resolves and renders the referenced block
+                // later, which may contain Djot. We cannot cheaply see inside,
+                // so enqueue conservatively when any reusable block is present.
+                || has_block('core/block', $post)
+            ) {
+                return true;
+            }
+        }
+
+        // Inline {djot}...{/djot} blocks and whole-post conversion only render
+        // on singular views (shouldFilterContent skips archives/feeds).
+        if (!is_singular()) {
+            return false;
+        }
+        $post = get_post();
+        if (!$post instanceof WP_Post) {
+            return false;
+        }
+        if (str_contains($post->post_content, '{djot}')) {
+            return true;
+        }
+
+        return $this->options['process_full_content'] && $this->typeRendersDjot($post->post_type);
+    }
+
+    /**
+     * The posts the current request will display: the single queried post on a
+     * singular view, or the main query's loop on an archive/home listing (so a
+     * Djot block or [djot] shortcode inside any listed post is detected).
+     *
+     * @return array<int, \WP_Post>
+     */
+    private function queriedPosts(): array
+    {
+        if (is_singular()) {
+            $post = get_post();
+
+            return $post instanceof WP_Post ? [$post] : [];
+        }
+
+        global $wp_query;
+
+        $result = [];
+        foreach ((array)($wp_query->posts ?? []) as $post) {
+            // Custom main queries can return ids (fields => 'ids'); resolve
+            // through the post cache.
+            $post = $post instanceof WP_Post ? $post : get_post($post);
+            if ($post instanceof WP_Post) {
+                $result[] = $post;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Whether whole-content Djot rendering is enabled for this post type. Only
+     * posts and pages are filtered (see shouldFilterContent).
+     */
+    private function typeRendersDjot(string $postType): bool
+    {
+        if ($postType === 'post') {
+            return (bool)$this->options['enable_posts'];
+        }
+        if ($postType === 'page') {
+            return (bool)$this->options['enable_pages'];
+        }
+
+        return false;
+    }
+
     public function enqueueAssets(): void
     {
-        // Plugin CSS
-        wp_enqueue_style(
-            'djot-markup',
-            WPDJOT_PLUGIN_URL . 'assets/css/djot.css',
-            [],
-            $this->assetVersion('assets/css/djot.css'),
-        );
+        // The stylesheet used to load on every front-end view. Only enqueue it
+        // where Djot is actually rendered (a Djot post/block, a [djot]
+        // shortcode in the queried content, or a comment preview) so non-Djot
+        // pages ship no extra CSS.
+        if ($this->shouldEnqueueStyles()) {
+            wp_enqueue_style(
+                'djot-markup',
+                WPDJOT_PLUGIN_URL . 'assets/css/djot.css',
+                [],
+                $this->assetVersion('assets/css/djot.css'),
+            );
+        }
 
         // Code block enhancements (copy button)
         // Note: Syntax highlighting is handled server-side by Torchlight

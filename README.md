@@ -6,7 +6,7 @@
 [![WordPress Plugin Rating](https://img.shields.io/wordpress/plugin/stars/djot-markup)](https://wordpress.org/plugins/djot-markup/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://php.net)
-[![WordPress 6.0+](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org)
+[![WordPress 6.3+](https://img.shields.io/badge/WordPress-6.3%2B-blue.svg)](https://wordpress.org)
 
 A WordPress plugin for [Djot](https://djot.net/) markup language support. 
 Convert Djot syntax to HTML in posts, pages, and comments.

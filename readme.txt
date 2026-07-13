@@ -1,7 +1,7 @@
 === Djot Markup ===
 Contributors: markmarkmark
 Tags: djot, markup, markdown, syntax-highlighting, code
-Requires at least: 6.0
+Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 8.2
 Stable tag: 1.5.18
@@ -93,6 +93,12 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 == Changelog ==
 
 = 1.5.18 =
+* Security: the public comment-preview endpoint is now gated (403 when Djot comments are disabled) and per-IP rate-limited, so anonymous callers can no longer drive the render pipeline unbounded; editors are exempt and input is capped.
+* Security: updated the bundled djot-php library to 0.1.32 - two XSS fixes (the raw-HTML image fallback and raw HTML minted from a foreign code fence) and a nested-bracket denial-of-service fix.
+* The Markdown and HTML paste-conversion endpoints reject input over 512 KB with a 413 instead of converting an arbitrarily large paste.
+* The [djot] shortcode is excluded from wptexturize, so titled fences like ::: tab "Overview" keep their quotes.
+* The stylesheet loads only on views that actually render Djot; the wpdjot_enqueue_styles filter can force it.
+* Minimum WordPress raised to 6.3 (the block uses Block API v3).
 * Assets cache-bust by file mtime instead of the plugin version, so hotfixes that do not bump the version still invalidate CDN and browser caches.
 * The release zip installs into the canonical djot-markup folder, so a manual admin upload replaces the existing plugin instead of creating a duplicate beside it.
 * Dark-mode styles (admonitions, tabs, code groups, comment tabs) follow a site-level theme toggle in both directions, matching the code blocks.

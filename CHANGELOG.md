@@ -9,7 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.18] - 2026-07-14
 
+### Security
+
+- Gate and rate-limit the public comment-preview REST endpoint
+  (`wpdjot/v1/preview-comment`): it returns 403 when Djot comment rendering is
+  disabled and applies a per-IP fixed-window throttle (default 30/minute,
+  filterable via `wpdjot_preview_rate_limit` / `wpdjot_preview_rate_window`), so
+  an anonymous caller can no longer drive the full pipeline unbounded. Users who
+  can edit posts are exempt; input is capped at 20000 characters.
+- Require `php-collective/djot` `^0.1.32`, which fixes two raw-HTML XSS paths
+  (the `HtmlToDjot` image fallback and raw HTML minted from a foreign code
+  fence) and a nested-bracket / nested-`[quote]` denial-of-service (linearized
+  from O(n^2)).
+
+### Changed
+
+- Raise the minimum WordPress version to 6.3 (the block uses Block API v3).
+- The main stylesheet enqueues only on front-end views that actually render Djot
+  (a Djot post/block, a `[djot]` shortcode in the queried content, or a comment
+  preview); the `wpdjot_enqueue_styles` filter can force-load it.
+
 ### Fixed
+
+- The `[djot]` shortcode is excluded from `wptexturize`, so fence titles such as
+  `::: tab "Overview"` keep their straight quotes; `:::` opener lines are also
+  straightened before parsing.
+- The `convert-markdown` and `convert-html` REST endpoints reject input over
+  512 KB with a 413 instead of converting an arbitrarily large paste.
 
 - Plugin CSS/JS cache-bust by file mtime instead of the plugin version, so
   upgrades and hotfixes that do not bump the version still invalidate CDN and

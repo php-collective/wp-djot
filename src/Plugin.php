@@ -483,7 +483,7 @@ class Plugin
             if (
                 has_block('wpdjot/djot', $post)
                 || has_block('wp-djot/djot', $post)
-                || ($tag !== '' && has_shortcode($post->post_content, $tag))
+                || has_shortcode($post->post_content, $tag)
                 // A synced/reusable block (core/block) only stores a reference
                 // here; do_blocks() resolves and renders the referenced block
                 // later, which may contain Djot. We cannot cheaply see inside,

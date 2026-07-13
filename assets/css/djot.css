@@ -68,6 +68,38 @@
 }
 
 /* Torchlight/Phiki Syntax Highlighting */
+/* Dual-theme code blocks: with a dark torchlight theme configured, phiki
+   emits both palettes in one markup (--phiki-dark-* custom properties). The
+   dark set activates on OS preference, and a site toggle wins in both
+   directions via the html[data-theme] convention. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .djot-content pre code.phiki-themes,
+    :root:not([data-theme="light"]) .djot-content pre code.phiki-themes span.token,
+    :root:not([data-theme="light"]) .wpdjot pre code.phiki-themes,
+    :root:not([data-theme="light"]) .wpdjot pre code.phiki-themes span.token {
+        color: var(--phiki-dark-color) !important;
+        background-color: var(--phiki-dark-background-color) !important;
+    }
+
+    :root:not([data-theme="light"]) .djot-content pre code.phiki-themes .line,
+    :root:not([data-theme="light"]) .wpdjot pre code.phiki-themes .line {
+        background-color: var(--phiki-dark-background) !important;
+    }
+}
+
+:root[data-theme="dark"] .djot-content pre code.phiki-themes,
+:root[data-theme="dark"] .djot-content pre code.phiki-themes span.token,
+:root[data-theme="dark"] .wpdjot pre code.phiki-themes,
+:root[data-theme="dark"] .wpdjot pre code.phiki-themes span.token {
+    color: var(--phiki-dark-color) !important;
+    background-color: var(--phiki-dark-background-color) !important;
+}
+
+:root[data-theme="dark"] .djot-content pre code.phiki-themes .line,
+:root[data-theme="dark"] .wpdjot pre code.phiki-themes .line {
+    background-color: var(--phiki-dark-background) !important;
+}
+
 .djot-content pre code.torchlight {
     display: block;
     min-width: max-content;

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.18] - 2026-07-14
+
 ### Fixed
 
 - Plugin CSS/JS cache-bust by file mtime instead of the plugin version, so
@@ -445,7 +447,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comments always processed with safe mode
 - XSS protection via djot-php safe mode
 
-[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.5.8...HEAD
+[Unreleased]: https://github.com/php-collective/wp-djot/compare/1.5.18...HEAD
+[1.5.18]: https://github.com/php-collective/wp-djot/compare/1.5.17...1.5.18
 [1.5.8]: https://github.com/php-collective/wp-djot/compare/1.5.7...1.5.8
 [1.5.7]: https://github.com/php-collective/wp-djot/compare/1.5.6...1.5.7
 [1.5.6]: https://github.com/php-collective/wp-djot/compare/1.5.5...1.5.6

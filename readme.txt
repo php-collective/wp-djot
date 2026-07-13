@@ -4,7 +4,7 @@ Tags: djot, markup, markdown, syntax-highlighting, code
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.5.17
+Stable tag: 1.5.18
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -91,6 +91,14 @@ Yes, you can use the shortcode block to add Djot content in the block editor.
 3. Rendered output with syntax highlighting
 
 == Changelog ==
+
+= 1.5.18 =
+* Assets cache-bust by file mtime instead of the plugin version, so hotfixes that do not bump the version still invalidate CDN and browser caches.
+* The release zip installs into the canonical djot-markup folder, so a manual admin upload replaces the existing plugin instead of creating a duplicate beside it.
+* Dark-mode styles (admonitions, tabs, code groups, comment tabs) follow a site-level theme toggle in both directions, matching the code blocks.
+* Mermaid diagrams render in the effective color scheme (site toggle or OS preference) and re-render on scheme changes, without capturing already-rendered SVG as source.
+* Dark-mode code themes actually activate now: code blocks follow prefers-color-scheme and a site theme toggle wins over the OS; dual-theme style attributes are normalized.
+* Torchlight highlighting: a more robust phiki capture-offset patcher (closing inline delimiters keep their scope), the dist build installs without Composer scripts, and the dark-theme CSS covers every highlighter span.
 
 = 1.5.17 =
 * Safe mode now defaults to on for fresh installs: with no saved settings yet, rendering previously ran with safe mode disabled until the settings page was saved once.

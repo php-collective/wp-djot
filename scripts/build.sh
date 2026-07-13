@@ -105,14 +105,20 @@ rm -rf "$TMP_DIR/vendor/php-collective/djot-grammars/tiptap/demo"
 find "$TMP_DIR/vendor" -depth -type d -name "bin" ! -path "$TMP_DIR/vendor/bin" -exec rm -rf {} + 2>/dev/null || true
 rm -rf "$TMP_DIR/vendor/bin"
 
-# Build zip
+# Build zip with the canonical top-level folder (the WordPress.org slug).
+# A root-level zip extracts into a folder named after the ZIP FILE on manual
+# admin uploads, creating a duplicate plugin next to the existing install
+# instead of replacing it.
 mkdir -p "$BUILD_DIR"
 rm -f "$BUILD_DIR/$ZIP_NAME"
-cd "$TMP_DIR"
-zip -r "$BUILD_DIR/$ZIP_NAME" . -x '*.DS_Store' --quiet
+WRAP_DIR="$(mktemp -d)"
+mv "$TMP_DIR" "$WRAP_DIR/djot-markup"
+TMP_DIR="$WRAP_DIR/djot-markup"
+cd "$WRAP_DIR"
+zip -r "$BUILD_DIR/$ZIP_NAME" djot-markup -x '*.DS_Store' --quiet
 
 # Cleanup
-rm -rf "$TMP_DIR"
+rm -rf "$WRAP_DIR"
 
 echo ""
 echo "Built: build/$ZIP_NAME ($(du -h "$BUILD_DIR/$ZIP_NAME" | cut -f1))"

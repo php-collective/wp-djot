@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The release zip wraps everything in the canonical `djot-markup/` folder: a
+  root-level zip extracts into a folder named after the zip file on manual
+  admin uploads, creating a duplicate plugin beside the existing install
+  instead of replacing it.
 - All dark-mode surface styles (admonition divs, tabs, code groups, comment
   tabs) honor a site-level `<html data-theme="dark|light">` toggle in both
   directions, matching the code blocks.

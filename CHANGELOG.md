@@ -19,9 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mermaid diagrams follow the effective color scheme: the initial render
   picks the mermaid theme from the site toggle (or OS preference) instead of
   always rendering light, and diagrams re-render on scheme changes.
-
-### Fixed
-
 - Dark-mode code themes actually activate: the dual-theme setting rendered
   both palettes into the markup, but no stylesheet rule ever switched to the
   dark set. Code blocks now follow the visitor's `prefers-color-scheme`, and

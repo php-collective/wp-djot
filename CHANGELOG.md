@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- All dark-mode surface styles (admonition divs, tabs, code groups, comment
+  tabs) honor a site-level `<html data-theme="dark|light">` toggle in both
+  directions, matching the code blocks.
+- Mermaid re-renders cannot capture already-rendered SVG as "source": an
+  inline script stashes and parks every diagram before the vendor script's
+  auto-run (data-processed makes it skip the node); the scheme-aware init
+  unparks them.
+- Mermaid diagrams follow the effective color scheme: the initial render
+  picks the mermaid theme from the site toggle (or OS preference) instead of
+  always rendering light, and diagrams re-render on scheme changes.
+
+### Fixed
+
 - Dark-mode code themes actually activate: the dual-theme setting rendered
   both palettes into the markup, but no stylesheet rule ever switched to the
   dark set. Code blocks now follow the visitor's `prefers-color-scheme`, and

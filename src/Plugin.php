@@ -481,7 +481,7 @@ class Plugin
             // "default" theme rendered unreadable diagrams on dark pages.
             $mermaidInit = 'document.addEventListener("DOMContentLoaded",function(){'
                 . 'if(typeof mermaid==="undefined"){return;}'
-                . 'function stash(){document.querySelectorAll("pre.mermaid").forEach(function(n){if(n.dataset.djotSource===undefined){n.dataset.djotSource=n.textContent;}});}'
+                . 'function stash(){document.querySelectorAll("pre.mermaid").forEach(function(n){if(n.dataset.djotSource===undefined){n.dataset.djotSource=n.textContent;}if(n.getAttribute("data-processed")==="djot-defer"){n.removeAttribute("data-processed");}});}'
                 . 'function dark(){var t=document.documentElement.dataset.theme;if(t==="dark"){return true;}if(t==="light"){return false;}return !!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);}'
                 . 'function render(){mermaid.initialize({startOnLoad:false,theme:dark()?"dark":"default"});mermaid.run({nodes:document.querySelectorAll("pre.mermaid")});}'
                 . 'function rerender(){var ns=document.querySelectorAll("pre.mermaid");if(!ns.length){return;}ns.forEach(function(n){if(n.dataset.djotSource===undefined){return;}n.removeAttribute("data-processed");n.innerHTML="";n.textContent=n.dataset.djotSource;});render();}'
@@ -492,6 +492,16 @@ class Plugin
                 . 'var q=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)");'
                 . 'if(q){if(q.addEventListener){q.addEventListener("change",later);}else if(q.addListener){q.addListener(later);}}'
                 . '});';
+            // Park diagrams before the vendor script loads: mermaid auto-runs
+            // on DOMContentLoaded and would race the source stash (a later
+            // scheme-change re-render then feeds rendered SVG back to mermaid
+            // as "source" - the visible "Syntax error in text" bomb).
+            $mermaidPark = 'document.querySelectorAll("pre.mermaid").forEach(function(n){'
+                . 'if(n.dataset.djotSource===undefined){'
+                . 'n.dataset.djotSource=n.textContent;'
+                . 'n.setAttribute("data-processed","djot-defer");'
+                . '}});';
+            wp_add_inline_script('mermaid', $mermaidPark, 'before');
             wp_add_inline_script('mermaid', $mermaidInit);
         }
 

@@ -475,11 +475,22 @@ class Plugin
                 ['in_footer' => true, 'strategy' => 'defer'],
             );
 
-            // Initialize mermaid when loaded
+            // Scheme-aware init: pick the mermaid theme from the effective
+            // color scheme (a site toggle via html[data-theme] wins over the
+            // OS preference) and re-render on scheme changes - a fixed
+            // "default" theme rendered unreadable diagrams on dark pages.
             $mermaidInit = 'document.addEventListener("DOMContentLoaded",function(){'
-                . 'if(typeof mermaid!=="undefined"){'
-                . 'mermaid.initialize({startOnLoad:true,theme:"default"});'
-                . '}'
+                . 'if(typeof mermaid==="undefined"){return;}'
+                . 'function stash(){document.querySelectorAll("pre.mermaid").forEach(function(n){if(n.dataset.djotSource===undefined){n.dataset.djotSource=n.textContent;}});}'
+                . 'function dark(){var t=document.documentElement.dataset.theme;if(t==="dark"){return true;}if(t==="light"){return false;}return !!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);}'
+                . 'function render(){mermaid.initialize({startOnLoad:false,theme:dark()?"dark":"default"});mermaid.run({nodes:document.querySelectorAll("pre.mermaid")});}'
+                . 'function rerender(){var ns=document.querySelectorAll("pre.mermaid");if(!ns.length){return;}ns.forEach(function(n){if(n.dataset.djotSource===undefined){return;}n.removeAttribute("data-processed");n.innerHTML="";n.textContent=n.dataset.djotSource;});render();}'
+                . 'function later(){setTimeout(rerender,300);}'
+                . 'stash();render();'
+                . 'document.addEventListener("wpdjot:scheme-change",later);'
+                . 'document.addEventListener("wpcarve:scheme-change",later);'
+                . 'var q=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)");'
+                . 'if(q){if(q.addEventListener){q.addEventListener("change",later);}else if(q.addListener){q.addListener(later);}}'
                 . '});';
             wp_add_inline_script('mermaid', $mermaidInit);
         }

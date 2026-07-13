@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace WpDjot\Test;
+namespace WpDjot\Test\TestCase;
 
 use PHPUnit\Framework\TestCase;
 use WpDjot\Converter;

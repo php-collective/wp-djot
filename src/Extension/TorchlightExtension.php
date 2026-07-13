@@ -137,16 +137,16 @@ class TorchlightExtension implements ExtensionInterface
             // (glued declarations, doubled semicolons - phiki issue 142);
             // normalize INSIDE style attributes only so code text with a
             // literal ;; is untouched.
-            $html = (string)preg_replace_callback(
+            $html = preg_replace_callback(
                 '/style=([\'"])(.*?)\1/s',
                 static function (array $m): string {
-                    $value = (string)preg_replace('/(#[0-9a-fA-F]{3,8})(--)/', '$1;$2', $m[2]);
-                    $value = str_replace(';;', ';', $value);
+                    $value = preg_replace('/(#[0-9a-fA-F]{3,8})(--)/', '$1;$2', $m[2]) ?? $m[2];
+                    $value = preg_replace('/;{2,}/', ';', $value) ?? $value;
 
                     return 'style=' . $m[1] . $value . $m[1];
                 },
                 $html,
-            );
+            ) ?? $html;
 
             // Add data-language-raw attribute to preserve full language string for visual editor
             if ($rawLanguage !== $language) {

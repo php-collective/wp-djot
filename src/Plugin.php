@@ -472,12 +472,18 @@ class Plugin
         // do_blocks()/do_shortcode() on the_content, so they also render on
         // archive/home listings that show full post content - not only singular
         // views. Scan the whole queried loop for them.
+        // Match DjotShortcode::register(), which falls back to the default tag
+        // when the configured one is blank; otherwise a blank setting would
+        // register [djot] but skip its detection here and drop the stylesheet.
         $tag = (string)$this->options['shortcode_tag'];
+        if ($tag === '') {
+            $tag = 'djot';
+        }
         foreach ($this->queriedPosts() as $post) {
             if (
                 has_block('wpdjot/djot', $post)
                 || has_block('wp-djot/djot', $post)
-                || ($tag !== '' && has_shortcode($post->post_content, $tag))
+                || has_shortcode($post->post_content, $tag)
                 // A synced/reusable block (core/block) only stores a reference
                 // here; do_blocks() resolves and renders the referenced block
                 // later, which may contain Djot. We cannot cheaply see inside,

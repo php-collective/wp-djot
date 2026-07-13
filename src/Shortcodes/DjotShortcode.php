@@ -78,7 +78,7 @@ class DjotShortcode
         foreach ($lines as $i => $line) {
             if ($codeFence !== null) {
                 if (
-                    preg_match('/^[ \t]*(`{3,}|~{3,})[ \t]*$/', $line, $m) === 1
+                    preg_match('/^[ \t]*(`{3,}|~{3,})[ \t\r]*$/', $line, $m) === 1
                     && $m[1][0] === $codeFence[0]
                     && strlen($m[1]) >= strlen($codeFence)
                 ) {

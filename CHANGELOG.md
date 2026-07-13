@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Plugin CSS/JS cache-bust by file mtime instead of the plugin version, so
+  upgrades and hotfixes that do not bump the version still invalidate CDN and
+  browser caches (the dark-mode stylesheet shipped but `?ver=1.5.17` kept
+  serving the stale copy).
 - The release zip wraps everything in the canonical `djot-markup/` folder: a
   root-level zip extracts into a folder named after the zip file on manual
   admin uploads, creating a duplicate plugin beside the existing install

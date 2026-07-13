@@ -426,6 +426,19 @@ class Plugin
     /**
      * Enqueue frontend assets.
      */
+
+    /**
+     * Cache-busting version for a plugin asset: the file's mtime, so upgrades
+     * and hotfixes that do not bump the plugin version still invalidate CDN
+     * and browser caches. Falls back to the plugin version.
+     */
+    private function assetVersion(string $relative): string
+    {
+        $mtime = @filemtime(WPDJOT_PLUGIN_DIR . $relative);
+
+        return $mtime ? (string)$mtime : WPDJOT_VERSION;
+    }
+
     public function enqueueAssets(): void
     {
         // Plugin CSS
@@ -433,7 +446,7 @@ class Plugin
             'djot-markup',
             WPDJOT_PLUGIN_URL . 'assets/css/djot.css',
             [],
-            WPDJOT_VERSION,
+            $this->assetVersion('assets/css/djot.css'),
         );
 
         // Code block enhancements (copy button)
@@ -442,7 +455,7 @@ class Plugin
             'wpdjot-code-blocks',
             WPDJOT_PLUGIN_URL . 'assets/js/code-blocks.js',
             [],
-            WPDJOT_VERSION,
+            $this->assetVersion('assets/js/code-blocks.js'),
             ['in_footer' => true, 'strategy' => 'defer'],
         );
 

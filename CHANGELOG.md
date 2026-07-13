@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Dark-mode code themes actually activate: the dual-theme setting rendered
+  both palettes into the markup, but no stylesheet rule ever switched to the
+  dark set. Code blocks now follow the visitor's `prefers-color-scheme`, and
+  a site-level `<html data-theme="dark|light">` toggle wins over the OS in
+  both directions.
+- Dual-theme style attributes are normalized (the engine glues declarations
+  and doubles semicolons - upstream phiki issue 142), scoped to style
+  attributes only.
+- Closing inline delimiters in highlighted fences keep their token scope:
+  `scripts/patch-phiki-offsets.php` patches the vendored phiki capture-offset
+  recovery (upstream phiki issue 141); wired into the Composer hooks and the
+  dist build.
+
 ## [1.5.16] - 2026-06-08
 
 ### Changed

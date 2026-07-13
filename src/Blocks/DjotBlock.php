@@ -342,9 +342,12 @@ class DjotBlock
         }
 
         // Same ballpark as WordPress' own comment length limit, but small
-        // enough that anonymous preview calls stay cheap.
+        // enough that anonymous preview calls stay cheap. Truncate on a UTF-8
+        // boundary so a multibyte sequence is not split into invalid bytes.
         if (strlen($content) > 20000) {
-            $content = substr($content, 0, 20000);
+            $content = function_exists('mb_strcut')
+                ? mb_strcut($content, 0, 20000, 'UTF-8')
+                : substr($content, 0, 20000);
         }
 
         $html = $this->converter->convertComment($content);

@@ -33,8 +33,10 @@ class DjotShortcode
      */
     public function register(string $tag = 'djot'): void
     {
-        $this->tag = $tag;
-        add_shortcode($tag, [$this, 'handle']);
+        // Fall back to the default tag when the configured tag is blank, so we
+        // never register an empty shortcode or propagate an empty tag.
+        $this->tag = $tag !== '' ? $tag : 'djot';
+        add_shortcode($this->tag, [$this, 'handle']);
         // wptexturize runs on the_content at priority 10, before shortcodes
         // execute at 11 - without this exclusion it curls the straight quotes
         // of a fence title (`::: tab "Overview"`), the line stops being a
@@ -52,7 +54,9 @@ class DjotShortcode
      */
     public function excludeFromTexturize(array $shortcodes): array
     {
-        $shortcodes[] = $this->tag;
+        if ($this->tag !== '' && !in_array($this->tag, $shortcodes, true)) {
+            $shortcodes[] = $this->tag;
+        }
 
         return $shortcodes;
     }

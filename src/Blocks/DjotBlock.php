@@ -311,10 +311,40 @@ class DjotBlock
      */
     public function renderCommentPreview(WP_REST_Request $request): WP_REST_Response
     {
-        $content = $request->get_param('content');
+        // The preview mirrors what a published comment would render, so it is
+        // only meaningful when Djot comment rendering is on. When it is off
+        // there is nothing to preview and no reason to expose an
+        // unauthenticated renderer at all. enable_comments defaults to true, so
+        // only an explicit false disables it.
+        $options = (array)get_option('wpdjot_settings', []);
+        if (array_key_exists('enable_comments', $options) && empty($options['enable_comments'])) {
+            return new WP_REST_Response(
+                ['message' => __('Comment rendering is disabled.', 'djot-markup')],
+                403,
+            );
+        }
 
-        if (!$content) {
+        // Throttle anonymous callers: the endpoint runs the full Djot pipeline
+        // without authentication, so an unbounded public renderer is a cheap
+        // CPU-amplification vector. Trusted editors (block-editor preview) are
+        // exempt.
+        if (self::isRateLimited()) {
+            return new WP_REST_Response(
+                ['message' => __('Too many preview requests - please slow down.', 'djot-markup')],
+                429,
+            );
+        }
+
+        $content = (string)$request->get_param('content');
+
+        if ($content === '') {
             return new WP_REST_Response(['html' => ''], 200);
+        }
+
+        // Same ballpark as WordPress' own comment length limit, but small
+        // enough that anonymous preview calls stay cheap.
+        if (strlen($content) > 20000) {
+            $content = substr($content, 0, 20000);
         }
 
         $html = $this->converter->convertComment($content);
@@ -326,14 +356,77 @@ class DjotBlock
     }
 
     /**
+     * Per-IP fixed-window throttle for the public comment preview. Returns true
+     * when the caller has exceeded the allowance and the request should be
+     * rejected with 429.
+     *
+     * Users who can edit posts are trusted (they drive the block editor's own
+     * preview) and are never throttled. Both the request allowance and the
+     * window are filterable, so a site behind a shared-IP CDN or reverse proxy
+     * can widen them - or disable the limit with a non-positive allowance.
+     */
+    private static function isRateLimited(): bool
+    {
+        if (current_user_can('edit_posts')) {
+            return false;
+        }
+
+        // Requests allowed per window; a non-positive value disables the limit.
+        $max = (int)apply_filters('wpdjot_preview_rate_limit', 30);
+        if ($max <= 0) {
+            return false;
+        }
+        // Window length in seconds.
+        $window = max(1, (int)apply_filters('wpdjot_preview_rate_window', MINUTE_IN_SECONDS));
+
+        $ip = isset($_SERVER['REMOTE_ADDR'])
+            ? sanitize_text_field((string)wp_unslash($_SERVER['REMOTE_ADDR']))
+            : 'unknown';
+        $key = 'wpdjot_pcw_' . md5($ip);
+        $now = time();
+        $data = get_transient($key);
+
+        // Start a fresh fixed window when none is active or the current one has
+        // lapsed. The window's expiry is anchored to its first request: counting
+        // a later request never extends it, so a client below the allowance is
+        // never blocked (a true fixed window, not a sliding one).
+        if (!is_array($data) || !isset($data['count'], $data['reset']) || $now >= (int)$data['reset']) {
+            set_transient($key, ['count' => 1, 'reset' => $now + $window], $window);
+
+            return false;
+        }
+        if ((int)$data['count'] >= $max) {
+            return true;
+        }
+        set_transient(
+            $key,
+            ['count' => (int)$data['count'] + 1, 'reset' => (int)$data['reset']],
+            max(1, (int)$data['reset'] - $now),
+        );
+
+        return false;
+    }
+
+    /**
      * Convert Markdown to Djot.
      */
     public function convertMarkdown(WP_REST_Request $request): WP_REST_Response
     {
-        $content = $request->get_param('content');
+        $content = (string)$request->get_param('content');
 
-        if (!$content) {
+        if ($content === '') {
             return new WP_REST_Response(['djot' => ''], 200);
+        }
+
+        // Bound the work: converting an arbitrarily large paste is a needless
+        // memory/CPU cost even for an authenticated editor. 512 KB is far above
+        // any realistic paste, so reject rather than silently truncate (which
+        // would corrupt the converted source mid-document).
+        if (strlen($content) > 512000) {
+            return new WP_REST_Response(
+                ['message' => __('The pasted content is too large to convert.', 'djot-markup')],
+                413,
+            );
         }
 
         $converter = new MarkdownToDjot();
@@ -347,10 +440,21 @@ class DjotBlock
      */
     public function convertHtml(WP_REST_Request $request): WP_REST_Response
     {
-        $content = $request->get_param('content');
+        $content = (string)$request->get_param('content');
 
-        if (!$content) {
+        if ($content === '') {
             return new WP_REST_Response(['djot' => ''], 200);
+        }
+
+        // Bound the work: converting an arbitrarily large paste is a needless
+        // memory/CPU cost even for an authenticated editor. 512 KB is far above
+        // any realistic paste, so reject rather than silently truncate (which
+        // would corrupt the converted source mid-document).
+        if (strlen($content) > 512000) {
+            return new WP_REST_Response(
+                ['message' => __('The pasted content is too large to convert.', 'djot-markup')],
+                413,
+            );
         }
 
         $converter = new HtmlToDjot();

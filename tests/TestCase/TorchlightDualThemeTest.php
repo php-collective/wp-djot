@@ -11,6 +11,9 @@ class TorchlightDualThemeTest extends TestCase
 {
     public function testDualThemeEmitsWellFormedDarkVariables(): void
     {
+        if (!class_exists(\Torchlight\Engine\Engine::class)) {
+            $this->markTestSkipped('Torchlight Engine is not installed.');
+        }
         $converter = new Converter(torchlightTheme: 'github-light', torchlightDarkTheme: 'github-dark');
 
         $html = $converter->convertArticle("``` php\n\$x = 1;\n```");
@@ -25,6 +28,9 @@ class TorchlightDualThemeTest extends TestCase
 
     public function testSingleThemeStaysSingle(): void
     {
+        if (!class_exists(\Torchlight\Engine\Engine::class)) {
+            $this->markTestSkipped('Torchlight Engine is not installed.');
+        }
         $converter = new Converter(torchlightTheme: 'github-light');
 
         $html = $converter->convertArticle("``` php\n\$x = 1;\n```");

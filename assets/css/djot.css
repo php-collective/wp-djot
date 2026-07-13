@@ -74,9 +74,9 @@
    directions via the html[data-theme] convention. */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .djot-content pre code.phiki-themes,
-    :root:not([data-theme="light"]) .djot-content pre code.phiki-themes span.token,
+    :root:not([data-theme="light"]) .djot-content pre code.phiki-themes span,
     :root:not([data-theme="light"]) .wpdjot pre code.phiki-themes,
-    :root:not([data-theme="light"]) .wpdjot pre code.phiki-themes span.token {
+    :root:not([data-theme="light"]) .wpdjot pre code.phiki-themes span {
         color: var(--phiki-dark-color) !important;
         background-color: var(--phiki-dark-background-color) !important;
     }
@@ -88,9 +88,9 @@
 }
 
 :root[data-theme="dark"] .djot-content pre code.phiki-themes,
-:root[data-theme="dark"] .djot-content pre code.phiki-themes span.token,
+:root[data-theme="dark"] .djot-content pre code.phiki-themes span,
 :root[data-theme="dark"] .wpdjot pre code.phiki-themes,
-:root[data-theme="dark"] .wpdjot pre code.phiki-themes span.token {
+:root[data-theme="dark"] .wpdjot pre code.phiki-themes span {
     color: var(--phiki-dark-color) !important;
     background-color: var(--phiki-dark-background-color) !important;
 }

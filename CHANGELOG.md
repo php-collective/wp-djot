@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dual-theme style attributes are normalized (the engine glues declarations
   and doubles semicolons - upstream phiki issue 142), scoped to style
   attributes only.
+- The dist build no longer fails on the Composer patch hook (the dist
+  install now runs --no-scripts and patches explicitly), the patch script
+  fails loudly on read/write errors, and the dark-theme CSS covers every
+  highlighter span.
 - Closing inline delimiters in highlighted fences keep their token scope:
   `scripts/patch-phiki-offsets.php` patches the vendored phiki capture-offset
   recovery (upstream phiki issue 141); wired into the Composer hooks and the

@@ -181,12 +181,13 @@ class Converter
         $smartQuotesLocale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
         $smartQuotesKey = (!$roundTripMode && $smartQuotesLocale !== 'en') ? '_sq_' . $smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
-        // Not in a feed. MermaidExtension emits a `<pre class="mermaid">` for a
-        // client script to replace, and a feed reader runs no script - so the
-        // diagram arrives as its source with no formatting and no explanation.
-        // Left unregistered, the same fence falls back to a plain code block,
-        // which is readable. Same trade the TOC and permalinks make above by
-        // being gated on 'article'.
+        // Not in a feed, though the gain is smaller here than for the TOC and
+        // permalinks above, and worth stating accurately: the container already
+        // carries the source as visible text, so no content is lost either way.
+        // What the code-block fallback buys is that it DECLARES the block is
+        // code, and that it escapes the arrow - `-->` sits unescaped inside the
+        // interactive form, and that is an HTML comment closer for whatever
+        // sanitizer a feed reader happens to run.
         $mermaidKey = $this->mermaidEnabled && $context !== 'comment' && $context !== 'feed' ? '_mermaid' : '';
         $roundTripKey = $roundTripMode ? '_rt' : '';
         $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey . $mermaidKey . $roundTripKey;

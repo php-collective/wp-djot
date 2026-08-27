@@ -26,9 +26,6 @@ echo "Building wp-djot $VERSION..."
 echo "Installing production dependencies..."
 cp "$PLUGIN_DIR/composer.json" "$PLUGIN_DIR/composer.lock" "$TMP_DIR/"
 php "$(command -v composer)" install --working-dir="$TMP_DIR" --no-dev --optimize-autoloader --no-interaction --no-scripts --quiet
-# Composer hooks do not run with --working-dir installs from CI; apply the phiki patch explicitly.
-php "$PLUGIN_DIR/scripts/patch-phiki-offsets.php" "$TMP_DIR/vendor"
-
 # Downgrade PHP 8.2 syntax to PHP 8.1 for WordPress.org compatibility
 echo "Downgrading PHP 8.2 syntax in vendor..."
 cp "$PLUGIN_DIR/rector.php" "$PLUGIN_DIR/rector-bootstrap.php" "$TMP_DIR/"

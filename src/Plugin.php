@@ -185,8 +185,13 @@ class Plugin
     {
         if ($this->options['enable_posts'] || $this->options['enable_pages']) {
             add_filter('the_content', [$this, 'filterContent'], 5);
-            add_filter('get_the_excerpt', [$this, 'filterExcerpt'], 5);
         }
+
+        // The block renders through its own callback whatever the content
+        // options say, so its excerpt has to as well: core drops a dynamic
+        // block and leaves the excerpt empty. filterExcerpt() bails out on a
+        // post this plugin does not own.
+        add_filter('get_the_excerpt', [$this, 'filterExcerpt'], 5);
 
         if ($this->options['enable_comments']) {
             add_filter('comment_text', [$this, 'filterComment'], 5);
@@ -241,6 +246,15 @@ class Plugin
         // Get the post content and generate excerpt from it
         $post = get_post();
         if (!$post) {
+            return $excerpt;
+        }
+
+        // With the content filters off this runs only to rescue a block
+        // excerpt; anything else is not this plugin's to rewrite.
+        if (
+            !$this->options['enable_posts'] && !$this->options['enable_pages']
+            && !has_block('wpdjot/djot', $post) && !has_block('wp-djot/djot', $post)
+        ) {
             return $excerpt;
         }
 

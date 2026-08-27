@@ -180,3 +180,98 @@ if (!function_exists('get_comments')) {
         return array_values($wp_test_comments ?? []);
     }
 }
+
+/*
+ * A minimal hook registry, so a test can ask what the plugin registered.
+ *
+ * The excerpt regression lived in registerFilters(), not in the filter body,
+ * so a test that only calls the callback would have stayed green through it.
+ */
+if (!function_exists('add_filter')) {
+    function add_filter(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): bool
+    {
+        global $wp_test_filters;
+        $wp_test_filters[$hook][$priority][] = $callback;
+
+        return true;
+    }
+}
+
+if (!function_exists('add_action')) {
+    function add_action(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): bool
+    {
+        return add_filter($hook, $callback, $priority, $acceptedArgs);
+    }
+}
+
+if (!function_exists('apply_filters')) {
+    function apply_filters(string $hook, mixed $value, mixed ...$args): mixed
+    {
+        return $value;
+    }
+}
+
+if (!function_exists('add_shortcode')) {
+    function add_shortcode(string $tag, callable $callback): void
+    {
+        global $wp_test_shortcodes;
+        $wp_test_shortcodes[$tag] = $callback;
+    }
+}
+
+if (!function_exists('is_admin')) {
+    function is_admin(): bool
+    {
+        return false;
+    }
+}
+
+if (!function_exists('is_feed')) {
+    function is_feed(): bool
+    {
+        return false;
+    }
+}
+
+if (!function_exists('has_block')) {
+    function has_block(string $blockName, mixed $post = null): bool
+    {
+        $content = is_object($post) ? ($post->post_content ?? '') : (string)$post;
+
+        return str_contains($content, '<!-- wp:' . $blockName . ' ');
+    }
+}
+
+if (!function_exists('wp_strip_all_tags')) {
+    function wp_strip_all_tags(string $text, bool $removeBreaks = false): string
+    {
+        $text = (string)preg_replace('@<(script|style)[^>]*?>.*?</\\1>@si', '', $text);
+        $text = strip_tags($text);
+
+        return trim($text);
+    }
+}
+
+/** Every callback registered for a hook, flattened in priority order. */
+function wp_test_callbacks(string $hook): array
+{
+    global $wp_test_filters;
+    $byPriority = $wp_test_filters[$hook] ?? [];
+    ksort($byPriority);
+    $flat = [];
+    foreach ($byPriority as $callbacks) {
+        foreach ($callbacks as $callback) {
+            $flat[] = $callback;
+        }
+    }
+
+    return $flat;
+}
+
+/** Reset the registry between tests. */
+function wp_test_reset_filters(): void
+{
+    global $wp_test_filters, $wp_test_shortcodes;
+    $wp_test_filters = [];
+    $wp_test_shortcodes = [];
+}

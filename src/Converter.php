@@ -165,7 +165,7 @@ class Converter
      *
      * @param string $profileName
      * @param bool $safeMode
-     * @param string $context Context name for filters: 'article', 'comment', or 'excerpt'
+     * @param string $context Context name for filters: 'article', 'feed', 'comment', or 'excerpt'
      * @param bool $roundTripMode Enable round-trip mode for visual editor (adds data-djot-* attributes)
      */
     private function getProfileConverter(string $profileName, bool $safeMode, string $context = 'article', bool $roundTripMode = false): DjotConverter
@@ -181,7 +181,14 @@ class Converter
         $smartQuotesLocale = $this->smartQuotesLocale === 'auto' ? $this->getWpLocale() : $this->smartQuotesLocale;
         $smartQuotesKey = (!$roundTripMode && $smartQuotesLocale !== 'en') ? '_sq_' . $smartQuotesLocale : '';
         $headingShiftKey = $this->headingShift > 0 ? '_hs' . $this->headingShift : '';
-        $mermaidKey = $this->mermaidEnabled && $context !== 'comment' ? '_mermaid' : '';
+        // Not in a feed, though the gain is smaller here than for the TOC and
+        // permalinks above, and worth stating accurately: the container already
+        // carries the source as visible text, so no content is lost either way.
+        // What the code-block fallback buys is that it DECLARES the block is
+        // code, and that it escapes the arrow - `-->` sits unescaped inside the
+        // interactive form, and that is an HTML comment closer for whatever
+        // sanitizer a feed reader happens to run.
+        $mermaidKey = $this->mermaidEnabled && $context !== 'comment' && $context !== 'feed' ? '_mermaid' : '';
         $roundTripKey = $roundTripMode ? '_rt' : '';
         $key = $profileName . ($safeMode ? '_safe' : '_unsafe') . '_' . $softBreakSetting . ($this->markdownMode ? '_md' : '') . $tocKey . $permalinksKey . $smartQuotesKey . $headingShiftKey . $mermaidKey . $roundTripKey;
 
@@ -298,7 +305,7 @@ class Converter
             // execute a client-side renderer over the block's text, which is
             // not a surface untrusted commenters should reach - a mermaid
             // fence in a comment stays an ordinary code block.
-            if ($this->mermaidEnabled && $context !== 'comment') {
+            if ($this->mermaidEnabled && $context !== 'comment' && $context !== 'feed') {
                 $converter->addExtension(new MermaidExtension());
             }
 
@@ -390,8 +397,28 @@ class Converter
      */
     public function convertArticle(string $djot): string
     {
+        return $this->convertInContext($djot, 'article');
+    }
+
+    /**
+     * Render for the current request: the feed context when this is a feed,
+     * the article context otherwise.
+     *
+     * The feed context differs in what it leaves OUT rather than how it parses.
+     * A table of contents is `#anchor` links into a page the reader is not on,
+     * a heading permalink is a hover affordance needing CSS a feed does not
+     * carry, and a Mermaid container needs a script that does not run there -
+     * so all three are omitted and the diagram falls back to a code block.
+     */
+    public function convertFeedOrArticle(string $djot): string
+    {
+        return $this->convertInContext($djot, is_feed() ? 'feed' : 'article');
+    }
+
+    private function convertInContext(string $djot, string $context): string
+    {
         $djot = $this->preProcess($djot, true);
-        $converter = $this->getProfileConverter($this->postProfile, false, 'article');
+        $converter = $this->getProfileConverter($this->postProfile, false, $context);
 
         try {
             $html = $converter->convert($djot);

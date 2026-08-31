@@ -220,7 +220,7 @@ class Plugin
 
         // Process full content as Djot using configured post profile
         if ($this->options['process_full_content']) {
-            return $this->converter->convertArticle($content);
+            return $this->converter->convertFeedOrArticle($content);
         }
 
         // Only process {djot}...{/djot} blocks
@@ -366,7 +366,7 @@ class Plugin
                 return $this->converter->convertComment($djotContent);
             }
 
-            return $this->converter->convertArticle($djotContent);
+            return $this->converter->convertFeedOrArticle($djotContent);
         }, $content);
     }
 
@@ -375,14 +375,20 @@ class Plugin
      */
     private function shouldFilterContent(): bool
     {
-        // Skip admin, feeds, and REST API
-        if (is_admin() || is_feed() || (defined('REST_REQUEST') && REST_REQUEST)) {
+        // Skip admin and REST. NOT feeds: skipping them did not hand the
+        // reader plain source, it handed them BROKEN source. Nothing rendered
+        // the Djot, so wptexturize reached it and curled the fence characters -
+        // ``` arrived as a left double quote followed by a backtick. A feed is
+        // the one place a reader cannot click through to see the real page, so
+        // it is the worst place to send markup.
+        if (is_admin() || (defined('REST_REQUEST') && REST_REQUEST)) {
             return false;
         }
 
         // Skip archive pages (home, category, tag, search, author, date archives)
-        // These show excerpts/teasers where Djot processing would break the "Read more" link
-        if (!is_singular()) {
+        // These show excerpts/teasers where Djot processing would break the "Read more" link.
+        // A feed is not an archive for this purpose: it carries the whole post.
+        if (!is_singular() && !is_feed()) {
             return false;
         }
 
